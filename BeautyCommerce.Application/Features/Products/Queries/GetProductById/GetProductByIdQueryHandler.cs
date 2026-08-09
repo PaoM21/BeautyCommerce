@@ -1,0 +1,52 @@
+﻿using AutoMapper;
+using BeautyCommerce.Application.Common.Helpers;
+using BeautyCommerce.Application.Common.Interfaces;
+using BeautyCommerce.Application.Features.Products.DTOs;
+using MediatR;
+using Microsoft.EntityFrameworkCore;
+
+namespace BeautyCommerce.Application.Features.Products.Queries.GetProductById;
+
+public class GetProductByIdHandler
+    : IRequestHandler<GetProductByIdQuery, ProductDetailDto>
+{
+    private readonly IProductRepository _productRepository;
+
+    public GetProductByIdHandler(IProductRepository productRepository)
+    {
+        _productRepository = productRepository;
+    }
+
+    public async Task<ProductDetailDto> Handle(
+        GetProductByIdQuery request,
+        CancellationToken cancellationToken)
+    {
+        var product = await _productRepository.GetWithDetailsAsync(request.Id);
+
+        Guard.AgainstNull(product, "Producto no encontrado.");
+
+        return new ProductDetailDto
+        {
+            Id = product.Id,
+            Name = product.Name,
+            Description = product.Description,
+            Brand = product.Brand.Name,
+            Category = product.Category.Name,
+
+            Variants = product.Variants
+                .Select(v => new ProductVariantDto
+                {
+                    Id = v.Id,
+                    Price = v.Price,
+                    Stock = v.Stock
+                }).ToList(),
+
+            Images = product.Images
+                .Select(i => new ProductImageDto
+                {
+                    Id = i.Id,
+                    Url = i.ImageUrl
+                }).ToList()
+        };
+    }
+}

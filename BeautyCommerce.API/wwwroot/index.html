@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>BeautyCommerce - Demo SPA</title>
+    <style>
+      body{font-family:Arial,Helvetica,sans-serif;margin:0;padding:24px;background:#fff}
+      h1{font-weight:600}
+      .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:24px}
+      .card{border:1px solid #eee;padding:16px;border-radius:6px;background:#fafafa}
+      .imgBox{height:180px;background:#f3efeD;border-radius:4px;display:flex;align-items:center;justify-content:center;color:#999}
+      .meta{font-size:12px;color:#777;margin-top:8px}
+      a{color:inherit;text-decoration:none}
+      .back{margin-bottom:12px;display:inline-block}
+      .loading{color:#666}
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="content"></div>
+    </div>
+
+    <script>
+      const apiBase = '/api';
+
+      function createProductCard(p){
+        const a = document.createElement('a');
+        a.href = '/productos/' + p.id;
+        const card = document.createElement('div'); card.className='card';
+
+        const imgBox = document.createElement('div'); imgBox.className='imgBox';
+        if(p.image){
+          const img = document.createElement('img'); img.src = p.image; img.style.maxHeight='100%'; img.style.maxWidth='100%'; img.alt = p.name;
+          imgBox.innerHTML = '';
+          imgBox.appendChild(img);
+        } else {
+          imgBox.textContent = 'Sin imagen';
+        }
+
+        const title = document.createElement('div'); title.innerHTML = '<strong>'+ (p.name||'Sin nombre') +'</strong>';
+        const brand = document.createElement('div'); brand.className='meta'; brand.textContent = p.brand || '';
+        const category = document.createElement('div'); category.className='meta'; category.textContent = p.category || '';
+
+        card.appendChild(imgBox);
+        card.appendChild(brand);
+        card.appendChild(title);
+        card.appendChild(category);
+
+        a.appendChild(card);
+        return a;
+      }
+
+      async function renderList(){
+        const content = document.getElementById('content');
+        content.innerHTML = '<h1>Todos nuestros productos</h1><div id="list" class="grid"><div class="loading">Cargando…</div></div>';
+        try{
+          const res = await fetch(apiBase + '/products');
+          if(!res.ok) throw new Error(res.statusText || res.status);
+          const json = await res.json();
+          const items = json.items || json || [];
+          const list = document.getElementById('list'); list.innerHTML = '';
+          if(!items.length){ list.innerHTML = '<div>No hay productos disponibles.</div>'; return; }
+          items.forEach(p => {
+            const node = createProductCard(p);
+            list.appendChild(node);
+          });
+        }catch(e){
+          document.getElementById('content').innerHTML = '<h1>Error</h1><div>'+ (e.message || e) +'</div>';
+        }
+      }
+
+      async function renderDetail(id){
+        const content = document.getElementById('content');
+        content.innerHTML = '<a class="back" href="/productos">← Volver</a><div id="detail"><div class="loading">Cargando…</div></div>';
+        try{
+          const res = await fetch(apiBase + '/products/' + id);
+          if(!res.ok) throw new Error(res.statusText || res.status);
+          const p = await res.json();
+          const d = document.getElementById('detail'); d.innerHTML='';
+
+          const title = document.createElement('h1'); title.textContent = p.name || 'Sin nombre';
+          const desc = document.createElement('p'); desc.textContent = p.description || '';
+          const imgBox = document.createElement('div'); imgBox.className='imgBox';
+          if(p.images && p.images.length){
+            const img = document.createElement('img'); img.src=p.images[0].url; img.alt=p.name; img.style.maxWidth='100%'; img.style.maxHeight='300px'; imgBox.appendChild(img);
+          } else {
+            imgBox.textContent = 'Sin imagen';
+          }
+
+          d.appendChild(title); d.appendChild(imgBox); d.appendChild(desc);
+
+          if(p.variants && p.variants.length){
+            const vtitle = document.createElement('h3'); vtitle.textContent = 'Variants'; d.appendChild(vtitle);
+            p.variants.forEach(v=>{
+              const li = document.createElement('div'); li.textContent = (v.name||'') + ' — Precio: ' + (v.price ?? '-') + ' — Stock: ' + (v.stock ?? '-'); d.appendChild(li);
+            })
+          }
+
+        }catch(e){
+          content.innerHTML = '<div>Error: '+(e.message||e)+'</div>';
+        }
+      }
+
+      (function(){
+        const path = location.pathname.replace(/\/$/, '');
+        const parts = path.split('/').filter(Boolean);
+        if(parts[0] === 'productos' && parts[1]){
+          renderDetail(parts[1]);
+        } else {
+          renderList();
+        }
+      })();
+    </script>
+  </body>
+</html>

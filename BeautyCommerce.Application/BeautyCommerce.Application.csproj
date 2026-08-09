@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Exceptions\" />
+    <Folder Include="Features\Admin\Commands\" />
+    <Folder Include="Features\Brands\Mappings\" />
+    <Folder Include="Features\Categories\Validators\" />
+    <Folder Include="Features\Customers\" />
+    <Folder Include="Features\Orders\Commands\UpdateStatus\" />
+    <Folder Include="Features\Products\Mappings\" />
+    <Folder Include="Features\Wishlists\Commands\AddItem\" />
+    <Folder Include="Features\Wishlists\Commands\RemoveItem\" />
+    <Folder Include="Features\Wishlists\DTOs\" />
+    <Folder Include="Features\Wishlists\Queries\GetWishlist\" />
+    <Folder Include="Services\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="16.2.0" />
+    <PackageReference Include="FluentValidation" Version="12.1.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+    <PackageReference Include="MediatR" Version="14.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.11" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.18" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BeautyCommerce.Domain\BeautyCommerce.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
