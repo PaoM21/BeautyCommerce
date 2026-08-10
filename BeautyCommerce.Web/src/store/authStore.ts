@@ -12,73 +12,62 @@ interface AuthStore {
   token: string | null;
   user: User | null;
 
-  login: (token: string, user: User | null) => void;
+  login: (token: string, user?: User | null) => void;
   logout: () => void;
-
-  isAdmin: () => boolean;
 }
 
-function getRoleFromToken(token: string): string | null {
+function getRoleFromToken(token: string): string | undefined {
   try {
-    const payload = token.split(".")[1];
-
-    if (!payload) return null;
-
-    const decoded = JSON.parse(
-      atob(
-        payload
-          .replace(/-/g, "+")
-          .replace(/_/g, "/")
-      )
+    const payload = JSON.parse(
+      atob(token.split(".")[1])
     );
 
     return (
-      decoded.role ??
-      decoded[
+      payload.role ??
+      payload[
         "http://schemas.microsoft.com/ws/2008/06/identity/claims/role"
-      ] ??
-      null
+      ]
     );
   } catch {
-    return null;
+    return undefined;
   }
 }
 
-export const useAuthStore = create<AuthStore>(
-  (set, get) => ({
-    token: localStorage.getItem("beauty_token"),
+const storedToken = localStorage.getItem("beauty_token");
 
-    user: null,
+export const useAuthStore = create<AuthStore>((set) => ({
+  token: storedToken,
 
-    login: (token, user) => {
-      localStorage.setItem("beauty_token", token);
+  user: storedToken
+    ? {
+        id: "",
+        email: "",
+        role: getRoleFromToken(storedToken),
+      }
+    : null,
 
-      const role =
-        user?.role ??
-        getRoleFromToken(token) ??
-        undefined;
+  login: (token, user = null) => {
+    localStorage.setItem("beauty_token", token);
 
-      set({
-        token,
-        user: user
-          ? {
-              ...user,
-              role,
-            }
-          : null,
-      });
-    },
+    const role = getRoleFromToken(token);
 
-    logout: () => {
-      localStorage.removeItem("beauty_token");
+    set({
+      token,
+      user: user
+        ? {
+            ...user,
+            role,
+          }
+        : null,
+    });
+  },
 
-      set({
-        token: null,
-        user: null,
-      });
-    },
+  logout: () => {
+    localStorage.removeItem("beauty_token");
 
-    isAdmin: () =>
-      get().user?.role?.toLowerCase() === "admin",
-  })
-);
+    set({
+      token: null,
+      user: null,
+    });
+  },
+}));

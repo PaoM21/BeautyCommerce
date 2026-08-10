@@ -1,7 +1,9 @@
-using BeautyCommerce.Application.Features.Orders.Commands.Checkout;
+using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Application.Common.Models;
+using BeautyCommerce.Application.Features.Orders.Commands.Checkout;
 using BeautyCommerce.Tests.Helpers;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace BeautyCommerce.Tests.Commands.Orders;
@@ -11,9 +13,9 @@ public class CheckoutCommandHandlerTests
     [Fact]
     public async Task Should_Create_Order_When_Payment_Succeeds()
     {
+        // Arrange
         var context = DbContextHelper.CreateDbContext();
 
-        // Seed product variant and cart
         var variant = new BeautyCommerce.Domain.Entities.ProductVariant
         {
             Id = Guid.NewGuid(),
@@ -31,31 +33,74 @@ public class CheckoutCommandHandlerTests
             UserId = userId
         };
 
-        cart.Items.Add(new BeautyCommerce.Domain.Entities.ShoppingCartItem
-        {
-            Id = Guid.NewGuid(),
-            ProductVariantId = variant.Id,
-            Quantity = 2,
-            UnitPrice = variant.Price
-        });
+        cart.Items.Add(
+            new BeautyCommerce.Domain.Entities.ShoppingCartItem
+            {
+                Id = Guid.NewGuid(),
+                ProductVariantId = variant.Id,
+                Quantity = 2,
+                UnitPrice = variant.Price
+            });
 
         context.ShoppingCarts.Add(cart);
-        await context.SaveChangesAsync(default);
 
-        var currentUserMock = new Mock<BeautyCommerce.Application.Common.Interfaces.ICurrentUserService>();
-        currentUserMock.Setup(x => x.UserId).Returns(userId);
+        await context.SaveChangesAsync();
 
-        var paymentMock = new Mock<BeautyCommerce.Application.Common.Interfaces.IPaymentService>();
-        paymentMock.Setup(p => p.CreatePaymentAsync(It.IsAny<decimal>(), It.IsAny<string>(), It.IsAny<string>()))
-            .ReturnsAsync(new PaymentResult { Success = true, TransactionId = "tx123" });
+        var currentUserMock =
+            new Mock<ICurrentUserService>();
 
-        var handler = new CheckoutCommandHandler(context, currentUserMock.Object, paymentMock.Object, new Microsoft.Extensions.Logging.Abstractions.NullLogger<CheckoutCommandHandler>());
+        currentUserMock
+            .Setup(x => x.UserId)
+            .Returns(userId);
+
+        var paymentMock =
+            new Mock<IPaymentService>();
+
+        paymentMock
+            .Setup(p =>
+                p.CreatePaymentAsync(
+                    It.IsAny<decimal>(),
+                    It.IsAny<string>(),
+                    It.IsAny<string>()))
+            .ReturnsAsync(
+                PaymentResult.Succeeded("tx123"));
+
+        var handler =
+            new CheckoutCommandHandler(
+                context,
+                currentUserMock.Object,
+                paymentMock.Object,
+                NullLogger<CheckoutCommandHandler>.Instance);
 
         var command = new CheckoutCommand();
 
-        var orderId = await handler.Handle(command, default);
+        // Act
+        var orderId =
+            await handler.Handle(
+                command,
+                CancellationToken.None);
 
+        // Assert
         orderId.Should().NotBeEmpty();
-        context.Orders.Count().Should().Be(1);
+
+        var order =
+            context.Orders
+                .FirstOrDefault();
+
+        order.Should().NotBeNull();
+
+        order!.UserId.Should().Be(userId);
+        order.Total.Should().Be(20m);
+        order.SubTotal.Should().Be(20m);
+        order.TransactionId.Should().Be("tx123");
+        order.Status
+            .Should()
+            .Be(BeautyCommerce.Domain.Enums.OrderStatus.Paid);
+
+        context.OrderItems
+            .Count()
+            .Should()
+            .Be(1);
     }
+
 }

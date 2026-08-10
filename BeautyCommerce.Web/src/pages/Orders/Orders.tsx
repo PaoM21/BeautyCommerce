@@ -65,7 +65,7 @@ export default function Orders() {
       ) : (
         <Box>
           {orders.map((order) => {
-            const date = order.orderDate ?? order.createdAt;
+            const date = order.orderDate;
 
             return (
               <Box key={order.id}>

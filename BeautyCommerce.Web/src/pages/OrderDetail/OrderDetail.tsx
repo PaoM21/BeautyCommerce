@@ -125,7 +125,7 @@ function SummaryRow({
         {label}
       </Typography>
 
-      <Typography fontSize={14}>
+      <Typography sx={{ fontSize: 14 }}>
         ${value.toLocaleString("es-CO")}
       </Typography>
     </Box>
@@ -141,6 +141,10 @@ function SummaryRow({
       </Container>
     );
   }
+
+  const subTotal = order.items.reduce((s, it) => s + (it.subtotal ?? it.unitPrice * it.quantity), 0);
+  const shippingCost = 0; // backend does not provide shipping breakdown in the Order model
+  const tax = Math.max(0, order.total - subTotal - shippingCost);
 
   return (
     <Container
@@ -190,17 +194,17 @@ function SummaryRow({
       >
         <SummaryRow
           label="Subtotal"
-          value={order.subTotal}
+          value={subTotal}
         />
 
         <SummaryRow
           label="Envío"
-          value={order.shippingCost}
+          value={shippingCost}
         />
 
         <SummaryRow
           label="Impuestos"
-          value={order.tax}
+          value={tax}
         />
 
         <Divider />
@@ -212,14 +216,11 @@ function SummaryRow({
             alignItems: "center",
           }}
         >
-          <Typography fontWeight={500}>
+          <Typography sx={{ fontWeight: 500 }}>
             Total
           </Typography>
 
-          <Typography
-            fontWeight={600}
-            fontSize={18}
-          >
+          <Typography sx={{ fontWeight: 600, fontSize: 18 }}>
             ${order.total.toLocaleString("es-CO")}
           </Typography>
         </Box>
@@ -269,11 +270,11 @@ function SummaryRow({
           py: 4,
         }}
       >
-        <Typography fontWeight={600}>
+        <Typography sx={{ fontWeight: 600 }}>
           Total
         </Typography>
 
-        <Typography fontWeight={600}>
+        <Typography sx={{ fontWeight: 600 }}>
           $
           {order.total.toLocaleString(
             "es-CO"

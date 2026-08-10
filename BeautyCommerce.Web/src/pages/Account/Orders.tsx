@@ -173,7 +173,7 @@ export default function Orders() {
                   </Typography>
                 </Box>
 
-                <Typography fontWeight={500}>
+                <Typography sx={{ fontWeight: 500 }}>
                   $
                   {order.total.toLocaleString(
                     "es-CO"

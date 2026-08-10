@@ -154,7 +154,7 @@ export default function AdminOrders() {
                 <Box>
                   <MobileLabel text="PEDIDO" />
 
-                  <Typography fontWeight={500}>
+                  <Typography sx={{ fontWeight: 500 }}>
                     {order.orderNumber}
                   </Typography>
                 </Box>
@@ -178,7 +178,7 @@ export default function AdminOrders() {
                 <Box>
                   <MobileLabel text="TOTAL" />
 
-                  <Typography fontWeight={500}>
+                  <Typography sx={{ fontWeight: 500 }}>
                     $
                     {order.total.toLocaleString(
                       "es-CO"

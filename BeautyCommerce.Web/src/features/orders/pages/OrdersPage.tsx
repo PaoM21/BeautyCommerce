@@ -145,7 +145,7 @@ export default function OrdersPage() {
                     Pedido
                   </Typography>
 
-                  <Typography fontSize={18}>
+                  <Typography sx={{ fontSize: 18 }}>
                     {order.orderNumber}
                   </Typography>
 

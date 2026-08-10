@@ -5,8 +5,6 @@ using BeautyCommerce.Domain.Entities;
 using BeautyCommerce.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
-using System.Linq;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
@@ -45,144 +43,159 @@ public class CheckoutCommandHandler
             "Starting checkout for user {UserId}",
             userId);
 
-        try
-        {
-            var cart = await _context.ShoppingCarts
-                .Include(x => x.Items)
+        var cart = await _context.ShoppingCarts
+            .Include(x => x.Items)
                 .ThenInclude(i => i.ProductVariant)
-                .FirstOrDefaultAsync(
-                    x => x.UserId == userId,
-                    cancellationToken);
+            .FirstOrDefaultAsync(
+                x => x.UserId == userId,
+                cancellationToken);
 
-            if (cart == null || !cart.Items.Any())
-                throw new BadRequestException(
-                    "El carrito está vacío.");
+        if (cart == null || !cart.Items.Any())
+            throw new BadRequestException(
+                "El carrito está vacío.");
 
-            foreach (var item in cart.Items)
+        foreach (var item in cart.Items)
+        {
+            if (item.ProductVariant == null)
             {
-                if (item.ProductVariant.Stock < item.Quantity)
-                {
-                    throw new BadRequestException(
-                        $"No hay stock suficiente para la variante {item.ProductVariantId}.");
-                }
+                throw new BadRequestException(
+                    $"La variante {item.ProductVariantId} no existe.");
             }
 
-            var subTotal = cart.Items.Sum(
-                item => item.Quantity * item.UnitPrice);
-
-            var shippingCost = 0m;
-
-            var tax = 0m;
-
-            var total = subTotal + shippingCost + tax;
-
-            if (total <= 0)
-                throw new BadRequestException(
-                    "El total del pedido debe ser mayor que cero.");
-
-            var orderNumber =
-                $"ORD-{Guid.NewGuid():N}";
-
-            var payment =
-                await _paymentService.CreatePaymentAsync(
-                    total,
-                    "COP",
-                    $"Pedido {orderNumber}");
-
-            if (!payment.Success)
+            if (item.Quantity <= 0)
             {
-                _logger.LogWarning(
-                    "Payment failed for user {UserId}: {Message}",
-                    userId,
-                    payment.Message);
-
                 throw new BadRequestException(
-                    payment.Message ?? "No fue posible procesar el pago.");
+                    "La cantidad de un producto debe ser mayor que cero.");
             }
 
-            _logger.LogInformation(
-                "Payment succeeded for user {UserId}. " +
-                "OrderNumber {OrderNumber}. Transaction {Transaction}",
+            if (item.ProductVariant.Stock < item.Quantity)
+            {
+                throw new BadRequestException(
+                    $"No hay stock suficiente para la variante {item.ProductVariantId}.");
+            }
+        }
+
+        var subTotal = cart.Items.Sum(
+            item => item.Quantity * item.UnitPrice);
+
+        var shippingCost = 0m;
+        var tax = 0m;
+        var total = subTotal + shippingCost + tax;
+
+        if (total <= 0)
+            throw new BadRequestException(
+                "El total del pedido debe ser mayor que cero.");
+
+        var orderNumber = $"ORD-{Guid.NewGuid():N}";
+
+        /*
+         * Pago simulado.
+         *
+         * Cuando integremos una pasarela real,
+         * este servicio será reemplazado por la implementación
+         * correspondiente.
+         */
+        var payment = await _paymentService.CreatePaymentAsync(
+            total,
+            "COP",
+            $"Pedido {orderNumber}");
+
+        if (!payment.Success)
+        {
+            _logger.LogWarning(
+                "Payment failed for user {UserId}: {Message}",
                 userId,
-                orderNumber,
-                payment.TransactionId);
+                payment.Message);
 
-            var order = new Order
+            throw new BadRequestException(
+                payment.Message ??
+                "No fue posible procesar el pago.");
+        }
+
+        var order = new Order
+        {
+            UserId = userId,
+            OrderDate = DateTime.UtcNow,
+            Status = OrderStatus.Paid,
+            SubTotal = subTotal,
+            ShippingCost = shippingCost,
+            Tax = tax,
+            Total = total,
+            OrderNumber = orderNumber,
+            TransactionId = payment.TransactionId
+        };
+
+        _context.Orders.Add(order);
+
+        foreach (var item in cart.Items)
+        {
+            var orderItem = new OrderItem
             {
-                UserId = userId,
-                OrderDate = DateTime.UtcNow,
-
-                Status = OrderStatus.Paid,
-
-                SubTotal = subTotal,
-                ShippingCost = shippingCost,
-                Tax = tax,
-                Total = total,
-                OrderNumber = orderNumber,
-                TransactionId = payment.TransactionId
+                Order = order,
+                ProductVariantId = item.ProductVariantId,
+                Quantity = item.Quantity,
+                UnitPrice = item.UnitPrice
             };
 
-            _context.Orders.Add(order);
+            _context.OrderItems.Add(orderItem);
 
-            foreach (var item in cart.Items)
-            {
-                var orderItem = new OrderItem
+            item.ProductVariant.Stock -= item.Quantity;
+
+                var inventoryMovement = new InventoryMovement
                 {
-                    Order = order,
                     ProductVariantId = item.ProductVariantId,
                     Quantity = item.Quantity,
-                    UnitPrice = item.UnitPrice
+                    IsEntry = false,
+                    Reason = $"Salida por pedido {order.OrderNumber}",
+                    UserId = userId
                 };
 
-                _context.OrderItems.Add(orderItem);
-
-                item.ProductVariant.Stock -= item.Quantity;
-
-                _logger.LogInformation(
-                    "Inventory changed for Variant {VariantId}: " +
-                    "-{Quantity}, NewStock {Stock}",
-                    item.ProductVariantId,
-                    item.Quantity,
-                    item.ProductVariant.Stock);
-            }
-
-            var message = new OutboxMessage
-            {
-                Id = Guid.NewGuid(),
-                OccurredOn = DateTime.UtcNow,
-                Type = "OrderCreated",
-                Content = JsonSerializer.Serialize(new
-                {
-                    order.Id,
-                    order.OrderNumber,
-                    order.Total,
-                    order.UserId
-                })
-            };
-
-            _context.OutboxMessages.Add(message);
-
-            _context.ShoppingCartItems.RemoveRange(
-                cart.Items);
+                _context.InventoryMovements.Add(inventoryMovement);
 
             _logger.LogInformation(
-                "Order created successfully. " +
-                "OrderId {OrderId}, UserId {UserId}, Total {Total}",
-                order.Id,
-                userId,
-                total);
-
-            return order.Id;
+                "Inventory changed for Variant {VariantId}: -{Quantity}, NewStock {Stock}",
+                item.ProductVariantId,
+                item.Quantity,
+                item.ProductVariant.Stock);
         }
-        catch (Exception ex)
+
+        var message = new OutboxMessage
         {
+            Id = Guid.NewGuid(),
+            OccurredOn = DateTime.UtcNow,
+            Type = "OrderCreated",
+            Content = JsonSerializer.Serialize(new
+            {
+                order.Id,
+                order.OrderNumber,
+                order.Total,
+                order.UserId
+            })
+        };
 
-            _logger.LogError(
-                ex,
-                "Error processing checkout for user {UserId}",
-                userId);
+        _context.OutboxMessages.Add(message);
 
-            throw;
-        }
+        _context.ShoppingCartItems.RemoveRange(cart.Items);
+
+        /*
+         * PERSISTIR TODO:
+         * - Order
+         * - OrderItems
+         * - Stock
+         * - OutboxMessage
+         * - ShoppingCartItems eliminados
+         */
+        await _context.SaveChangesAsync(cancellationToken);
+
+        // Loyalty awarding is handled asynchronously by the OutboxProcessor
+        // to keep checkout responsibilities focused and decoupled.
+
+        _logger.LogInformation(
+            "Order created successfully. OrderId {OrderId}, UserId {UserId}, Total {Total}",
+            order.Id,
+            userId,
+            total);
+
+        return order.Id;
     }
 }

@@ -187,7 +187,7 @@ export default function Cart() {
               </Typography>
             </Box>
 
-            <Typography fontWeight={500}>
+            <Typography sx={{ fontWeight: 500 }}>
               $
               {item.subtotal.toLocaleString(
                 "es-CO"
@@ -218,7 +218,7 @@ export default function Cart() {
               Total
             </Typography>
 
-            <Typography fontWeight={600}>
+            <Typography sx={{ fontWeight: 600 }}>
               $
               {cart.total.toLocaleString(
                 "es-CO"

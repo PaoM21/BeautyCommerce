@@ -15,7 +15,7 @@ import Orders from "../features/orders/pages/OrdersPage";
 import OrderDetail from "../pages/OrderDetail/OrderDetail";
 import AdminOrders from "../pages/Admin/Orders/AdminOrders";
 import AdminOrderDetail from "../pages/Admin/Orders/AdminOrderDetail";
-import AdminDashboard from "../pages/Admin/Dashboard/AdminDashboard";
+import Dashboard from "../pages/Admin/Dashboard/Dashboard";
 import AdminRoute from "./AdminRoute";
 import AccountOrders from "../pages/Account/Orders";
 import AccountOrderDetail from "../pages/Account/OrderDetail";
@@ -45,13 +45,14 @@ export default function AppRoutes() {
           <Route path="/pedidos/:id" element={<OrderDetail />} />
           <Route path="/mi-cuenta/pedidos" element={<AccountOrders />} />
           <Route path="/mi-cuenta/pedidos/:id" element={<AccountOrderDetail />} />
-          <Route element={<AdminRoute />}>
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/pedidos" element={<AdminOrders />} />
-            <Route path="/admin/pedidos/:id" element={<AdminOrderDetail />} />
-          </Route>
           <Route path="/favoritos" element={<Wishlist />} />
           <Route path="/mi-cuenta/rewards" element={<Loyalty />} />
+        </Route>
+
+        <Route element={<ProtectedRoute requiredRole="Admin" />}>
+          <Route path="/admin" element={<Dashboard />} />
+          <Route path="/admin/pedidos" element={<AdminOrders />} />
+          <Route path="/admin/pedidos/:id" element={<AdminOrderDetail />} />
         </Route>
       </Route>
     </Routes>

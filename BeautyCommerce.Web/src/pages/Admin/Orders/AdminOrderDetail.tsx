@@ -382,7 +382,7 @@ export default function AdminOrderDetail() {
               </Box>
 
               <Box sx={{ textAlign: "right" }}>
-                <Typography fontWeight={500}>
+                <Typography sx={{ fontWeight: 500 }}>
                   ${item.subtotal.toLocaleString("es-CO")}
                 </Typography>
 
@@ -426,9 +426,9 @@ export default function AdminOrderDetail() {
               justifyContent: "space-between",
             }}
           >
-            <Typography fontWeight={500}>Total</Typography>
+            <Typography sx={{ fontWeight: 500 }}>Total</Typography>
 
-            <Typography fontSize={22} fontWeight={500}>
+            <Typography sx={{ fontSize: 22, fontWeight: 500 }}>
               ${order.total.toLocaleString("es-CO")}
             </Typography>
           </Box>

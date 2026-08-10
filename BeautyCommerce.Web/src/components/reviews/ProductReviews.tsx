@@ -121,7 +121,7 @@ export default function ProductReviews({
                                     mb: 1,
                                 }}
                             >
-                                <Typography fontWeight={500}>
+                                <Typography sx={{ fontWeight: 500 }}>
                                     {review.userName}
                                 </Typography>
 
