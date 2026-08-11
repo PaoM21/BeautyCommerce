@@ -20,6 +20,7 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using Microsoft.AspNetCore.Http;
+using System.Text.Json.Serialization;
 
 namespace BeautyCommerce.API;
 
@@ -146,7 +147,13 @@ public class Program
                 };
             });
 
-        builder.Services.AddControllers();
+        builder.Services
+            .AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(
+                    new JsonStringEnumConverter());
+            });
 
         builder.Services.AddCors(options =>
         {

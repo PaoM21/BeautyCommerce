@@ -65,6 +65,12 @@ export default function AdminOrderDetail() {
       updateOrderStatus(order!.id, newStatus),
 
     onSuccess: async () => {
+      // Update the cached order immediately so the UI reflects the new status
+      queryClient.setQueryData(["order", id], (old: any) => {
+        if (!old) return old;
+        return { ...old, status: newStatus };
+      });
+
       await queryClient.invalidateQueries({
         queryKey: ["order", id],
       });

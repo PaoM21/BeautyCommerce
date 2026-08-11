@@ -33,7 +33,10 @@ public class UpdateOrderStatusCommandHandlerTests
             .Setup(l => l.AwardPointsForOrderAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
 
-        var handler = new UpdateOrderStatusCommandHandler(context, loyaltyMock.Object);
+        var cacheMock = new Mock<BeautyCommerce.Application.Common.Interfaces.ICacheService>();
+        cacheMock.Setup(c => c.RemoveAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+
+        var handler = new UpdateOrderStatusCommandHandler(context, loyaltyMock.Object, cacheMock.Object);
 
         var result = await handler.Handle(new UpdateOrderStatusCommand
         {
@@ -66,7 +69,10 @@ public class UpdateOrderStatusCommandHandlerTests
 
         var loyaltyMock = new Mock<BeautyCommerce.Application.Common.Interfaces.ILoyaltyService>();
 
-        var handler = new UpdateOrderStatusCommandHandler(context, loyaltyMock.Object);
+        var cacheMock = new Mock<BeautyCommerce.Application.Common.Interfaces.ICacheService>();
+        cacheMock.Setup(c => c.RemoveAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+
+        var handler = new UpdateOrderStatusCommandHandler(context, loyaltyMock.Object, cacheMock.Object);
 
         await FluentActions.Invoking(() => handler.Handle(new UpdateOrderStatusCommand
         {
