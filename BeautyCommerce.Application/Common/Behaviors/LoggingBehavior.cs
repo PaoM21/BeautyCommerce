@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 namespace BeautyCommerce.Application.Common.Behaviors;
 
 public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : notnull
 {
     private readonly ILogger<LoggingBehavior<TRequest, TResponse>> _logger;
 
