@@ -60,11 +60,10 @@ export async function getProductById(
     ? p.variants.map((v: any) => ({
         id: v.id,
         productId: p.id,
-        sku: v.name ?? "",
-        color: v.color ?? "",
-        size: v.size ?? "",
-        stock: Number(v.stock ?? 0),
-        price: Number(v.price ?? 0),
+        color: v.color,
+        size: v.size,
+        stock: v.stock ?? 0,
+        price: v.price ?? 0,
       }))
     : [];
 
@@ -94,55 +93,4 @@ export async function getProductById(
   };
 
   return product;
-}
-
-export interface AdminProductListItem {
-  id: string;
-  name: string;
-  brand: string;
-  category: string;
-  price: number;
-  stock: number;
-  image: string | null;
-}
-
-export interface AdminProductsResult {
-  items: AdminProductListItem[];
-  page: number;
-  pageSize: number;
-  totalRecords: number;
-  totalPages: number;
-}
-
-export async function getAdminProducts(
-  page = 1,
-  pageSize = 12,
-  search?: string
-): Promise<AdminProductsResult> {
-  const response = await api.get<AdminProductsResult>(
-    "/products",
-    {
-      params: {
-        Page: page,
-        PageSize: pageSize,
-        Search: search || undefined,
-      },
-    }
-  );
-
-  return response.data;
-}
-
-export async function updateVariantStock(
-  productVariantId: string,
-  quantity: number,
-  reason: string
-): Promise<void> {
-  await api.put("/ProductVariants/stock", {
-    stock: {
-      productVariantId,
-      quantity,
-      reason,
-    },
-  });
 }

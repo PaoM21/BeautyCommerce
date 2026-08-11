@@ -5,7 +5,6 @@ using BeautyCommerce.Application.Common.Interfaces;
 namespace BeautyCommerce.Application.Common.Behaviors;
 
 public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : notnull
 {
     private readonly IApplicationDbContext _context;
     private readonly ILogger<TransactionBehavior<TRequest, TResponse>> _logger;

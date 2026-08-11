@@ -1,7 +1,9 @@
-﻿using BeautyCommerce.Application.Common.Helpers;
+﻿using AutoMapper;
+using BeautyCommerce.Application.Common.Helpers;
 using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Application.Features.Products.DTOs;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 
 namespace BeautyCommerce.Application.Features.Products.Queries.GetProductById;
 
@@ -28,14 +30,13 @@ public class GetProductByIdHandler
             Id = product.Id,
             Name = product.Name,
             Description = product.Description,
-            Brand = product.Brand?.Name ?? "Sin marca",
-            Category = product.Category?.Name ?? "Sin categoría",
+            Brand = product.Brand.Name,
+            Category = product.Category.Name,
 
             Variants = product.Variants
                 .Select(v => new ProductVariantDto
                 {
                     Id = v.Id,
-                    Name = v.SKU,
                     Price = v.Price,
                     Stock = v.Stock
                 }).ToList(),
