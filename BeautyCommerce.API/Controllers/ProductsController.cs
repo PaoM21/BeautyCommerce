@@ -2,8 +2,6 @@
 using BeautyCommerce.Application.Features.Products.Commands.CreateProduct;
 using BeautyCommerce.Application.Features.Products.Commands.DeleteProduct;
 using BeautyCommerce.Application.Features.Products.Commands.UpdateProduct;
-using BeautyCommerce.Application.Features.Products.Commands.UpdateStock;
-using BeautyCommerce.Application.Common.Constants;
 using BeautyCommerce.Application.Features.Products.DTOs;
 using BeautyCommerce.Application.Features.Products.Queries.GetProducts;
 using BeautyCommerce.Application.Features.Products.Queries.GetProductById;
@@ -69,15 +67,6 @@ public class ProductsController : ControllerBase
     {
         command.Id = id;
 
-        await _mediator.Send(command);
-
-        return NoContent();
-    }
-
-    [Authorize(Roles = Roles.Admin)]
-    [HttpPut("stock")]
-    public async Task<IActionResult> UpdateStock(UpdateStockCommand command)
-    {
         await _mediator.Send(command);
 
         return NoContent();

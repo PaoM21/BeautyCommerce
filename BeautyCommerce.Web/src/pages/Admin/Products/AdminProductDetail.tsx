@@ -12,10 +12,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-import {
-  getProductById,
-  updateVariantStock,
-} from "../../../services/productService";
+import { getProductById } from "../../../services/productService";
+import { updateInventoryStock } from "../../../services/inventoryService";
 
 export default function AdminProductDetail() {
   const { id } = useParams();
@@ -47,11 +45,12 @@ export default function AdminProductDetail() {
       quantity: number;
       reason: string;
     }) =>
-      updateVariantStock(
+      updateInventoryStock({
         productVariantId,
-        quantity,
-        reason
-      ),
+        quantity: Math.abs(quantity),
+        isEntry: quantity > 0,
+        reason,
+      }),
 
     onSuccess: async () => {
       await refetch();

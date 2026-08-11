@@ -153,19 +153,6 @@ export async function getAdminProducts(
   return response.data;
 }
 
-export async function updateVariantStock(
-  productVariantId: string,
-  quantity: number,
-  reason: string
-): Promise<void> {
-  await api.put("/ProductVariants/stock", {
-    stock: {
-      productVariantId,
-      quantity,
-      reason,
-    },
-  });
-}
 
 export interface UpdateProductInput {
   name: string;

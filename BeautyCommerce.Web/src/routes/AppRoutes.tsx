@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 import MainLayout from "../components/layout/MainLayout";
 import Home from "../pages/Home/Home";
@@ -20,7 +20,8 @@ import AdminProductCreate from "../pages/Admin/Products/AdminProductCreate";
 import AdminProductDetail from "../pages/Admin/Products/AdminProductDetail";
 import AdminProductEdit from "../pages/Admin/Products/AdminProductEdit";
 import Dashboard from "../pages/Admin/Dashboard/Dashboard";
-import AdminRoute from "./AdminRoute";
+import AdminCustomers from "../pages/Admin/Customers/AdminCustomers";
+import AdminInventory from "../pages/Admin/Inventory/AdminInventory";
 import AccountOrders from "../pages/Account/Orders";
 import AccountOrderDetail from "../pages/Account/OrderDetail";
 import Wishlist from "../pages/Wishlist/Wishlist";
@@ -54,7 +55,8 @@ export default function AppRoutes() {
         </Route>
 
         <Route element={<ProtectedRoute requiredRole="Admin" />}>
-          <Route path="/admin" element={<Dashboard />} />
+          <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+          <Route path="/admin/dashboard" element={<Dashboard />} />
 
           <Route path="/admin/productos" element={<AdminProducts />} />
           <Route path="/admin/productos/nuevo" element={<AdminProductCreate />} />
@@ -63,6 +65,10 @@ export default function AppRoutes() {
 
           <Route path="/admin/pedidos" element={<AdminOrders />} />
           <Route path="/admin/pedidos/:id" element={<AdminOrderDetail />} />
+
+          <Route path="/admin/clientes" element={<AdminCustomers />} />
+
+          <Route path="/admin/inventario" element={<AdminInventory />} />
         </Route>
       </Route>
     </Routes>
