@@ -42,7 +42,7 @@ export default function Login() {
         password,
       });
 
-      loginStore(response.token, response.user);
+      loginStore(response.token, response.user ?? null);
 
       navigate("/");
     } catch (error) {

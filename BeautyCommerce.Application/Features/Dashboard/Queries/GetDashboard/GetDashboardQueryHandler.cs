@@ -24,10 +24,16 @@ public class GetDashboardQueryHandler
         GetDashboardQuery request,
         CancellationToken cancellationToken)
     {
+        var now = DateTime.UtcNow;
+
         var firstDay = new DateTime(
-            DateTime.UtcNow.Year,
-            DateTime.UtcNow.Month,
-            1);
+            now.Year,
+            now.Month,
+            1,
+            0,
+            0,
+            0,
+            DateTimeKind.Utc);
 
         var dashboard = new DashboardDto
         {

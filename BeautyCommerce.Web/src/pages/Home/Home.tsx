@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 export default function Home() {
   return (
     <Box>
-      {/* HERO */}
+      {/* HERO: split layout with image on the right */}
       <Box
         sx={{
           minHeight: {
@@ -19,74 +19,93 @@ export default function Home() {
           },
           display: "flex",
           alignItems: "center",
-          backgroundColor: "#f7f5f2",
+          background: "linear-gradient(180deg, rgba(247,245,242,1) 0%, rgba(247,245,242,1) 50%)",
+          position: "relative",
+          overflow: "hidden",
         }}
       >
         <Container maxWidth="xl">
           <Box
             sx={{
-              maxWidth: 620,
-              py: 10,
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+              alignItems: "center",
+              gap: 4,
+              py: { xs: 6, md: 10 },
             }}
           >
-            <Typography
-              sx={{
-                fontSize: 13,
-                letterSpacing: 3,
-                textTransform: "uppercase",
-                color: "#9a8065",
-                mb: 3,
-              }}
-            >
-              Beauty Collection
-            </Typography>
+            <Box sx={{ maxWidth: 620 }}>
+              <Typography
+                sx={{
+                  fontSize: 13,
+                  letterSpacing: 3,
+                  textTransform: "uppercase",
+                  color: "#9a8065",
+                  mb: 3,
+                }}
+              >
+                Beauty Collection
+              </Typography>
 
-            <Typography
-              component="h1"
-              sx={{
-                fontSize: {
-                  xs: 42,
-                  md: 68,
-                },
-                lineHeight: 1.05,
-                fontWeight: 400,
-                letterSpacing: -2,
-                color: "#202020",
-                mb: 3,
-              }}
-            >
-              Descubre la belleza que resalta tu esencia.
-            </Typography>
+              <Typography
+                component="h1"
+                sx={{
+                  fontSize: { xs: 34, md: 56 },
+                  lineHeight: 1.05,
+                  fontWeight: 400,
+                  letterSpacing: -1.5,
+                  color: "#202020",
+                  mb: 3,
+                }}
+              >
+                Descubre la belleza que resalta tu esencia.
+              </Typography>
 
-            <Typography
-              sx={{
-                fontSize: 17,
-                lineHeight: 1.7,
-                color: "#666666",
-                maxWidth: 500,
-                mb: 4,
-              }}
-            >
-              Productos seleccionados para crear una rutina
-              de belleza que se adapte a ti.
-            </Typography>
+              <Typography
+                sx={{
+                  fontSize: 17,
+                  lineHeight: 1.7,
+                  color: "#666666",
+                  maxWidth: 520,
+                  mb: 4,
+                }}
+              >
+                Productos seleccionados para crear una rutina
+                de belleza que se adapte a ti.
+              </Typography>
 
-            <Button
-              component={Link}
-              to="/productos"
-              variant="contained"
+              <Button
+                component={Link}
+                to="/productos"
+                variant="contained"
+                sx={{
+                  backgroundColor: "#1f1f1f",
+                  color: "#fff",
+                  px: 5,
+                  py: 1.6,
+                  borderRadius: 6,
+                  boxShadow: "0 6px 18px rgba(31,31,31,0.18)",
+                }}
+              >
+                Explorar colección
+              </Button>
+            </Box>
+
+            {/* Right column: hero image box (place hero.jpg in public/) */}
+            <Box
               sx={{
-                backgroundColor: "#1f1f1f",
-                px: 5,
-                py: 1.7,
-                borderRadius: 0,
-                "&:hover": {
-                  backgroundColor: "#333333",
-                },
+                display: { xs: "none", md: "block" },
+                width: "100%",
+                height: 420,
+                borderRadius: 12,
+                overflow: "hidden",
+                boxShadow: "0 10px 30px rgba(0,0,0,0.12)",
+                backgroundImage: "url('/hero.svg')",
+                backgroundSize: "cover",
+                backgroundPosition: "center right",
               }}
-            >
-              Explorar colección
-            </Button>
+              aria-hidden
+            />
           </Box>
         </Container>
       </Box>
@@ -102,16 +121,13 @@ export default function Home() {
             mb: 2,
           }}
         >
-          Explora
+          Categorías principales
         </Typography>
 
         <Typography
           component="h2"
           sx={{
-            fontSize: {
-              xs: 32,
-              md: 44,
-            },
+            fontSize: { xs: 28, md: 40 },
             fontWeight: 400,
             mb: 6,
           }}
@@ -127,27 +143,31 @@ export default function Home() {
               sm: "1fr 1fr",
               lg: "repeat(4, 1fr)",
             },
-            gap: 2,
+            gap: 3,
           }}
         >
           <CategoryCard
             title="Maquillaje"
             subtitle="Looks que hablan de ti"
+            imageUrl="/maquillaje.svg"
           />
 
           <CategoryCard
             title="Skincare"
             subtitle="Cuida tu piel"
+            imageUrl="/skincare.svg"
           />
 
           <CategoryCard
             title="Accesorios"
             subtitle="Detalles que transforman"
+            imageUrl="/accesorios.svg"
           />
 
           <CategoryCard
             title="Fragancias"
             subtitle="Tu esencia"
+            imageUrl="/fragancias.svg"
           />
         </Box>
       </Container>
@@ -158,12 +178,14 @@ export default function Home() {
 interface CategoryCardProps {
   title: string;
   subtitle: string;
+  imageUrl?: string;
 }
 
 function CategoryCard({
   title,
   subtitle,
-}: CategoryCardProps) {
+  imageUrl,
+}: CategoryCardProps & { imageUrl?: string }) {
   return (
     <Box
       component={Link}
@@ -172,35 +194,50 @@ function CategoryCard({
         textDecoration: "none",
         color: "inherit",
         minHeight: 320,
-        backgroundColor: "#f3f1ee",
+        backgroundColor: "#fff",
         display: "flex",
         flexDirection: "column",
         justifyContent: "flex-end",
         p: 4,
-        transition: "transform 0.3s ease",
+        transition: "transform 0.25s ease, box-shadow 0.25s ease",
+        borderRadius: 12,
+        overflow: "hidden",
+        boxShadow: "0 8px 24px rgba(16,16,16,0.08)",
+        backgroundImage: imageUrl ? `url(${imageUrl})` : undefined,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
         "&:hover": {
-          transform: "translateY(-5px)",
+          transform: "translateY(-6px)",
+          boxShadow: "0 18px 40px rgba(16,16,16,0.12)",
         },
       }}
     >
-      <Typography
+      <Box
         sx={{
-          fontSize: 25,
-          fontWeight: 500,
-          mb: 1,
+          background: "linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.9) 70%)",
+          py: 2,
+          px: 1,
         }}
       >
-        {title}
-      </Typography>
+        <Typography
+          sx={{
+            fontSize: 22,
+            fontWeight: 600,
+            mb: 0.5,
+          }}
+        >
+          {title}
+        </Typography>
 
-      <Typography
-        sx={{
-          color: "#777777",
-          fontSize: 14,
-        }}
-      >
-        {subtitle}
-      </Typography>
+        <Typography
+          sx={{
+            color: "#777777",
+            fontSize: 14,
+          }}
+        >
+          {subtitle}
+        </Typography>
+      </Box>
     </Box>
   );
 }

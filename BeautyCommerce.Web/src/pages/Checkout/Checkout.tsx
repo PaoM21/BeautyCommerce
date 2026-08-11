@@ -227,7 +227,7 @@ export default function Checkout() {
                                     </Typography>
                                 </Box>
 
-                                <Typography fontWeight={500}>
+                                <Typography sx={{ fontWeight: 500 }}>
                                     $
                                     {item.subtotal.toLocaleString(
                                         "es-CO"
@@ -300,14 +300,11 @@ export default function Checkout() {
                             mb: 4,
                         }}
                     >
-                        <Typography fontWeight={500}>
+                        <Typography sx={{ fontWeight: 500 }}>
                             Total
                         </Typography>
 
-                        <Typography
-                            fontSize={20}
-                            fontWeight={500}
-                        >
+                        <Typography sx={{ fontSize: 20, fontWeight: 500 }}>
                             $
                             {cart.total.toLocaleString("es-CO")}
                         </Typography>

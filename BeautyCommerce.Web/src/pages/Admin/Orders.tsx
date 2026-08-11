@@ -51,7 +51,8 @@ export default function AdminOrders() {
   });
 
   const mutation = useMutation({
-    mutationFn: updateOrderStatus,
+    mutationFn: ({ orderId, status }: { orderId: string; status: string }) =>
+      updateOrderStatus(orderId, status),
 
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -198,7 +199,7 @@ export default function AdminOrders() {
                     TOTAL
                   </Typography>
 
-                  <Typography fontWeight={500}>
+                  <Typography sx={{ fontWeight: 500 }}>
                     ${order.total.toLocaleString("es-CO")}
                   </Typography>
                 </Box>

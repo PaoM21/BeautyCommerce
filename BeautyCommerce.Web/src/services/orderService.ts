@@ -43,7 +43,9 @@ export async function getMyOrders(): Promise<Order[]> {
 export async function getOrderById(
   id: string
 ): Promise<Order> {
-  const response = await api.get<Order>(`/Orders/${id}`);
+  const response = await api.get<Order>(
+    `/Orders/${id}`
+  );
 
   return response.data;
 }
@@ -69,10 +71,8 @@ export async function updateOrderStatus(
   status: string
 ): Promise<void> {
   await api.put("/Orders/status", {
-    order: {
-      orderId,
-      status,
-    },
+    orderId,
+    status,
   });
 }
 

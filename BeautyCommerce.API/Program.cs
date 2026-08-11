@@ -20,6 +20,7 @@ using System.Reflection;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
 using Microsoft.AspNetCore.Http;
+using System.Text.Json.Serialization;
 
 namespace BeautyCommerce.API;
 
@@ -50,7 +51,7 @@ public class Program
         builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         builder.Services.AddScoped<IImageStorageService, LocalImageStorageService>();
         builder.Services.AddScoped<IInventoryService, InventoryService>();
-        builder.Services.AddScoped<BeautyCommerce.Application.Common.Interfaces.IPaymentService, BeautyCommerce.Infrastructure.Services.FakePaymentService>();
+        builder.Services.AddScoped<BeautyCommerce.Application.Common.Interfaces.IPaymentService, BeautyCommerce.Infrastructure.Services.PaymentService>();
         builder.Services.AddMemoryCache();
         builder.Services.AddScoped<BeautyCommerce.Application.Common.Interfaces.ICacheService, BeautyCommerce.Infrastructure.Services.MemoryCacheService>();
 
@@ -146,7 +147,13 @@ public class Program
                 };
             });
 
-        builder.Services.AddControllers();
+        builder.Services
+            .AddControllers()
+            .AddJsonOptions(options =>
+            {
+                options.JsonSerializerOptions.Converters.Add(
+                    new JsonStringEnumConverter());
+            });
 
         builder.Services.AddCors(options =>
         {

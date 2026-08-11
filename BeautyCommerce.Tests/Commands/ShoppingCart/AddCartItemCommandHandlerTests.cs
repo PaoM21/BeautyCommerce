@@ -23,7 +23,19 @@ public class AddCartItemCommandHandlerTests
         context.ProductVariants.Add(variant);
         await context.SaveChangesAsync(default);
 
-        var currentUser = new FakeCurrentUserService();
+        var userId = Guid.NewGuid();
+
+        // Ensure a user exists in the test database matching the authenticated user.
+        context.Users.Add(new BeautyCommerce.Infrastructure.Identity.ApplicationUser
+        {
+            Id = userId,
+            UserName = "testuser",
+            Email = "test@example.com"
+        });
+
+        await context.SaveChangesAsync(default);
+
+        var currentUser = new BeautyCommerce.Tests.Helpers.FakeCurrentUserServiceProxy(userId);
 
         var handler = new AddCartItemCommandHandler(context, currentUser);
 

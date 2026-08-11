@@ -3,7 +3,7 @@ using BeautyCommerce.Application.Features.Orders.DTOs;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
-namespace BeautyCommerce.Application.Features.Orders.Queries.GetAllOrders;
+namespace BeautyCommerce.Application.Features.Orders.Queries.GetAdminOrderById;
 
 public class GetAdminOrderByIdQueryHandler
     : IRequestHandler<GetAdminOrderByIdQuery, OrderDto?>
@@ -48,9 +48,7 @@ public class GetAdminOrderByIdQueryHandler
                         item.ProductVariant.Size,
 
                     Quantity = item.Quantity,
-
                     UnitPrice = item.UnitPrice,
-
                     Subtotal =
                         item.Quantity * item.UnitPrice,
 

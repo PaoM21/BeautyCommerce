@@ -102,8 +102,7 @@ export default function ProductDetail() {
 
     const image =
         product.images?.find((x) => x.isPrimary)?.imageUrl ??
-        product.images?.[0]?.imageUrl ??
-        product.images?.[0]?.url;
+            product.images?.[0]?.imageUrl;
 
     return (
         <Container maxWidth="xl" sx={{ py: 8 }}>

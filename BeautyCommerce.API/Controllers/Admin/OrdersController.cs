@@ -1,4 +1,5 @@
 using BeautyCommerce.Application.Common.Constants;
+using BeautyCommerce.Application.Features.Orders.Queries.GetAdminOrderById;
 using BeautyCommerce.Application.Features.Orders.Queries.GetAllOrders;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -19,9 +20,9 @@ public class OrdersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetAllOrdersQuery());
+        var result = await _mediator.Send(new GetAllOrdersQuery(), cancellationToken);
 
         return Ok(result);
     }

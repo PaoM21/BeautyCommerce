@@ -17,7 +17,9 @@ public class UserService : IUserService
 
     public async Task<int> GetTotalCustomersAsync()
     {
-        return await _userManager.Users.CountAsync();
+        var customers = await _userManager.GetUsersInRoleAsync(BeautyCommerce.Application.Common.Constants.Roles.Customer);
+
+        return customers.Count;
     }
 
     public async Task<List<UserDto>> GetAllAsync(CancellationToken cancellationToken = default)

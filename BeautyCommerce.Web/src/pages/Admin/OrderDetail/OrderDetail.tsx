@@ -1,27 +1,55 @@
 import {
   Alert,
   Box,
+  Button,
   CircularProgress,
   Container,
   Divider,
+  MenuItem,
+  Select,
   Typography,
 } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate, useParams } from "react-router-dom";
+import { useState } from "react";
 
-import { getOrderById } from "../../services/orderService";
+import {
+  getAdminOrderById,
+  updateOrderStatus,
+} from "../../../services/orderService";
 
-export default function OrderDetail() {
+export default function AdminOrderDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [status, setStatus] = useState("");
 
   const {
     data: order,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["order", id],
-    queryFn: () => getOrderById(id!),
+    queryKey: ["admin-order", id],
+    queryFn: () => getAdminOrderById(id!),
     enabled: Boolean(id),
+  });
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      updateOrderStatus(id!, status),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["admin-order", id],
+      });
+
+      await queryClient.invalidateQueries({
+        queryKey: ["admin-orders"],
+      });
+
+      setStatus("");
+    },
   });
 
   if (isLoading) {
@@ -42,16 +70,16 @@ export default function OrderDetail() {
   if (isError || !order) {
     return (
       <Container sx={{ py: 10 }}>
-        <Alert severity="error">
+        <Typography>
           No fue posible encontrar el pedido.
-        </Alert>
+        </Typography>
       </Container>
     );
   }
 
   return (
     <Container
-      maxWidth="md"
+      maxWidth="lg"
       sx={{
         py: 8,
       }}
@@ -65,7 +93,7 @@ export default function OrderDetail() {
           mb: 2,
         }}
       >
-        Mi pedido
+        Administración
       </Typography>
 
       <Typography
@@ -87,7 +115,7 @@ export default function OrderDetail() {
           display: "grid",
           gridTemplateColumns: {
             xs: "1fr",
-            sm: "1fr 1fr",
+            md: "repeat(4, 1fr)",
           },
           gap: 4,
           mb: 6,
@@ -107,16 +135,12 @@ export default function OrderDetail() {
 
         <Info
           label="Total"
-          value={`$${order.total.toLocaleString(
-            "es-CO"
-          )}`}
+          value={`$${order.total.toLocaleString("es-CO")}`}
         />
 
         <Info
           label="Transacción"
-          value={
-            order.transactionId ?? "Pendiente"
-          }
+          value={order.transactionId ?? "Pendiente"}
         />
       </Box>
 
@@ -128,12 +152,89 @@ export default function OrderDetail() {
           mb: 3,
         }}
       >
-        Estado del pedido
+        Actualizar estado
       </Typography>
 
-      <OrderTimeline status={order.status} />
+      <Box
+        sx={{
+          display: "flex",
+          gap: 2,
+          flexDirection: {
+            xs: "column",
+            sm: "row",
+          },
+          mb: 5,
+        }}
+      >
+        <Select
+          value={status || order.status}
+          onChange={(event) => setStatus(event.target.value)}
+          sx={{
+            minWidth: 220,
+          }}
+        >
+          <MenuItem value="Pending">
+            Pendiente
+          </MenuItem>
 
-      <Divider sx={{ my: 6 }} />
+          <MenuItem value="Paid">
+            Pagado
+          </MenuItem>
+
+          <MenuItem value="Processing">
+            Preparando pedido
+          </MenuItem>
+
+          <MenuItem value="Shipped">
+            Enviado
+          </MenuItem>
+
+          <MenuItem value="Delivered">
+            Entregado
+          </MenuItem>
+
+          <MenuItem value="Cancelled">
+            Cancelado
+          </MenuItem>
+        </Select>
+
+        <Button
+          variant="contained"
+          disabled={
+            mutation.isPending ||
+            !status ||
+            status.toLowerCase() ===
+              order.status.toLowerCase()
+          }
+          onClick={() => mutation.mutate()}
+          sx={{
+            borderRadius: 0,
+            px: 4,
+            backgroundColor: "#1f1f1f",
+            "&:hover": {
+              backgroundColor: "#000",
+            },
+          }}
+        >
+          {mutation.isPending
+            ? "Actualizando..."
+            : "Actualizar estado"}
+        </Button>
+      </Box>
+
+      {mutation.isError && (
+        <Alert severity="error" sx={{ mb: 4 }}>
+          No fue posible actualizar el estado.
+        </Alert>
+      )}
+
+      {mutation.isSuccess && (
+        <Alert severity="success" sx={{ mb: 4 }}>
+          Estado actualizado correctamente.
+        </Alert>
+      )}
+
+      <Divider sx={{ mb: 5 }} />
 
       <Typography
         sx={{
@@ -144,10 +245,9 @@ export default function OrderDetail() {
         Productos
       </Typography>
 
-      <Box>
-        {order.items.map((item) => (
+      {order.items.map((item) => (
+        <Box key={item.id}>
           <Box
-            key={item.id}
             sx={{
               display: "flex",
               gap: 3,
@@ -178,12 +278,7 @@ export default function OrderDetail() {
             </Box>
 
             <Box sx={{ flex: 1 }}>
-              <Typography
-                sx={{
-                  fontSize: 16,
-                  mb: 0.5,
-                }}
-              >
+              <Typography>
                 {item.productName}
               </Typography>
 
@@ -192,14 +287,14 @@ export default function OrderDetail() {
                   sx={{
                     fontSize: 13,
                     color: "#888",
-                    mb: 1,
+                    mt: 0.5,
                   }}
                 >
                   {item.color &&
                     `Color: ${item.color}`}
-
-                  {item.color && item.size && " · "}
-
+                  {item.color &&
+                    item.size &&
+                    " · "}
                   {item.size &&
                     `Talla: ${item.size}`}
                 </Typography>
@@ -209,6 +304,7 @@ export default function OrderDetail() {
                 sx={{
                   fontSize: 13,
                   color: "#888",
+                  mt: 1,
                 }}
               >
                 Cantidad: {item.quantity}
@@ -220,7 +316,7 @@ export default function OrderDetail() {
                 textAlign: "right",
               }}
             >
-              <Typography sx={{ fontWeight: 500 }}>
+              <Typography fontWeight={500}>
                 $
                 {item.subtotal.toLocaleString(
                   "es-CO"
@@ -234,14 +330,28 @@ export default function OrderDetail() {
                   mt: 0.5,
                 }}
               >
-                ${item.unitPrice.toLocaleString(
+                $
+                {item.unitPrice.toLocaleString(
                   "es-CO"
-                )} c/u
+                )}{" "}
+                c/u
               </Typography>
             </Box>
           </Box>
-        ))}
-      </Box>
+
+          <Divider />
+        </Box>
+      ))}
+
+      <Button
+        onClick={() => navigate("/admin/pedidos")}
+        sx={{
+          mt: 5,
+          color: "#1f1f1f",
+        }}
+      >
+        ← Volver a pedidos
+      </Button>
     </Container>
   );
 }
@@ -268,65 +378,6 @@ function Info({
       </Typography>
 
       <Typography>{value}</Typography>
-    </Box>
-  );
-}
-
-function OrderTimeline({
-  status,
-}: {
-  status: string;
-}) {
-  const steps = [
-    ["pending", "Pedido recibido"],
-    ["processing", "Preparando pedido"],
-    ["shipped", "Pedido enviado"],
-    ["delivered", "Pedido entregado"],
-  ];
-
-  const currentIndex = steps.findIndex(
-    ([key]) => key === status.toLowerCase()
-  );
-
-  return (
-    <Box>
-      {steps.map(([key, label], index) => {
-        const completed =
-          index <= currentIndex;
-
-        return (
-          <Box
-            key={key}
-            sx={{
-              display: "flex",
-              gap: 2,
-              mb: 3,
-            }}
-          >
-            <Box
-              sx={{
-                width: 12,
-                height: 12,
-                borderRadius: "50%",
-                backgroundColor: completed
-                  ? "#1f1f1f"
-                  : "#ddd",
-                mt: 0.5,
-              }}
-            />
-
-            <Typography
-              sx={{
-                color: completed
-                  ? "#222"
-                  : "#aaa",
-              }}
-            >
-              {label}
-            </Typography>
-          </Box>
-        );
-      })}
     </Box>
   );
 }
