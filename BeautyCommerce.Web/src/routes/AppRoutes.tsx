@@ -14,7 +14,7 @@ import OrderConfirmation from "../pages/OrderConfirmation/OrderConfirmation";
 import Orders from "../features/orders/pages/OrdersPage";
 import OrderDetail from "../pages/OrderDetail/OrderDetail";
 import AdminOrders from "../pages/Admin/Orders/AdminOrders";
-import AdminOrderDetail from "../pages/Admin/Orders/AdminOrderDetail";
+import AdminOrderDetail from "../pages/Admin/OrderDetail/OrderDetail";
 import Dashboard from "../pages/Admin/Dashboard/Dashboard";
 import AdminRoute from "./AdminRoute";
 import AccountOrders from "../pages/Account/Orders";
