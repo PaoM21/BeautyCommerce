@@ -56,6 +56,16 @@ public class GetDashboardQueryHandler
             PendingOrders = await _context.Orders
                 .CountAsync(
                     x => x.Status == OrderStatus.Pending,
+                    cancellationToken),
+
+            LowStockProducts = await _context.ProductVariants
+                .CountAsync(
+                    x => x.Stock > 0 && x.Stock <= x.MinimumStock,
+                    cancellationToken),
+
+            OutOfStockProducts = await _context.ProductVariants
+                .CountAsync(
+                    x => x.Stock <= 0,
                     cancellationToken)
         };
 

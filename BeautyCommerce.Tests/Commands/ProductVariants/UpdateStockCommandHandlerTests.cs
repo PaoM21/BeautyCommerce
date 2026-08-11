@@ -1,7 +1,10 @@
+using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Application.Features.ProductVariants.Commands.UpdateStock;
 using BeautyCommerce.Application.Features.ProductVariants.DTOs;
 using BeautyCommerce.Tests.Helpers;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace BeautyCommerce.Tests.Commands.ProductVariants;
 
@@ -22,11 +25,20 @@ public class UpdateStockCommandHandlerTests
         context.ProductVariants.Add(variant);
         await context.SaveChangesAsync(default);
 
-        var handler = new UpdateStockCommandHandler(context, new Microsoft.Extensions.Logging.Abstractions.NullLogger<UpdateStockCommandHandler>());
+        var cache = new Mock<ICacheService>();
+
+        var handler = new UpdateStockCommandHandler(
+            context,
+            cache.Object,
+            NullLogger<UpdateStockCommandHandler>.Instance);
 
         var command = new UpdateStockCommand
         {
-            Stock = new UpdateStockDto { ProductVariantId = variant.Id, Quantity = -3 }
+            Stock = new UpdateStockDto
+            {
+                ProductVariantId = variant.Id,
+                Quantity = -3
+            }
         };
 
         await handler.Handle(command, default);

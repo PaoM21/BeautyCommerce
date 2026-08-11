@@ -8,11 +8,14 @@ public class UpdateProductCommandHandler
     : IRequestHandler<UpdateProductCommand>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICacheService _cache;
 
     public UpdateProductCommandHandler(
-        IApplicationDbContext context)
+        IApplicationDbContext context,
+        ICacheService cache)
     {
         _context = context;
+        _cache = cache;
     }
 
     public async Task Handle(
@@ -32,5 +35,7 @@ public class UpdateProductCommandHandler
         product.IsFeatured = request.IsFeatured;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _cache.InvalidateTagAsync("Products");
     }
 }

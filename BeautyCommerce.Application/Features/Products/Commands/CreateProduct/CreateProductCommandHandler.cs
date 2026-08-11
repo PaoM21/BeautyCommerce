@@ -10,11 +10,14 @@ public class CreateProductCommandHandler
     : IRequestHandler<CreateProductCommand, Guid>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICacheService _cache;
 
     public CreateProductCommandHandler(
-        IApplicationDbContext context)
+        IApplicationDbContext context,
+        ICacheService cache)
     {
         _context = context;
+        _cache = cache;
     }
     public async Task<Guid> Handle(
         CreateProductCommand request,
@@ -49,6 +52,8 @@ public class CreateProductCommandHandler
         await _context.Products.AddAsync(product, cancellationToken);
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _cache.InvalidateTagAsync("Products");
 
         return product.Id;
     }

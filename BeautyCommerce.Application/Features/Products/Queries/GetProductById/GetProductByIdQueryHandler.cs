@@ -26,9 +26,17 @@ public class GetProductByIdHandler
         return new ProductDetailDto
         {
             Id = product.Id,
+
             Name = product.Name,
+
             Description = product.Description,
+
+            BrandId = product.BrandId,
+
+            CategoryId = product.CategoryId,
+
             Brand = product.Brand?.Name ?? "Sin marca",
+
             Category = product.Category?.Name ?? "Sin categoría",
 
             Variants = product.Variants
@@ -38,14 +46,16 @@ public class GetProductByIdHandler
                     Name = v.SKU,
                     Price = v.Price,
                     Stock = v.Stock
-                }).ToList(),
+                })
+                .ToList(),
 
             Images = product.Images
                 .Select(i => new ProductImageDto
                 {
                     Id = i.Id,
                     Url = i.ImageUrl
-                }).ToList()
+                })
+                .ToList()
         };
     }
 }

@@ -8,6 +8,10 @@ public class ProductDetailDto
 
     public string Description { get; set; } = string.Empty;
 
+    public Guid BrandId { get; set; }
+
+    public Guid CategoryId { get; set; }
+
     public string Brand { get; set; } = string.Empty;
 
     public string Category { get; set; } = string.Empty;

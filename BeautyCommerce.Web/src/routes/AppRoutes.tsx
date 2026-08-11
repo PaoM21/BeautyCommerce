@@ -16,7 +16,9 @@ import OrderDetail from "../pages/OrderDetail/OrderDetail";
 import AdminOrders from "../pages/Admin/Orders/AdminOrders";
 import AdminOrderDetail from "../pages/Admin/OrderDetail/OrderDetail";
 import AdminProducts from "../pages/Admin/Products/AdminProducts";
+import AdminProductCreate from "../pages/Admin/Products/AdminProductCreate";
 import AdminProductDetail from "../pages/Admin/Products/AdminProductDetail";
+import AdminProductEdit from "../pages/Admin/Products/AdminProductEdit";
 import Dashboard from "../pages/Admin/Dashboard/Dashboard";
 import AdminRoute from "./AdminRoute";
 import AccountOrders from "../pages/Account/Orders";
@@ -55,7 +57,9 @@ export default function AppRoutes() {
           <Route path="/admin" element={<Dashboard />} />
 
           <Route path="/admin/productos" element={<AdminProducts />} />
+          <Route path="/admin/productos/nuevo" element={<AdminProductCreate />} />
           <Route path="/admin/productos/:id" element={<AdminProductDetail />} />
+          <Route path="/admin/productos/:id/editar" element={<AdminProductEdit />} />
 
           <Route path="/admin/pedidos" element={<AdminOrders />} />
           <Route path="/admin/pedidos/:id" element={<AdminOrderDetail />} />

@@ -8,12 +8,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import {
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useParams, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 import {
@@ -27,7 +23,6 @@ export default function AdminProductDetail() {
   const [reasons, setReasons] = useState<Record<string, string>>({});
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const queryClient = useQueryClient();
 
   const {
     data: product,
@@ -39,6 +34,8 @@ export default function AdminProductDetail() {
     queryFn: () => getProductById(id!),
     enabled: Boolean(id),
   });
+
+  const navigate = useNavigate();
 
   const mutation = useMutation({
     mutationFn: ({
@@ -57,8 +54,7 @@ export default function AdminProductDetail() {
       ),
 
     onSuccess: async () => {
-
-      const result = await refetch();
+      await refetch();
 
       setQuantities({});
       setReasons({});
@@ -174,19 +170,53 @@ export default function AdminProductDetail() {
         Administración
       </Typography>
 
-      <Typography
-        component="h1"
+      <Box
         sx={{
-          fontSize: {
-            xs: 36,
-            md: 48,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: {
+            xs: "flex-start",
+            md: "center",
           },
-          fontWeight: 400,
+          gap: 3,
           mb: 6,
+          flexDirection: {
+            xs: "column",
+            md: "row",
+          },
         }}
       >
-        {product.name}
-      </Typography>
+        <Typography
+          component="h1"
+          sx={{
+            fontSize: {
+              xs: 36,
+              md: 48,
+            },
+            fontWeight: 400,
+          }}
+        >
+          {product.name}
+        </Typography>
+
+        <Button
+          variant="contained"
+          onClick={() =>
+            navigate(`/admin/productos/${product.id}/editar`)
+          }
+          sx={{
+            borderRadius: 0,
+            px: 4,
+            py: 1.5,
+            backgroundColor: "#1f1f1f",
+            "&:hover": {
+              backgroundColor: "#000",
+            },
+          }}
+        >
+          Editar producto
+        </Button>
+      </Box>
 
       <Box
         sx={{
