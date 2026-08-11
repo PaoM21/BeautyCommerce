@@ -5,6 +5,7 @@ using System.Text.Json;
 namespace BeautyCommerce.Application.Common.Behaviors;
 
 public class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : notnull
 {
     private readonly BeautyCommerce.Application.Common.Interfaces.ICacheService? _cache;
     private readonly ILogger<CachingBehavior<TRequest, TResponse>> _logger;

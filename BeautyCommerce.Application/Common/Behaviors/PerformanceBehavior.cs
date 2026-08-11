@@ -5,6 +5,7 @@ using System.Diagnostics;
 namespace BeautyCommerce.Application.Common.Behaviors;
 
 public class PerformanceBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
+    where TRequest : notnull
 {
     private readonly ILogger<PerformanceBehavior<TRequest, TResponse>> _logger;
     private readonly int _thresholdMilliseconds = 500;

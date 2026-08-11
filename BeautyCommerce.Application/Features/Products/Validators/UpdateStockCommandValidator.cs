@@ -1,6 +1,7 @@
+using BeautyCommerce.Application.Features.Products.Commands.UpdateStock;
 using FluentValidation;
 
-namespace BeautyCommerce.Application.Features.Products.Commands.UpdateStock;
+namespace BeautyCommerce.Application.Features.Products.Validators;
 
 public class UpdateStockCommandValidator
     : AbstractValidator<UpdateStockCommand>
