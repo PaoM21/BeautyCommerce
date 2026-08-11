@@ -1,10 +1,8 @@
 using BeautyCommerce.Application.Common.Exceptions;
 using BeautyCommerce.Application.Common.Interfaces;
-using BeautyCommerce.Application.Features.Products.Queries.GetProductById;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace BeautyCommerce.Application.Features.Products.Commands.UpdateStock;
 
@@ -44,18 +42,11 @@ public class UpdateStockCommandHandler
 
         await _context.SaveChangesAsync(cancellationToken);
 
-        // Invalidate cache for the product detail
         try
         {
-            var productId = variant.ProductId;
+            await _cache.InvalidateTagAsync("Products");
 
-            var getProductQuery = new GetProductByIdQuery { Id = productId };
-
-            var cacheKey = $"{typeof(GetProductByIdQuery).FullName}:{JsonSerializer.Serialize(getProductQuery)}";
-
-            await _cache.RemoveAsync(cacheKey);
-
-            _logger?.LogInformation("Cache invalidated for product {ProductId}", productId);
+            _logger?.LogInformation("Product cache invalidated after stock update for variant {VariantId}", variant.Id);
         }
         catch (Exception ex)
         {

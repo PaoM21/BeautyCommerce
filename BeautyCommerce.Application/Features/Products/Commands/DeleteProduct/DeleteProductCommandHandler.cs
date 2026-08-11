@@ -9,11 +9,13 @@ public class DeleteProductCommandHandler
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
+    private readonly ICacheService _cache;
 
-    public DeleteProductCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser)
+    public DeleteProductCommandHandler(IApplicationDbContext context, ICurrentUserService currentUser, ICacheService cache)
     {
         _context = context;
         _currentUser = currentUser;
+        _cache = cache;
     }
 
     public async Task<bool> Handle(
@@ -33,6 +35,8 @@ public class DeleteProductCommandHandler
         product.DeletedBy = _currentUser.UserId;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _cache.InvalidateTagAsync("Products");
 
         return true;
     }

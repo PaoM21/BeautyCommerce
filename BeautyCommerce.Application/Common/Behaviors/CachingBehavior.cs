@@ -39,9 +39,29 @@ public class CachingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
 
         var response = await next();
 
-        // Cache for default 5 minutes
-        await _cache.SetAsync(key, response!, TimeSpan.FromMinutes(5));
+        // Cache for default 5 minutes, tagged by feature so write handlers
+        // can invalidate every cached query for that feature (list + detail)
+        // without needing to know each individual cache key.
+        await _cache.SetAsync(key, response!, TimeSpan.FromMinutes(5), GetFeatureTag(typeof(TRequest)));
 
         return response;
+    }
+
+    private static string? GetFeatureTag(Type requestType)
+    {
+        const string marker = ".Features.";
+
+        var ns = requestType.Namespace;
+
+        var markerIndex = ns?.IndexOf(marker, StringComparison.Ordinal) ?? -1;
+
+        if (markerIndex < 0)
+            return null;
+
+        var rest = ns![(markerIndex + marker.Length)..];
+
+        var dotIndex = rest.IndexOf('.');
+
+        return dotIndex < 0 ? rest : rest[..dotIndex];
     }
 }

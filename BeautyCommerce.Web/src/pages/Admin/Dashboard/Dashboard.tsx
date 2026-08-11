@@ -68,6 +68,14 @@ export default function Dashboard() {
       label: "Ventas del mes",
       value: `$${dashboard.salesThisMonth.toLocaleString("es-CO")}`,
     },
+    {
+      label: "Stock bajo",
+      value: dashboard.lowStockProducts,
+    },
+    {
+      label: "Agotados",
+      value: dashboard.outOfStockProducts,
+    },
   ];
 
   return (

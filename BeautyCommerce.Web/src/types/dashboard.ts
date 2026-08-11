@@ -5,4 +5,6 @@ export interface Dashboard {
   totalSales: number;
   salesThisMonth: number;
   pendingOrders: number;
+  lowStockProducts: number;
+  outOfStockProducts: number;
 }

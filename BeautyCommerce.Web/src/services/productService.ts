@@ -22,8 +22,18 @@ export async function getProducts(): Promise<Product[]> {
     oldPrice: p.oldPrice ?? undefined,
     brandId: p.brandId ?? "",
     categoryId: p.categoryId ?? "",
-    brand: p.brand ? { id: "", name: p.brand } : undefined,
-    category: p.category ? { id: "", name: p.category } : undefined,
+    brand: p.brand
+      ? {
+          id: p.brandId ?? "",
+          name: p.brand,
+        }
+      : undefined,
+    category: p.category
+      ? {
+          id: p.categoryId ?? "",
+          name: p.category,
+        }
+      : undefined,
     images: p.image
       ? [
           {
@@ -85,8 +95,18 @@ export async function getProductById(
     oldPrice: p.oldPrice ?? undefined,
     brandId: p.brandId ?? "",
     categoryId: p.categoryId ?? "",
-    brand: p.brand ? { id: "", name: p.brand } : undefined,
-    category: p.category ? { id: "", name: p.category } : undefined,
+    brand: p.brand
+      ? {
+          id: p.brandId ?? "",
+          name: p.brand,
+        }
+      : undefined,
+    category: p.category
+      ? {
+          id: p.categoryId ?? "",
+          name: p.category,
+        }
+      : undefined,
     images: images,
     variants: variants,
     averageRating: p.averageRating ?? undefined,
@@ -145,4 +165,51 @@ export async function updateVariantStock(
       reason,
     },
   });
+}
+
+export interface UpdateProductInput {
+  name: string;
+  description: string;
+  brandId: string;
+  categoryId: string;
+  isFeatured: boolean;
+}
+
+export async function updateProduct(
+  id: string,
+  data: UpdateProductInput
+): Promise<void> {
+  await api.put(`/products/${id}`, {
+    name: data.name,
+    description: data.description,
+    brandId: data.brandId,
+    categoryId: data.categoryId,
+    isFeatured: data.isFeatured,
+  });
+}
+
+export interface CreateProductVariant {
+  price: number;
+  stock: number;
+}
+
+export interface CreateProductRequest {
+  name: string;
+  description: string;
+  brandId: string;
+  categoryId: string;
+  isFeatured: boolean;
+  variants: CreateProductVariant[];
+  images: string[];
+}
+
+export async function createProduct(
+  product: CreateProductRequest
+): Promise<string> {
+  const response = await api.post<string>(
+    "/Products",
+    product
+  );
+
+  return response.data;
 }

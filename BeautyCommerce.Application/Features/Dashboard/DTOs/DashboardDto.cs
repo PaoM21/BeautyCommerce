@@ -13,4 +13,8 @@ public class DashboardDto
     public decimal SalesThisMonth { get; set; }
 
     public int PendingOrders { get; set; }
+
+    public int LowStockProducts { get; set; }
+
+    public int OutOfStockProducts { get; set; }
 }

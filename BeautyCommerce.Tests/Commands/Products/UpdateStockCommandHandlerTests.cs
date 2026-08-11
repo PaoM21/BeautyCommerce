@@ -1,7 +1,10 @@
+using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Application.Features.Products.Commands.UpdateStock;
 using BeautyCommerce.Application.Features.Products.DTOs;
 using BeautyCommerce.Tests.Helpers;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
 namespace BeautyCommerce.Tests.Commands.Products;
 
@@ -12,7 +15,6 @@ public class UpdateStockCommandHandlerTests
     {
         var context = DbContextHelper.CreateDbContext();
 
-        // Seed variant
         var variant = new BeautyCommerce.Domain.Entities.ProductVariant
         {
             Id = Guid.NewGuid(),
@@ -21,9 +23,15 @@ public class UpdateStockCommandHandlerTests
         };
 
         context.ProductVariants.Add(variant);
+
         await context.SaveChangesAsync(default);
 
-        var handler = new UpdateStockCommandHandler(context, new Microsoft.Extensions.Logging.Abstractions.NullLogger<UpdateStockCommandHandler>());
+        var cache = new Mock<ICacheService>();
+
+        var handler = new UpdateStockCommandHandler(
+            context,
+            cache.Object,
+            NullLogger<UpdateStockCommandHandler>.Instance);
 
         var command = new UpdateStockCommand
         {
@@ -36,7 +44,9 @@ public class UpdateStockCommandHandlerTests
 
         await handler.Handle(command, default);
 
-        var updated = await context.ProductVariants.FindAsync(variant.Id);
+        var updated =
+            await context.ProductVariants.FindAsync(variant.Id);
+
         updated!.Stock.Should().Be(10);
     }
 }

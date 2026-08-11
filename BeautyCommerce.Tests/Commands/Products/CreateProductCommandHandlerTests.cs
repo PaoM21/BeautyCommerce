@@ -1,7 +1,9 @@
+using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Application.Features.Products.Commands.CreateProduct;
 using BeautyCommerce.Application.Features.Products.DTOs;
 using BeautyCommerce.Tests.Helpers;
 using FluentAssertions;
+using Moq;
 
 namespace BeautyCommerce.Tests.Commands.Products;
 
@@ -12,7 +14,9 @@ public class CreateProductCommandHandlerTests
     {
         var context = DbContextHelper.CreateDbContext();
 
-        var handler = new CreateProductCommandHandler(context);
+        var cache = new Mock<ICacheService>();
+
+        var handler = new CreateProductCommandHandler(context, cache.Object);
 
         var command = new CreateProductCommand
         {

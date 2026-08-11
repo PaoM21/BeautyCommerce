@@ -1,5 +1,6 @@
 ﻿using BeautyCommerce.Domain.Base;
-using BeautyCommerce.Domain.Entities;
+
+namespace BeautyCommerce.Domain.Entities;
 
 public class Product : BaseEntity
 {
