@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace BeautyCommerce.API.Controllers;
 
 [ApiController]
-[Route("api/dashboard")]
+[Route("api/admin/dashboard")]
 [Authorize(Roles = Roles.Admin)]
 public class DashboardController : ControllerBase
 {

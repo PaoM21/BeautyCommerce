@@ -1,3 +1,4 @@
+using BeautyCommerce.Application.Common.Constants;
 using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Application.Features.Users.DTOs;
 using BeautyCommerce.Infrastructure.Identity;
@@ -17,7 +18,7 @@ public class UserService : IUserService
 
     public async Task<int> GetTotalCustomersAsync()
     {
-        var customers = await _userManager.GetUsersInRoleAsync(BeautyCommerce.Application.Common.Constants.Roles.Customer);
+        var customers = await _userManager.GetUsersInRoleAsync(Roles.Customer);
 
         return customers.Count;
     }
@@ -29,6 +30,23 @@ public class UserService : IUserService
             .ThenBy(x => x.LastName)
             .ToListAsync(cancellationToken);
 
+        return await MapUsersAsync(users);
+    }
+
+    public async Task<List<UserDto>> GetCustomersAsync(CancellationToken cancellationToken = default)
+    {
+        var customers = await _userManager.GetUsersInRoleAsync(Roles.Customer);
+
+        var users = customers
+            .OrderBy(x => x.FirstName)
+            .ThenBy(x => x.LastName)
+            .ToList();
+
+        return await MapUsersAsync(users);
+    }
+
+    private async Task<List<UserDto>> MapUsersAsync(List<ApplicationUser> users)
+    {
         var result = new List<UserDto>(users.Count);
 
         foreach (var user in users)
@@ -38,11 +56,15 @@ public class UserService : IUserService
             result.Add(new UserDto
             {
                 Id = user.Id,
+
                 FullName = string.IsNullOrWhiteSpace(user.FirstName) && string.IsNullOrWhiteSpace(user.LastName)
-                    ? user.UserName
+                    ? user.UserName ?? string.Empty
                     : $"{user.FirstName} {user.LastName}".Trim(),
+
                 Email = user.Email ?? string.Empty,
+
                 Role = roles.FirstOrDefault() ?? string.Empty,
+
                 IsActive = user.IsActive
             });
         }

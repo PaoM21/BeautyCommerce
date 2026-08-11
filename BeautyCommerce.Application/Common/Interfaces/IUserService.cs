@@ -7,5 +7,7 @@
         Task<int> GetTotalCustomersAsync();
 
         Task<List<UserDto>> GetAllAsync(CancellationToken cancellationToken = default);
+
+        Task<List<UserDto>> GetCustomersAsync(CancellationToken cancellationToken = default);
     }
 }

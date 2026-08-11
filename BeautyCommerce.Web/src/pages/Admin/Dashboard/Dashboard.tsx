@@ -2,6 +2,7 @@ import {
   Box,
   CircularProgress,
   Container,
+  Divider,
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
@@ -160,6 +161,94 @@ export default function Dashboard() {
           </Box>
         ))}
       </Box>
+
+      <Divider sx={{ my: 6 }} />
+
+      <Typography sx={{ fontSize: 22, mb: 3 }}>
+        Últimos pedidos
+      </Typography>
+
+      {dashboard.lastOrders.length === 0 ? (
+        <Box sx={{ border: "1px solid #e5e1dc", p: 5, textAlign: "center" }}>
+          <Typography color="text.secondary">
+            Todavía no hay pedidos.
+          </Typography>
+        </Box>
+      ) : (
+        <Box>
+          {dashboard.lastOrders.map((order) => (
+            <Box
+              key={order.id}
+              sx={{
+                display: "grid",
+                gridTemplateColumns: {
+                  xs: "1fr",
+                  md: "1.5fr 1fr 1fr",
+                },
+                gap: 2,
+                alignItems: "center",
+                py: 3,
+                px: 2,
+                borderBottom: "1px solid #e5e1dc",
+              }}
+            >
+              <Box>
+                <Typography sx={{ fontWeight: 500 }}>
+                  {order.orderNumber}
+                </Typography>
+
+                <Typography sx={{ fontSize: 13, color: "#999", mt: 0.5 }}>
+                  {new Date(order.createdAt).toLocaleDateString("es-CO")}
+                </Typography>
+              </Box>
+
+              <Typography sx={{ fontSize: 13, color: "#777" }}>
+                Cliente: {order.customer}
+              </Typography>
+
+              <Typography
+                sx={{
+                  fontWeight: 500,
+                  textAlign: { xs: "left", md: "right" },
+                }}
+              >
+                ${order.total.toLocaleString("es-CO")}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      )}
+
+      {dashboard.salesByMonth.length > 0 && (
+        <>
+          <Divider sx={{ my: 6 }} />
+
+          <Typography sx={{ fontSize: 22, mb: 3 }}>
+            Ventas por mes
+          </Typography>
+
+          <Box>
+            {dashboard.salesByMonth.map((month) => (
+              <Box
+                key={month.month}
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  py: 2,
+                  borderBottom: "1px solid #e5e1dc",
+                }}
+              >
+                <Typography>{month.month}</Typography>
+
+                <Typography sx={{ fontWeight: 500 }}>
+                  ${month.total.toLocaleString("es-CO")}
+                </Typography>
+              </Box>
+            ))}
+          </Box>
+        </>
+      )}
     </Container>
   );
 }

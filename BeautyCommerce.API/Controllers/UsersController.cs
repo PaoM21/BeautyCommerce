@@ -1,4 +1,5 @@
 using BeautyCommerce.Application.Common.Constants;
+using BeautyCommerce.Application.Features.Users.Queries.GetCustomers;
 using BeautyCommerce.Application.Features.Users.Queries.GetUsers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -24,5 +25,13 @@ public class UsersController : ControllerBase
         var users = await _mediator.Send(new GetUsersQuery());
 
         return Ok(users);
+    }
+
+    [HttpGet("customers")]
+    public async Task<IActionResult> GetCustomers()
+    {
+        var customers = await _mediator.Send(new GetCustomersQuery());
+
+        return Ok(customers);
     }
 }
