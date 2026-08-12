@@ -48,3 +48,7 @@ npm-debug.log*
 # Testing
 coverage/
 .nyc_output/
+TestResults/
+
+# SonarQube scanner working directory
+.sonarqube/
