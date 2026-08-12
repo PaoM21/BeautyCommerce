@@ -41,6 +41,7 @@ frontend/shared/node_modules/
 
 # Logs
 logs/
+Logs/
 *.log
 npm-debug.log*
 

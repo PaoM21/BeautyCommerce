@@ -7,7 +7,7 @@ COPY . .
 
 RUN dotnet restore
 
-RUN dotnet publish BeautyCommerce.API/BeautyCommerce.API.csproj \
+RUN dotnet publish src/BeautyCommerce.API/BeautyCommerce.API.csproj \
 	-c Release \
 	-o /app/publish
 
