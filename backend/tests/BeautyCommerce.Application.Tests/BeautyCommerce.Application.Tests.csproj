@@ -18,9 +18,9 @@
   </ItemGroup>
 
   <ItemGroup>
-	<ProjectReference Include="..\BeautyCommerce.Application\BeautyCommerce.Application.csproj" />
-	<ProjectReference Include="..\BeautyCommerce.Domain\BeautyCommerce.Domain.csproj" />
-	<ProjectReference Include="..\BeautyCommerce.Infrastructure\BeautyCommerce.Infrastructure.csproj" />
+	<ProjectReference Include="..\..\src\BeautyCommerce.Application\BeautyCommerce.Application.csproj" />
+	<ProjectReference Include="..\..\src\BeautyCommerce.Domain\BeautyCommerce.Domain.csproj" />
+	<ProjectReference Include="..\..\src\BeautyCommerce.Infrastructure\BeautyCommerce.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
