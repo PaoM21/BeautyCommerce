@@ -45,6 +45,30 @@ public class UserService : IUserService
         return await MapUsersAsync(users);
     }
 
+    public async Task<Dictionary<Guid, UserDto>> GetUsersByIdsAsync(
+        IEnumerable<Guid> ids,
+        CancellationToken cancellationToken = default)
+    {
+        var idSet = ids.Distinct().ToList();
+
+        var users = await _userManager.Users
+            .Where(x => idSet.Contains(x.Id))
+            .ToListAsync(cancellationToken);
+
+        return users.ToDictionary(
+            x => x.Id,
+            x => new UserDto
+            {
+                Id = x.Id,
+
+                FullName = string.IsNullOrWhiteSpace(x.FirstName) && string.IsNullOrWhiteSpace(x.LastName)
+                    ? x.UserName ?? string.Empty
+                    : $"{x.FirstName} {x.LastName}".Trim(),
+
+                Email = x.Email ?? string.Empty
+            });
+    }
+
     private async Task<List<UserDto>> MapUsersAsync(List<ApplicationUser> users)
     {
         var result = new List<UserDto>(users.Count);

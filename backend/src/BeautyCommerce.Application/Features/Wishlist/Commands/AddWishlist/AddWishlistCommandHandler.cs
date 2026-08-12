@@ -31,11 +31,29 @@ public class AddWishlistCommandHandler : IRequestHandler<AddWishlistCommand>
         if (product == null)
             throw new NotFoundException("Producto no encontrado.");
 
-        var exists = await _context.WishlistItems
-            .AnyAsync(x => x.UserId == userId && x.ProductId == request.ProductId, cancellationToken);
+        // Include soft-deleted rows: the unique index on (UserId, ProductId)
+        // still holds a previously removed item, so re-adding it must
+        // revive that row instead of inserting a new one (which would
+        // violate the constraint and 500).
+        var existing = await _context.WishlistItems
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(
+                x => x.UserId == userId && x.ProductId == request.ProductId,
+                cancellationToken);
 
-        if (exists)
+        if (existing != null)
+        {
+            if (!existing.IsDeleted)
+                return;
+
+            existing.IsDeleted = false;
+            existing.DeletedAt = null;
+            existing.DeletedBy = null;
+
+            await _context.SaveChangesAsync(cancellationToken);
+
             return;
+        }
 
         var item = new WishlistItem
         {

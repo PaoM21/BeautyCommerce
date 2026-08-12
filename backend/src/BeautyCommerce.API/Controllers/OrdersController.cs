@@ -1,8 +1,5 @@
-﻿using BeautyCommerce.Application.Common.Constants;
-using BeautyCommerce.Application.Features.Orders.Commands.Checkout;
-using BeautyCommerce.Application.Features.Orders.Commands.UpdateOrderStatus;
+﻿using BeautyCommerce.Application.Features.Orders.Commands.Checkout;
 using BeautyCommerce.Application.Features.Orders.Queries.GetOrderById;
-using BeautyCommerce.Application.Features.Orders.Queries.GetOrders;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -57,23 +54,5 @@ public class OrdersController : ControllerBase
             return NotFound();
 
         return Ok(result);
-    }
-
-
-
-    [Authorize(Roles = Roles.Admin)]
-    [HttpPut("status")]
-    public async Task<IActionResult> UpdateStatus(UpdateOrderStatusCommand command)
-    {
-        var result = await _mediator.Send(command);
-
-        if (!result)
-            return NotFound();
-
-        return Ok(new
-        {
-            Success = true,
-            Message = "Estado actualizado correctamente."
-        });
     }
 }

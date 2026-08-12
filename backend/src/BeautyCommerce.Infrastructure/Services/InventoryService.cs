@@ -53,6 +53,7 @@ public class InventoryService : IInventoryService
         await _context.SaveChangesAsync(cancellationToken);
 
         await _cache.InvalidateTagAsync("Products");
+        await _cache.InvalidateTagAsync("Inventory");
     }
 
     public async Task RegisterExitAsync(
@@ -99,5 +100,6 @@ public class InventoryService : IInventoryService
         await _context.SaveChangesAsync(cancellationToken);
 
         await _cache.InvalidateTagAsync("Products");
+        await _cache.InvalidateTagAsync("Inventory");
     }
 }

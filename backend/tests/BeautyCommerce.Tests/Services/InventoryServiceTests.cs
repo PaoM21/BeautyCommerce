@@ -62,9 +62,12 @@ public class InventoryServiceTests
         movements.Should().Contain(x => x.IsEntry && x.Quantity == 5);
         movements.Should().Contain(x => !x.IsEntry && x.Quantity == 3);
 
-        // The two successful operations must each invalidate the Products cache tag.
+        // The two successful operations must each invalidate the Products and Inventory cache tags.
         cache.Verify(
             x => x.InvalidateTagAsync("Products"),
+            Times.Exactly(2));
+        cache.Verify(
+            x => x.InvalidateTagAsync("Inventory"),
             Times.Exactly(2));
     }
 

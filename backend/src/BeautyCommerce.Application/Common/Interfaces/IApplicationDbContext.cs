@@ -20,7 +20,6 @@ public interface IApplicationDbContext
     DbSet<ProductImage> ProductImages { get; }
     DbSet<ShoppingCart> ShoppingCarts { get; }
     DbSet<ShoppingCartItem> ShoppingCartItems { get; }
-    DbSet<RefreshToken> RefreshTokens { get; }
     DbSet<Wishlist> Wishlists { get; }
     DbSet<WishlistItem> WishlistItems { get; }
     DbSet<OutboxMessage> OutboxMessages { get; }

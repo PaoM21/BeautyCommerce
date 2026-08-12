@@ -18,7 +18,6 @@ export async function login(
 
   return {
     token: data?.token ?? data?.Token ?? "",
-    refreshToken: data?.refreshToken ?? data?.RefreshToken,
     expiration: data?.expiration ?? data?.Expiration,
     user: {
       id: data?.user?.id ?? data?.userId ?? data?.UserId ?? "",

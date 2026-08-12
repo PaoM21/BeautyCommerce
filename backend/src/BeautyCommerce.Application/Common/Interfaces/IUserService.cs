@@ -9,5 +9,9 @@
         Task<List<UserDto>> GetAllAsync(CancellationToken cancellationToken = default);
 
         Task<List<UserDto>> GetCustomersAsync(CancellationToken cancellationToken = default);
+
+        Task<Dictionary<Guid, UserDto>> GetUsersByIdsAsync(
+            IEnumerable<Guid> ids,
+            CancellationToken cancellationToken = default);
     }
 }

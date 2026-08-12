@@ -9,18 +9,21 @@ public class GetAdminOrderByIdQueryHandler
     : IRequestHandler<GetAdminOrderByIdQuery, OrderDto?>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IUserService _userService;
 
     public GetAdminOrderByIdQueryHandler(
-        IApplicationDbContext context)
+        IApplicationDbContext context,
+        IUserService userService)
     {
         _context = context;
+        _userService = userService;
     }
 
     public async Task<OrderDto?> Handle(
         GetAdminOrderByIdQuery request,
         CancellationToken cancellationToken)
     {
-        return await _context.Orders
+        var order = await _context.Orders
             .AsNoTracking()
             .Where(x => x.Id == request.Id)
             .Select(x => new OrderDto
@@ -60,5 +63,20 @@ public class GetAdminOrderByIdQueryHandler
                 }).ToList()
             })
             .FirstOrDefaultAsync(cancellationToken);
+
+        if (order == null)
+            return null;
+
+        var customers = await _userService.GetUsersByIdsAsync(
+            new[] { order.UserId },
+            cancellationToken);
+
+        if (customers.TryGetValue(order.UserId, out var customer))
+        {
+            order.CustomerName = customer.FullName;
+            order.CustomerEmail = customer.Email;
+        }
+
+        return order;
     }
 }

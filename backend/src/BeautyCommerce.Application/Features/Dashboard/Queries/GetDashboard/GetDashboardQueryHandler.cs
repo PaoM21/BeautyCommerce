@@ -35,6 +35,24 @@ public class GetDashboardQueryHandler
             0,
             DateTimeKind.Utc);
 
+        var lastOrders = await _context.Orders
+            .AsNoTracking()
+            .OrderByDescending(x => x.OrderDate)
+            .Take(10)
+            .Select(x => new
+            {
+                x.Id,
+                x.OrderNumber,
+                x.UserId,
+                x.Total,
+                x.OrderDate
+            })
+            .ToListAsync(cancellationToken);
+
+        var customers = await _userService.GetUsersByIdsAsync(
+            lastOrders.Select(x => x.UserId),
+            cancellationToken);
+
         var dashboard = new DashboardDto
         {
             TotalProducts = await _context.Products.CountAsync(cancellationToken),
@@ -71,19 +89,18 @@ public class GetDashboardQueryHandler
                     x => x.Stock <= 0,
                     cancellationToken),
 
-            LastOrders = await _context.Orders
-                .AsNoTracking()
-                .OrderByDescending(x => x.OrderDate)
-                .Take(10)
+            LastOrders = lastOrders
                 .Select(x => new DashboardOrderDto
                 {
                     Id = x.Id,
                     OrderNumber = x.OrderNumber,
-                    Customer = x.UserId.ToString(),
+                    Customer = customers.TryGetValue(x.UserId, out var customer)
+                        ? customer.FullName
+                        : x.UserId.ToString(),
                     Total = x.Total,
                     CreatedAt = x.OrderDate
                 })
-                .ToListAsync(cancellationToken),
+                .ToList(),
 
             SalesByMonth = await _context.Orders
                 .AsNoTracking()

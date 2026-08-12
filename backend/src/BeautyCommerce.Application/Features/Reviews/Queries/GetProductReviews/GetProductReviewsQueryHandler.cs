@@ -11,29 +11,49 @@ public class GetProductReviewsQueryHandler
         List<ReviewDto>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IUserService _userService;
 
     public GetProductReviewsQueryHandler(
-        IApplicationDbContext context)
+        IApplicationDbContext context,
+        IUserService userService)
     {
         _context = context;
+        _userService = userService;
     }
 
     public async Task<List<ReviewDto>> Handle(
         GetProductReviewsQuery request,
         CancellationToken cancellationToken)
     {
-        return await _context.Reviews
+        var reviews = await _context.Reviews
             .Where(x =>
                 x.ProductId == request.ProductId)
             .OrderByDescending(x => x.CreatedAt)
+            .Select(x => new
+            {
+                x.Id,
+                x.UserId,
+                x.Rating,
+                x.Comment,
+                x.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+
+        var users = await _userService.GetUsersByIdsAsync(
+            reviews.Select(x => x.UserId),
+            cancellationToken);
+
+        return reviews
             .Select(x => new ReviewDto
             {
                 Id = x.Id,
-                UserName = x.User.FirstName,
+                UserName = users.TryGetValue(x.UserId, out var user)
+                    ? user.FullName
+                    : "Usuario",
                 Rating = x.Rating,
                 Comment = x.Comment,
                 CreatedAt = x.CreatedAt
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
     }
 }

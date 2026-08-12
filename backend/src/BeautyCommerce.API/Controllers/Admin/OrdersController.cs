@@ -1,4 +1,5 @@
 using BeautyCommerce.Application.Common.Constants;
+using BeautyCommerce.Application.Features.Orders.Commands.UpdateOrderStatus;
 using BeautyCommerce.Application.Features.Orders.Queries.GetAdminOrderById;
 using BeautyCommerce.Application.Features.Orders.Queries.GetAllOrders;
 using MediatR;
@@ -43,5 +44,22 @@ public class OrdersController : ControllerBase
             return NotFound();
 
         return Ok(result);
+    }
+
+    [HttpPut("status")]
+    public async Task<IActionResult> UpdateStatus(
+        UpdateOrderStatusCommand command,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result)
+            return NotFound();
+
+        return Ok(new
+        {
+            Success = true,
+            Message = "Estado actualizado correctamente."
+        });
     }
 }

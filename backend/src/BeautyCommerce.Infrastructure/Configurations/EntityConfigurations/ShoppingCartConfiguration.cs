@@ -13,10 +13,6 @@ public class ShoppingCartConfiguration
 
         builder.HasKey(x => x.Id);
 
-        builder.HasOne(x => x.User)
-            .WithOne(x => x.ShoppingCart)
-            .HasForeignKey<ShoppingCart>(x => x.UserId);
-
         builder.HasMany(x => x.Items)
             .WithOne(x => x.ShoppingCart)
             .HasForeignKey(x => x.ShoppingCartId);

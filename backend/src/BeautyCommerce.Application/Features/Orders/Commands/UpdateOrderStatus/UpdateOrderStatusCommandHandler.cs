@@ -1,12 +1,9 @@
 ﻿using BeautyCommerce.Application.Common.Exceptions;
 using BeautyCommerce.Application.Common.Helpers;
 using BeautyCommerce.Application.Common.Interfaces;
-using BeautyCommerce.Application.Features.Orders.Queries.GetAdminOrderById;
-using BeautyCommerce.Application.Features.Orders.Queries.GetAllOrders;
 using BeautyCommerce.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System.Text.Json;
 
 namespace BeautyCommerce.Application.Features.Orders.Commands.UpdateOrderStatus;
 
@@ -54,19 +51,10 @@ public class UpdateOrderStatusCommandHandler
         await _context.SaveChangesAsync(
             cancellationToken);
 
-        // Invalidar cache del detalle administrativo
-        var adminOrderCacheKey =
-            $"{typeof(GetAdminOrderByIdQuery).FullName}:" +
-            $"{JsonSerializer.Serialize(new GetAdminOrderByIdQuery { Id = order.Id })}";
-
-        await _cache.RemoveAsync(adminOrderCacheKey);
-
-        // Invalidar cache del listado administrativo
-        var adminOrdersCacheKey =
-            $"{typeof(GetAllOrdersQuery).FullName}:" +
-            $"{JsonSerializer.Serialize(new GetAllOrdersQuery())}";
-
-        await _cache.RemoveAsync(adminOrdersCacheKey);
+        // Invalida todas las consultas cacheadas del feature Orders (listados y
+        // detalles, tanto administrativos como del cliente), ya que todas
+        // comparten el tag "Orders" generado por CachingBehavior.
+        await _cache.InvalidateTagAsync("Orders");
 
         if (previousStatus != OrderStatus.Delivered &&
             order.Status == OrderStatus.Delivered)
