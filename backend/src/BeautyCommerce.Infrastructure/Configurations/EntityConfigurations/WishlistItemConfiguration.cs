@@ -13,10 +13,6 @@ public class WishlistItemConfiguration
 
         builder.HasKey(x => x.Id);
 
-        builder.HasOne(x => x.User)
-            .WithMany(x => x.WishlistItems)
-            .HasForeignKey(x => x.UserId);
-
         builder.HasOne(x => x.Product)
             .WithMany(x => x.WishlistItems)
             .HasForeignKey(x => x.ProductId);

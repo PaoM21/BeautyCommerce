@@ -70,7 +70,7 @@ export async function updateOrderStatus(
   orderId: string,
   status: string
 ): Promise<void> {
-  await api.put("/Orders/status", {
+  await api.put("/admin/Orders/status", {
     orderId,
     status,
   });

@@ -13,6 +13,4 @@ public interface IIdentityService
     Task<LoginResponseDto> LoginAsync(
     string email,
     string password);
-
-    //Task<LoginResponseDto> RefreshTokenAsync(string refreshToken);
 }

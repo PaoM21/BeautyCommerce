@@ -34,7 +34,7 @@ public class UpdateOrderStatusCommandHandlerTests
             .Returns(Task.CompletedTask);
 
         var cacheMock = new Mock<BeautyCommerce.Application.Common.Interfaces.ICacheService>();
-        cacheMock.Setup(c => c.RemoveAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+        cacheMock.Setup(c => c.InvalidateTagAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
 
         var handler = new UpdateOrderStatusCommandHandler(context, loyaltyMock.Object, cacheMock.Object);
 
@@ -47,6 +47,10 @@ public class UpdateOrderStatusCommandHandlerTests
         result.Should().BeTrue();
 
         loyaltyMock.Verify(l => l.AwardPointsForOrderAsync(order.Id, It.IsAny<CancellationToken>()), Times.Once);
+
+        // Debe invalidar el tag compartido por listados/detalles de Orders,
+        // tanto administrativos como del cliente (GetMyOrders, GetOrderById).
+        cacheMock.Verify(c => c.InvalidateTagAsync("Orders"), Times.Once);
     }
 
     [Fact]
@@ -70,7 +74,7 @@ public class UpdateOrderStatusCommandHandlerTests
         var loyaltyMock = new Mock<BeautyCommerce.Application.Common.Interfaces.ILoyaltyService>();
 
         var cacheMock = new Mock<BeautyCommerce.Application.Common.Interfaces.ICacheService>();
-        cacheMock.Setup(c => c.RemoveAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+        cacheMock.Setup(c => c.InvalidateTagAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
 
         var handler = new UpdateOrderStatusCommandHandler(context, loyaltyMock.Object, cacheMock.Object);
 
@@ -79,5 +83,7 @@ public class UpdateOrderStatusCommandHandlerTests
             OrderId = order.Id,
             Status = OrderStatus.Pending
         }, default)).Should().ThrowAsync<BeautyCommerce.Application.Common.Exceptions.BadRequestException>();
+
+        cacheMock.Verify(c => c.InvalidateTagAsync(It.IsAny<string>()), Times.Never);
     }
 }

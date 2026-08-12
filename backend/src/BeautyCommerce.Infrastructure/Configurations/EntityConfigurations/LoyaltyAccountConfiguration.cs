@@ -21,12 +21,6 @@ public class LoyaltyAccountConfiguration
             .HasMaxLength(50)
             .IsRequired();
 
-        builder.HasOne(x => x.User)
-            .WithOne()
-            .HasForeignKey<LoyaltyAccount>(
-                x => x.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
-
         builder.HasIndex(x => x.UserId)
             .IsUnique();
     }

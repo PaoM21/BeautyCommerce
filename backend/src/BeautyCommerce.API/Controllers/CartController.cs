@@ -1,5 +1,8 @@
 ﻿using BeautyCommerce.Application.Common.Models;
 using BeautyCommerce.Application.Features.ShoppingCart.Commands.AddItem;
+using BeautyCommerce.Application.Features.ShoppingCart.Commands.Clear;
+using BeautyCommerce.Application.Features.ShoppingCart.Commands.RemoveItem;
+using BeautyCommerce.Application.Features.ShoppingCart.Commands.UpdateItem;
 using BeautyCommerce.Application.Features.ShoppingCart.DTOs;
 using BeautyCommerce.Application.Features.ShoppingCart.Queries.GetCart;
 using MediatR;
@@ -60,5 +63,35 @@ public class CartController : ControllerBase
             Message = "Carrito obtenido correctamente.",
             Data = cart
         });
+    }
+
+    [HttpPut("items")]
+    public async Task<IActionResult> UpdateItem(UpdateCartItemDto dto)
+    {
+        await _mediator.Send(new UpdateCartItemCommand
+        {
+            Item = dto
+        });
+
+        return NoContent();
+    }
+
+    [HttpDelete("items/{productVariantId:guid}")]
+    public async Task<IActionResult> RemoveItem(Guid productVariantId)
+    {
+        await _mediator.Send(new RemoveCartItemCommand
+        {
+            ProductVariantId = productVariantId
+        });
+
+        return NoContent();
+    }
+
+    [HttpDelete]
+    public async Task<IActionResult> Clear()
+    {
+        await _mediator.Send(new ClearCartCommand());
+
+        return NoContent();
     }
 }

@@ -9,11 +9,14 @@ public class GetAllOrdersQueryHandler
     : IRequestHandler<GetAllOrdersQuery, List<OrderDto>>
 {
     private readonly IApplicationDbContext _context;
+    private readonly IUserService _userService;
 
     public GetAllOrdersQueryHandler(
-        IApplicationDbContext context)
+        IApplicationDbContext context,
+        IUserService userService)
     {
         _context = context;
+        _userService = userService;
     }
 
     public async Task<List<OrderDto>> Handle(
@@ -27,11 +30,21 @@ public class GetAllOrdersQueryHandler
             .OrderByDescending(x => x.OrderDate)
             .ToListAsync(cancellationToken);
 
+        var customers = await _userService.GetUsersByIdsAsync(
+            orders.Select(x => x.UserId),
+            cancellationToken);
+
         return orders.Select(order => new OrderDto
         {
             Id = order.Id,
 
             UserId = order.UserId,
+
+            CustomerName = customers.TryGetValue(order.UserId, out var customer)
+                ? customer.FullName
+                : null,
+
+            CustomerEmail = customer?.Email,
 
             OrderNumber = order.OrderNumber,
 
