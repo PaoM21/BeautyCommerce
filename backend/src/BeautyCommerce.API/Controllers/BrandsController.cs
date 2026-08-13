@@ -1,4 +1,5 @@
 ﻿using BeautyCommerce.API.Common.Controllers;
+using BeautyCommerce.Application.Common.Constants;
 using BeautyCommerce.Application.Common.Models;
 using BeautyCommerce.Application.Features.Brands.Commands.CreateBrand;
 using BeautyCommerce.Application.Features.Brands.Commands.DeleteBrand;
@@ -21,6 +22,7 @@ public class BrandsController : ApiControllerBase
     {
     }
 
+    [Authorize(Roles = Roles.Admin)]
     [HttpPost]
     public async Task<IActionResult> Create(CreateBrandCommand command)
     {
@@ -73,6 +75,7 @@ public class BrandsController : ApiControllerBase
         });
     }
 
+    [Authorize(Roles = Roles.Admin)]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, UpdateBrandCommand command)
     {
@@ -96,6 +99,7 @@ public class BrandsController : ApiControllerBase
         });
     }
 
+    [Authorize(Roles = Roles.Admin)]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {

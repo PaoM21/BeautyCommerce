@@ -8,10 +8,12 @@ public class UpdateBrandCommandHandler
     : IRequestHandler<UpdateBrandCommand, bool>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICacheService _cache;
 
-    public UpdateBrandCommandHandler(IApplicationDbContext context)
+    public UpdateBrandCommandHandler(IApplicationDbContext context, ICacheService cache)
     {
         _context = context;
+        _cache = cache;
     }
 
     public async Task<bool> Handle(
@@ -29,6 +31,8 @@ public class UpdateBrandCommandHandler
         brand.LogoUrl = request.Brand.LogoUrl;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _cache.InvalidateTagAsync("Brands");
 
         return true;
     }

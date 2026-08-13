@@ -1,4 +1,5 @@
-﻿using BeautyCommerce.Application.Common.Interfaces;
+﻿using BeautyCommerce.Application.Common.Exceptions;
+using BeautyCommerce.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,13 +33,13 @@ namespace BeautyCommerce.Application.Features.ShoppingCart.Commands.RemoveItem
                     cancellationToken);
 
             if (cart == null)
-                throw new Exception("Carrito no encontrado.");
+                throw new NotFoundException("Carrito no encontrado.");
 
             var item = cart.Items.FirstOrDefault(x =>
                 x.ProductVariantId == request.ProductVariantId);
 
             if (item == null)
-                throw new Exception("Producto no existe en el carrito.");
+                throw new NotFoundException("Producto no existe en el carrito.");
 
             _context.ShoppingCartItems.Remove(item);
 

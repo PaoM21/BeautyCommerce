@@ -43,6 +43,9 @@ public class Program
 
         builder.Services.AddInfrastructure(builder.Configuration);
 
+        builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+        builder.Services.AddProblemDetails();
+
         builder.Services.AddHttpContextAccessor();
 
         builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
@@ -205,15 +208,17 @@ public class Program
 
         var app = builder.Build();
 
+        app.UseExceptionHandler();
+
         app.UseSerilogRequestLogging();
 
         app.UseStaticFiles();
         app.UseRouting();
 
+        app.UseCors("DefaultCorsPolicy");
+
         app.UseAuthentication();
         app.UseAuthorization();
-
-        app.UseCors("DefaultCorsPolicy");
 
         app.UseEndpoints(endpoints =>
         {

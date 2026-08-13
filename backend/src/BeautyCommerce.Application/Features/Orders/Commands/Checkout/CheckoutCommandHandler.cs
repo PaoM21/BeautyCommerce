@@ -16,17 +16,20 @@ public class CheckoutCommandHandler
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
     private readonly IPaymentService _paymentService;
+    private readonly IInventoryService _inventoryService;
     private readonly ILogger<CheckoutCommandHandler> _logger;
 
     public CheckoutCommandHandler(
         IApplicationDbContext context,
         ICurrentUserService currentUser,
         IPaymentService paymentService,
+        IInventoryService inventoryService,
         ILogger<CheckoutCommandHandler> logger)
     {
         _context = context;
         _currentUser = currentUser;
         _paymentService = paymentService;
+        _inventoryService = inventoryService;
         _logger = logger;
     }
 
@@ -67,12 +70,6 @@ public class CheckoutCommandHandler
                 throw new BadRequestException(
                     "La cantidad de un producto debe ser mayor que cero.");
             }
-
-            if (item.ProductVariant.Stock < item.Quantity)
-            {
-                throw new BadRequestException(
-                    $"No hay stock suficiente para la variante {item.ProductVariantId}.");
-            }
         }
 
         var subTotal = cart.Items.Sum(
@@ -87,6 +84,31 @@ public class CheckoutCommandHandler
                 "El total del pedido debe ser mayor que cero.");
 
         var orderNumber = $"ORD-{Guid.NewGuid():N}";
+
+        // Reserve stock atomically for every item BEFORE charging the
+        // customer, and before this handler creates anything of its own.
+        // IInventoryService owns the only atomic stock decrement in the
+        // system (see InventoryService.TryRegisterExitAsync) and records
+        // the InventoryMovement itself, so checkout no longer touches
+        // ProductVariant.Stock or InventoryMovement directly. If any item
+        // can't be reserved, we throw here — nothing has been charged yet,
+        // and TransactionBehavior rolls back any reservations already made
+        // for earlier items in this same loop.
+        foreach (var item in cart.Items)
+        {
+            var reserved = await _inventoryService.TryRegisterExitAsync(
+                item.ProductVariantId,
+                item.Quantity,
+                $"Salida por pedido {orderNumber}",
+                userId,
+                cancellationToken);
+
+            if (!reserved)
+            {
+                throw new BadRequestException(
+                    $"No hay stock suficiente para la variante {item.ProductVariantId}.");
+            }
+        }
 
         /*
          * Pago simulado.
@@ -138,25 +160,6 @@ public class CheckoutCommandHandler
             };
 
             _context.OrderItems.Add(orderItem);
-
-            item.ProductVariant.Stock -= item.Quantity;
-
-                var inventoryMovement = new InventoryMovement
-                {
-                    ProductVariantId = item.ProductVariantId,
-                    Quantity = item.Quantity,
-                    IsEntry = false,
-                    Reason = $"Salida por pedido {order.OrderNumber}",
-                    UserId = userId
-                };
-
-                _context.InventoryMovements.Add(inventoryMovement);
-
-            _logger.LogInformation(
-                "Inventory changed for Variant {VariantId}: -{Quantity}, NewStock {Stock}",
-                item.ProductVariantId,
-                item.Quantity,
-                item.ProductVariant.Stock);
         }
 
         var message = new OutboxMessage
@@ -181,9 +184,13 @@ public class CheckoutCommandHandler
          * PERSISTIR TODO:
          * - Order
          * - OrderItems
-         * - Stock
          * - OutboxMessage
          * - ShoppingCartItems eliminados
+         *
+         * El stock y su InventoryMovement ya se persistieron arriba, uno
+         * por variante, dentro de TryRegisterExitAsync — pero siguen
+         * dentro de esta misma transacción (TransactionBehavior), así que
+         * si algo de lo anterior falla aquí, también se revierte.
          */
         await _context.SaveChangesAsync(cancellationToken);
 

@@ -1,8 +1,11 @@
 using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Application.Common.Models;
 using BeautyCommerce.Application.Features.Orders.Commands.Checkout;
+using BeautyCommerce.Domain.Entities;
+using BeautyCommerce.Infrastructure.Services;
 using BeautyCommerce.Tests.Helpers;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
@@ -13,12 +16,34 @@ public class CheckoutCommandHandlerTests
     [Fact]
     public async Task Should_Create_Order_When_Payment_Succeeds()
     {
-        // Arrange
-        var context = DbContextHelper.CreateDbContext();
+        // Arrange. Uses SQLite (not the InMemory provider) because checkout
+        // now reserves stock via InventoryService.TryRegisterExitAsync,
+        // which relies on ExecuteUpdateAsync — see InventoryServiceTests
+        // for why. SQLite also enforces real foreign keys, hence the
+        // Brand/Category/Product seeding below.
+        var (context, connection) = SqliteDbContextHelper.CreateDbContext();
+        using var _ = connection;
 
-        var variant = new BeautyCommerce.Domain.Entities.ProductVariant
+        var brand = new Brand { Name = "QA Brand", Description = "QA" };
+        var category = new Category { Name = "QA Category", Description = "QA" };
+        context.Brands.Add(brand);
+        context.Categories.Add(category);
+        await context.SaveChangesAsync();
+
+        var product = new Product
+        {
+            Name = "QA Product",
+            Slug = $"qa-{Guid.NewGuid():N}",
+            BrandId = brand.Id,
+            CategoryId = category.Id
+        };
+        context.Products.Add(product);
+        await context.SaveChangesAsync();
+
+        var variant = new ProductVariant
         {
             Id = Guid.NewGuid(),
+            ProductId = product.Id,
             Price = 10m,
             Stock = 5
         };
@@ -65,11 +90,15 @@ public class CheckoutCommandHandlerTests
             .ReturnsAsync(
                 PaymentResult.Succeeded("tx123"));
 
+        var cacheMock = new Mock<ICacheService>();
+        var inventoryService = new InventoryService(context, cacheMock.Object);
+
         var handler =
             new CheckoutCommandHandler(
                 context,
                 currentUserMock.Object,
                 paymentMock.Object,
+                inventoryService,
                 NullLogger<CheckoutCommandHandler>.Instance);
 
         var command = new CheckoutCommand();
@@ -101,6 +130,23 @@ public class CheckoutCommandHandlerTests
             .Count()
             .Should()
             .Be(1);
-    }
 
+        // Stock and the InventoryMovement now come from
+        // IInventoryService.TryRegisterExitAsync, not from checkout
+        // mutating ProductVariant.Stock directly — confirm both actually
+        // happened. ExecuteUpdateAsync bypasses the change tracker, so
+        // read fresh via AsNoTracking.
+        var updatedVariant = await context.ProductVariants
+            .AsNoTracking()
+            .FirstAsync(x => x.Id == variant.Id);
+        updatedVariant.Stock.Should().Be(3);
+
+        var movements = await context.InventoryMovements
+            .AsNoTracking()
+            .Where(x => x.ProductVariantId == variant.Id)
+            .ToListAsync();
+        movements.Should().HaveCount(1);
+        movements[0].Quantity.Should().Be(2);
+        movements[0].IsEntry.Should().BeFalse();
+    }
 }

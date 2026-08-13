@@ -1,4 +1,5 @@
-﻿using BeautyCommerce.Application.Common.Interfaces;
+﻿using BeautyCommerce.Application.Common.Exceptions;
+using BeautyCommerce.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,13 +33,13 @@ namespace BeautyCommerce.Application.Features.ShoppingCart.Commands.UpdateItem
                     cancellationToken);
 
             if (cart == null)
-                throw new Exception("Carrito no encontrado.");
+                throw new NotFoundException("Carrito no encontrado.");
 
             var item = cart.Items.FirstOrDefault(x =>
                 x.ProductVariantId == request.Item.ProductVariantId);
 
             if (item == null)
-                throw new Exception("Producto no encontrado en el carrito.");
+                throw new NotFoundException("Producto no encontrado en el carrito.");
 
             var variant = await _context.ProductVariants
                 .FirstAsync(
@@ -46,7 +47,7 @@ namespace BeautyCommerce.Application.Features.ShoppingCart.Commands.UpdateItem
                     cancellationToken);
 
             if (variant.Stock < request.Item.Quantity)
-                throw new Exception("No hay stock suficiente.");
+                throw new BadRequestException("No hay stock suficiente.");
 
             item.Quantity = request.Item.Quantity;
 

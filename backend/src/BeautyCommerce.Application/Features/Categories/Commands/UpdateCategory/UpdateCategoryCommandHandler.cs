@@ -8,10 +8,12 @@ public class UpdateCategoryCommandHandler
     : IRequestHandler<UpdateCategoryCommand, bool>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICacheService _cache;
 
-    public UpdateCategoryCommandHandler(IApplicationDbContext context)
+    public UpdateCategoryCommandHandler(IApplicationDbContext context, ICacheService cache)
     {
         _context = context;
+        _cache = cache;
     }
 
     public async Task<bool> Handle(
@@ -31,6 +33,8 @@ public class UpdateCategoryCommandHandler
         category.ParentCategoryId = request.Category.ParentCategoryId;
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _cache.InvalidateTagAsync("Categories");
 
         return true;
     }
