@@ -2,18 +2,21 @@ using BeautyCommerce.Domain.Entities;
 using BeautyCommerce.Infrastructure.Persistence;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 
 namespace BeautyCommerce.Tests.Integrity;
 
-// 6.4.2 finding #4: 6.4.1 found zero CHECK constraints anywhere in the
-// schema. This test proves it directly — writing impossible values
-// (negative stock, negative price, zero/negative quantities) straight to
-// PostgreSQL via raw SQL, bypassing every C# validation the application
-// has (InventoryService's atomic UPDATE guard, FluentValidation, etc.
-// none of that runs here on purpose). If PostgreSQL accepts these writes,
-// there is no safety net below the application layer — a future bug, a
-// direct SQL script, or a different service touching this data could
-// silently corrupt it.
+// 6.4.2 found zero CHECK constraints anywhere in the schema and proved it by
+// writing impossible values straight to PostgreSQL via raw SQL. 6.4.4
+// closed that gap: migration 20260813033142_AddDomainCheckConstraints adds
+// 12 CHECK constraints (Stock/Price/Cost/MinimumStock >= 0, OldPrice IS
+// NULL OR OldPrice >= 0, Quantity > 0 on OrderItems/ShoppingCartItems/
+// InventoryMovements, UnitPrice >= 0 on OrderItems/ShoppingCartItems,
+// Total/SubTotal >= 0 on Orders). Every 6.4.2 diagnostic test below is now
+// flipped into a regression test: the exact same raw-SQL writes that
+// PostgreSQL used to accept must now be rejected with a check_violation
+// (SQLSTATE 23514), bypassing the application layer entirely so the
+// guarantee is proven at the database, not just in C#.
 [Trait("Category", "Integration")]
 public class CheckConstraintTests : IAsyncLifetime
 {
@@ -60,6 +63,7 @@ public class CheckConstraintTests : IAsyncLifetime
         {
             ProductId = product.Id,
             SKU = $"QA-CHK-{Guid.NewGuid():N}"[..20],
+            Barcode = $"QA-BC-{Guid.NewGuid():N}"[..20],
             Price = 10m,
             Cost = 5m,
             Stock = 10,
@@ -73,6 +77,7 @@ public class CheckConstraintTests : IAsyncLifetime
             UserId = Guid.NewGuid(),
             OrderNumber = $"ORD-QA-CHECK-{Guid.NewGuid():N}"[..30],
             Status = BeautyCommerce.Domain.Enums.OrderStatus.Paid,
+            SubTotal = 10m,
             Total = 10m,
             OrderDate = DateTime.UtcNow
         };
@@ -135,88 +140,172 @@ public class CheckConstraintTests : IAsyncLifetime
         await context.SaveChangesAsync();
     }
 
+    private static async Task AssertCheckViolationAsync(Func<Task> writeAttempt)
+    {
+        var thrown = await writeAttempt.Should().ThrowAsync<PostgresException>(
+            "PostgreSQL must reject this write now that the CHECK constraint exists");
+
+        thrown.Which.SqlState.Should().Be(
+            PostgresErrorCodes.CheckViolation,
+            "the rejection must come from a CHECK constraint violation (23514), not some other error");
+    }
+
     [Fact]
-    public async Task Database_Accepts_Negative_Stock_On_ProductVariant()
+    public async Task Database_Rejects_Negative_Stock_On_ProductVariant()
     {
         await using var context = NewContext();
 
-        await context.Database.ExecuteSqlInterpolatedAsync(
-            $"UPDATE \"ProductVariants\" SET \"Stock\" = -1 WHERE \"Id\" = {_variantId}");
+        await AssertCheckViolationAsync(() => context.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"ProductVariants\" SET \"Stock\" = -1 WHERE \"Id\" = {_variantId}"));
 
         var stock = await context.ProductVariants.AsNoTracking()
             .Where(x => x.Id == _variantId).Select(x => x.Stock).FirstAsync();
-
-        stock.Should().Be(-1, "no CHECK constraint exists on ProductVariants.Stock — PostgreSQL accepted a raw UPDATE to a negative value");
+        stock.Should().Be(10, "the rejected write must not have changed the stored value");
     }
 
     [Fact]
-    public async Task Database_Accepts_Negative_Price_And_Cost_On_ProductVariant()
+    public async Task Database_Rejects_Negative_Price_On_ProductVariant()
     {
         await using var context = NewContext();
 
-        await context.Database.ExecuteSqlInterpolatedAsync(
-            $"UPDATE \"ProductVariants\" SET \"Price\" = -10, \"Cost\" = -5 WHERE \"Id\" = {_variantId}");
-
-        var variant = await context.ProductVariants.AsNoTracking()
-            .FirstAsync(x => x.Id == _variantId);
-
-        variant.Price.Should().Be(-10m, "no CHECK constraint exists on ProductVariants.Price");
-        variant.Cost.Should().Be(-5m, "no CHECK constraint exists on ProductVariants.Cost");
+        await AssertCheckViolationAsync(() => context.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"ProductVariants\" SET \"Price\" = -10 WHERE \"Id\" = {_variantId}"));
     }
 
     [Fact]
-    public async Task Database_Accepts_Zero_Quantity_On_OrderItem()
+    public async Task Database_Rejects_Negative_Cost_On_ProductVariant()
+    {
+        await using var context = NewContext();
+
+        await AssertCheckViolationAsync(() => context.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"ProductVariants\" SET \"Cost\" = -5 WHERE \"Id\" = {_variantId}"));
+    }
+
+    [Fact]
+    public async Task Database_Rejects_Negative_OldPrice_But_Still_Allows_Null_On_ProductVariant()
+    {
+        await using var context = NewContext();
+
+        await AssertCheckViolationAsync(() => context.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"ProductVariants\" SET \"OldPrice\" = -1 WHERE \"Id\" = {_variantId}"));
+
+        // The constraint must not turn OldPrice into a required field —
+        // NULL (no previous price) is still a valid, common state.
+        await context.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"ProductVariants\" SET \"OldPrice\" = NULL WHERE \"Id\" = {_variantId}");
+
+        var oldPrice = await context.ProductVariants.AsNoTracking()
+            .Where(x => x.Id == _variantId).Select(x => x.OldPrice).FirstAsync();
+        oldPrice.Should().BeNull("OldPrice IS NULL must remain a valid state under the new constraint");
+    }
+
+    [Fact]
+    public async Task Database_Rejects_Negative_MinimumStock_On_ProductVariant()
+    {
+        await using var context = NewContext();
+
+        await AssertCheckViolationAsync(() => context.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"ProductVariants\" SET \"MinimumStock\" = -1 WHERE \"Id\" = {_variantId}"));
+    }
+
+    [Fact]
+    public async Task Database_Rejects_Zero_Quantity_On_OrderItem()
     {
         await using var context = NewContext();
 
         var id = Guid.NewGuid();
-        await context.Database.ExecuteSqlInterpolatedAsync($"""
+        await AssertCheckViolationAsync(() => context.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO "OrderItems"
                 ("Id", "OrderId", "ProductVariantId", "Quantity", "UnitPrice", "Total", "CreatedAt", "IsActive", "IsDeleted")
             VALUES
                 ({id}, {_orderId}, {_variantId}, 0, 10, 0, now(), true, false)
-            """);
+            """));
 
         var exists = await context.OrderItems.AsNoTracking().AnyAsync(x => x.Id == id);
-        exists.Should().BeTrue("no CHECK constraint exists on OrderItems.Quantity — a zero-quantity line item was accepted");
+        exists.Should().BeFalse("the rejected insert must not have created a row");
     }
 
     [Fact]
-    public async Task Database_Accepts_Negative_Quantity_On_ShoppingCartItem()
+    public async Task Database_Rejects_Negative_UnitPrice_On_OrderItem()
     {
         await using var context = NewContext();
 
         var id = Guid.NewGuid();
-        await context.Database.ExecuteSqlInterpolatedAsync($"""
+        await AssertCheckViolationAsync(() => context.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO "OrderItems"
+                ("Id", "OrderId", "ProductVariantId", "Quantity", "UnitPrice", "Total", "CreatedAt", "IsActive", "IsDeleted")
+            VALUES
+                ({id}, {_orderId}, {_variantId}, 1, -10, -10, now(), true, false)
+            """));
+    }
+
+    [Fact]
+    public async Task Database_Rejects_Negative_Quantity_On_ShoppingCartItem()
+    {
+        await using var context = NewContext();
+
+        var id = Guid.NewGuid();
+        await AssertCheckViolationAsync(() => context.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO "ShoppingCartItems"
                 ("Id", "ShoppingCartId", "ProductVariantId", "Quantity", "UnitPrice", "CreatedAt", "IsActive", "IsDeleted")
             VALUES
                 ({id}, {_cartId}, {_variantId}, -3, 10, now(), true, false)
-            """);
+            """));
 
-        var quantity = await context.ShoppingCartItems.AsNoTracking()
-            .Where(x => x.Id == id).Select(x => x.Quantity).FirstAsync();
-
-        quantity.Should().Be(-3, "no CHECK constraint exists on ShoppingCartItems.Quantity — a -3 quantity cart line was accepted");
+        var exists = await context.ShoppingCartItems.AsNoTracking().AnyAsync(x => x.Id == id);
+        exists.Should().BeFalse("the rejected insert must not have created a row");
     }
 
     [Fact]
-    public async Task Database_Accepts_Negative_Quantity_On_InventoryMovement()
+    public async Task Database_Rejects_Negative_UnitPrice_On_ShoppingCartItem()
     {
         await using var context = NewContext();
 
         var id = Guid.NewGuid();
-        await context.Database.ExecuteSqlInterpolatedAsync($"""
+        await AssertCheckViolationAsync(() => context.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO "ShoppingCartItems"
+                ("Id", "ShoppingCartId", "ProductVariantId", "Quantity", "UnitPrice", "CreatedAt", "IsActive", "IsDeleted")
+            VALUES
+                ({id}, {_cartId}, {_variantId}, 1, -10, now(), true, false)
+            """));
+    }
+
+    [Fact]
+    public async Task Database_Rejects_Negative_Quantity_On_InventoryMovement()
+    {
+        await using var context = NewContext();
+
+        var id = Guid.NewGuid();
+        await AssertCheckViolationAsync(() => context.Database.ExecuteSqlInterpolatedAsync($"""
             INSERT INTO "InventoryMovements"
                 ("Id", "ProductVariantId", "Quantity", "IsEntry", "Reason", "CreatedAt", "IsActive", "IsDeleted")
             VALUES
                 ({id}, {_variantId}, -7, true, 'QA check constraint test', now(), true, false)
-            """);
+            """));
 
-        var quantity = await context.InventoryMovements.AsNoTracking()
-            .Where(x => x.Id == id).Select(x => x.Quantity).FirstAsync();
+        var exists = await context.InventoryMovements.AsNoTracking().AnyAsync(x => x.Id == id);
+        exists.Should().BeFalse("the rejected insert must not have created a row");
+    }
 
-        quantity.Should().Be(-7, "no CHECK constraint exists on InventoryMovements.Quantity — a negative-quantity movement was accepted, " +
-            "even though it would make an 'entry' subtract stock instead of adding it");
+    [Fact]
+    public async Task Database_Rejects_Negative_Total_On_Order()
+    {
+        await using var context = NewContext();
+
+        await AssertCheckViolationAsync(() => context.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"Orders\" SET \"Total\" = -1 WHERE \"Id\" = {_orderId}"));
+
+        var total = await context.Orders.AsNoTracking()
+            .Where(x => x.Id == _orderId).Select(x => x.Total).FirstAsync();
+        total.Should().Be(10m, "the rejected write must not have changed the stored value");
+    }
+
+    [Fact]
+    public async Task Database_Rejects_Negative_SubTotal_On_Order()
+    {
+        await using var context = NewContext();
+
+        await AssertCheckViolationAsync(() => context.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE \"Orders\" SET \"SubTotal\" = -1 WHERE \"Id\" = {_orderId}"));
     }
 }

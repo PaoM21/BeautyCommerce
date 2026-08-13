@@ -3,6 +3,7 @@ using System;
 using BeautyCommerce.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BeautyCommerce.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260813033142_AddDomainCheckConstraints")]
+    partial class AddDomainCheckConstraints
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -605,18 +608,10 @@ namespace BeautyCommerce.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("Barcode")
-                        .IsUnique();
-
                     b.HasIndex("ProductId");
-
-                    b.HasIndex("SKU")
-                        .IsUnique();
 
                     b.ToTable("ProductVariants", null, t =>
                         {
-                            t.HasCheckConstraint("CK_ProductVariants_Barcode_NotBlank", "length(trim(\"Barcode\")) > 0");
-
                             t.HasCheckConstraint("CK_ProductVariants_Cost_NonNegative", "\"Cost\" >= 0");
 
                             t.HasCheckConstraint("CK_ProductVariants_MinimumStock_NonNegative", "\"MinimumStock\" >= 0");
@@ -624,8 +619,6 @@ namespace BeautyCommerce.Infrastructure.Migrations
                             t.HasCheckConstraint("CK_ProductVariants_OldPrice_NonNegative", "\"OldPrice\" IS NULL OR \"OldPrice\" >= 0");
 
                             t.HasCheckConstraint("CK_ProductVariants_Price_NonNegative", "\"Price\" >= 0");
-
-                            t.HasCheckConstraint("CK_ProductVariants_SKU_NotBlank", "length(trim(\"SKU\")) > 0");
 
                             t.HasCheckConstraint("CK_ProductVariants_Stock_NonNegative", "\"Stock\" >= 0");
                         });

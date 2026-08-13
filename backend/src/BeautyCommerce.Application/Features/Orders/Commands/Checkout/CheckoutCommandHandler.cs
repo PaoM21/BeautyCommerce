@@ -72,6 +72,24 @@ public class CheckoutCommandHandler
             }
         }
 
+        var variantIds = cart.Items
+            .Select(i => i.ProductVariantId)
+            .Distinct()
+            .ToList();
+
+        var hasUnavailableItem = await _context.ProductVariants
+            .IgnoreQueryFilters()
+            .Where(v => variantIds.Contains(v.Id))
+            .AnyAsync(
+                v => v.IsDeleted || v.Product.IsDeleted || v.Product.Category.IsDeleted,
+                cancellationToken);
+
+        if (hasUnavailableItem)
+        {
+            throw new BadRequestException(
+                "Uno de los productos de tu carrito ya no está disponible.");
+        }
+
         var subTotal = cart.Items.Sum(
             item => item.Quantity * item.UnitPrice);
 
@@ -85,15 +103,6 @@ public class CheckoutCommandHandler
 
         var orderNumber = $"ORD-{Guid.NewGuid():N}";
 
-        // Reserve stock atomically for every item BEFORE charging the
-        // customer, and before this handler creates anything of its own.
-        // IInventoryService owns the only atomic stock decrement in the
-        // system (see InventoryService.TryRegisterExitAsync) and records
-        // the InventoryMovement itself, so checkout no longer touches
-        // ProductVariant.Stock or InventoryMovement directly. If any item
-        // can't be reserved, we throw here — nothing has been charged yet,
-        // and TransactionBehavior rolls back any reservations already made
-        // for earlier items in this same loop.
         foreach (var item in cart.Items)
         {
             var reserved = await _inventoryService.TryRegisterExitAsync(
@@ -110,13 +119,6 @@ public class CheckoutCommandHandler
             }
         }
 
-        /*
-         * Pago simulado.
-         *
-         * Cuando integremos una pasarela real,
-         * este servicio será reemplazado por la implementación
-         * correspondiente.
-         */
         var payment = await _paymentService.CreatePaymentAsync(
             total,
             "COP",
@@ -180,22 +182,7 @@ public class CheckoutCommandHandler
 
         _context.ShoppingCartItems.RemoveRange(cart.Items);
 
-        /*
-         * PERSISTIR TODO:
-         * - Order
-         * - OrderItems
-         * - OutboxMessage
-         * - ShoppingCartItems eliminados
-         *
-         * El stock y su InventoryMovement ya se persistieron arriba, uno
-         * por variante, dentro de TryRegisterExitAsync — pero siguen
-         * dentro de esta misma transacción (TransactionBehavior), así que
-         * si algo de lo anterior falla aquí, también se revierte.
-         */
         await _context.SaveChangesAsync(cancellationToken);
-
-        // Loyalty awarding is handled asynchronously by the OutboxProcessor
-        // to keep checkout responsibilities focused and decoupled.
 
         _logger.LogInformation(
             "Order created successfully. OrderId {OrderId}, UserId {UserId}, Total {Total}",

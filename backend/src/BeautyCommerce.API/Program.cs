@@ -54,6 +54,7 @@ public class Program
         builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         builder.Services.AddScoped<IImageStorageService, LocalImageStorageService>();
         builder.Services.AddScoped<IInventoryService, InventoryService>();
+        builder.Services.AddScoped<IProductVariantIdentifierGenerator, ProductVariantIdentifierGenerator>();
         builder.Services.AddScoped<BeautyCommerce.Application.Common.Interfaces.IPaymentService, BeautyCommerce.Infrastructure.Services.PaymentService>();
         builder.Services.AddMemoryCache();
         builder.Services.AddScoped<BeautyCommerce.Application.Common.Interfaces.ICacheService, BeautyCommerce.Infrastructure.Services.MemoryCacheService>();

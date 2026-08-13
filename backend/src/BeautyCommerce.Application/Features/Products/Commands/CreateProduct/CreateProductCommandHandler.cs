@@ -11,13 +11,16 @@ public class CreateProductCommandHandler
 {
     private readonly IApplicationDbContext _context;
     private readonly ICacheService _cache;
+    private readonly IProductVariantIdentifierGenerator _identifierGenerator;
 
     public CreateProductCommandHandler(
         IApplicationDbContext context,
-        ICacheService cache)
+        ICacheService cache,
+        IProductVariantIdentifierGenerator identifierGenerator)
     {
         _context = context;
         _cache = cache;
+        _identifierGenerator = identifierGenerator;
     }
     public async Task<Guid> Handle(
         CreateProductCommand request,
@@ -34,8 +37,13 @@ public class CreateProductCommandHandler
 
         foreach (var variant in request.Variants)
         {
+            // SKU/Barcode are technical inventory identifiers, not
+            // something the client provides — the backend generates and
+            // guarantees their uniqueness (see IProductVariantIdentifierGenerator).
             product.Variants.Add(new ProductVariant
             {
+                SKU = await _identifierGenerator.GenerateSkuAsync(cancellationToken),
+                Barcode = await _identifierGenerator.GenerateBarcodeAsync(cancellationToken),
                 Price = variant.Price,
                 Stock = variant.Stock
             });

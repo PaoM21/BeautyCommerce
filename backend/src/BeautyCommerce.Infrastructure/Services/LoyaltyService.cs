@@ -25,7 +25,6 @@ public class LoyaltyService : ILoyaltyService
         if (order == null)
             return;
 
-        // Evitar entregar puntos dos veces
         var alreadyAwarded =
             await _context.LoyaltyTransactions
                 .AnyAsync(

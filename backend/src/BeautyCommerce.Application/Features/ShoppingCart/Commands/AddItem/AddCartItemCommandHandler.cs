@@ -30,13 +30,7 @@ public class AddCartItemCommandHandler
             throw new UnauthorizedAccessException(
                 "User is not authenticated.");
         }
-
-        // NOTE: In test environments the Identity user may not be present
-        // in the same DbContext instance. We proceed assuming the
-        // authenticated user is valid. If necessary, add explicit
-        // existence checks at a higher layer.
-
-        // Find product variant.
+        
         var variant = await _context.ProductVariants
             .FirstOrDefaultAsync(
                 pv => pv.Id == request.Item.ProductVariantId,
@@ -47,22 +41,19 @@ public class AddCartItemCommandHandler
             throw new KeyNotFoundException(
                 "Product variant not found.");
         }
-
-        // Validate stock.
+        
         if (variant.Stock < request.Item.Quantity)
         {
             throw new InvalidOperationException(
                 "Insufficient stock for the requested quantity.");
         }
-
-        // Find existing cart for authenticated user.
+        
         var cart = await _context.ShoppingCarts
             .Include(c => c.Items)
             .FirstOrDefaultAsync(
                 c => c.UserId == userId.Value,
                 cancellationToken);
-
-        // Create cart if it doesn't exist.
+                
         if (cart == null)
         {
             cart = new global::BeautyCommerce.Domain.Entities.ShoppingCart
@@ -74,8 +65,7 @@ public class AddCartItemCommandHandler
 
             await _context.SaveChangesAsync(cancellationToken);
         }
-
-        // Check if product variant is already in cart.
+        
         var existingItem = cart.Items
             .FirstOrDefault(
                 i => i.ProductVariantId == variant.Id);

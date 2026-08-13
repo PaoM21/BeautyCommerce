@@ -154,7 +154,14 @@ public class CacheInvalidationTests
         context.Products.Add(product);
         await context.SaveChangesAsync();
 
-        var variant = new ProductVariant { ProductId = product.Id, Price = 10m, Stock = 10 };
+        var variant = new ProductVariant
+        {
+            ProductId = product.Id,
+            SKU = $"QA-SKU-{Guid.NewGuid():N}"[..20],
+            Barcode = $"QA-BC-{Guid.NewGuid():N}"[..20],
+            Price = 10m,
+            Stock = 10
+        };
         context.ProductVariants.Add(variant);
         await context.SaveChangesAsync();
 

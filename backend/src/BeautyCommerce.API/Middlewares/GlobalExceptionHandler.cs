@@ -5,13 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BeautyCommerce.API.Middlewares;
 
-// Without this, every business-rule failure (invalid order status
-// transition, insufficient stock, "cart not found", ...) bubbles up as an
-// unhandled exception and the client sees a bare 500 with (in Development)
-// a full stack trace, instead of the 400/401/404 the situation actually
-// calls for. This maps the exception types already thrown across the
-// Application layer to the right status code; it does not change which
-// exception any handler throws.
 public class GlobalExceptionHandler : IExceptionHandler
 {
     private readonly ILogger<GlobalExceptionHandler> _logger;
@@ -51,13 +44,6 @@ public class GlobalExceptionHandler : IExceptionHandler
         {
             Status = statusCode,
             Title = title,
-            // The message on business exceptions is already the
-            // user-facing Spanish copy the handlers wrote (e.g. "No hay
-            // suficiente stock para realizar la salida."). For an
-            // unmapped/unexpected exception we do not forward
-            // exception.Message, since that could leak internal details
-            // (SQL, file paths) — the full exception is logged above
-            // instead.
             Detail = statusCode == StatusCodes.Status500InternalServerError
                 ? "Ocurrió un error inesperado. Intenta de nuevo más tarde."
                 : exception.Message,

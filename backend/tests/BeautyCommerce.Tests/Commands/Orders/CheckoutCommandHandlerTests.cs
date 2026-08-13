@@ -44,6 +44,8 @@ public class CheckoutCommandHandlerTests
         {
             Id = Guid.NewGuid(),
             ProductId = product.Id,
+            SKU = $"QA-SKU-{Guid.NewGuid():N}"[..20],
+            Barcode = $"QA-BC-{Guid.NewGuid():N}"[..20],
             Price = 10m,
             Stock = 5
         };

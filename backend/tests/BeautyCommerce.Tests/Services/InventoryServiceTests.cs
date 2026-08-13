@@ -50,6 +50,8 @@ public class InventoryServiceTests
         {
             Id = Guid.NewGuid(),
             ProductId = productId,
+            SKU = $"QA-SKU-{Guid.NewGuid():N}"[..20],
+            Barcode = $"QA-BC-{Guid.NewGuid():N}"[..20],
             Price = 10m,
             Stock = 10
         };
@@ -140,7 +142,15 @@ public class InventoryServiceTests
 
         var productId = await SeedProductAsync(context);
 
-        var variant = new ProductVariant { Id = Guid.NewGuid(), ProductId = productId, Price = 1m, Stock = 5 };
+        var variant = new ProductVariant
+        {
+            Id = Guid.NewGuid(),
+            ProductId = productId,
+            SKU = $"QA-SKU-{Guid.NewGuid():N}"[..20],
+            Barcode = $"QA-BC-{Guid.NewGuid():N}"[..20],
+            Price = 1m,
+            Stock = 5
+        };
         context.ProductVariants.Add(variant);
         await context.SaveChangesAsync(default);
 

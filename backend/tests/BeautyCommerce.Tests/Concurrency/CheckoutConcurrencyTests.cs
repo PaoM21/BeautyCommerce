@@ -59,6 +59,7 @@ public class CheckoutConcurrencyTests : IAsyncLifetime
         {
             ProductId = product.Id,
             SKU = $"QA-CHK-{Guid.NewGuid():N}"[..20],
+            Barcode = $"QA-BC-{Guid.NewGuid():N}"[..20],
             Price = 10m,
             Stock = 7,
             MinimumStock = 0

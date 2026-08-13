@@ -62,6 +62,7 @@ public class CheckoutTransactionIntegrityTests : IAsyncLifetime
         {
             ProductId = product.Id,
             SKU = $"QA-INT-{Guid.NewGuid():N}"[..20],
+            Barcode = $"QA-BC-{Guid.NewGuid():N}"[..20],
             Price = 10m,
             Stock = InitialStock,
             MinimumStock = 0

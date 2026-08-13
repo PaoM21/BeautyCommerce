@@ -29,8 +29,7 @@ public class RemoveWishlistCommandHandler : IRequestHandler<RemoveWishlistComman
 
         if (item == null)
             return;
-
-        // Soft delete to keep history
+            
         item.IsDeleted = true;
         item.DeletedAt = DateTime.UtcNow;
         item.DeletedBy = _currentUser.UserId;

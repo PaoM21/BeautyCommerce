@@ -138,7 +138,6 @@ public class ApplicationDbContext
                 System.Diagnostics.Debug.WriteLine($"Error while logging SaveChangesAsync failure: {logEx.Message}");
             }
 
-            // Re-throw original exception so normal flow/handlers still observe it.
             throw;
         }
     }

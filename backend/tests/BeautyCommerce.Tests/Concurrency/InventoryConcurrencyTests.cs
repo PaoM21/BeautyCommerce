@@ -57,6 +57,7 @@ public class InventoryConcurrencyTests : IAsyncLifetime
         {
             ProductId = product.Id,
             SKU = $"QA-CONC-{Guid.NewGuid():N}"[..20],
+            Barcode = $"QA-BC-{Guid.NewGuid():N}"[..20],
             Price = 10m,
             Stock = 10,
             MinimumStock = 0
