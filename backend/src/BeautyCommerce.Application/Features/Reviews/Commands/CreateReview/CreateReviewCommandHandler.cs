@@ -12,13 +12,16 @@ public class CreateReviewCommandHandler
 {
     private readonly IApplicationDbContext _context;
     private readonly ICurrentUserService _currentUser;
+    private readonly ICacheService _cache;
 
     public CreateReviewCommandHandler(
         IApplicationDbContext context,
-        ICurrentUserService currentUser)
+        ICurrentUserService currentUser,
+        ICacheService cache)
     {
         _context = context;
         _currentUser = currentUser;
+        _cache = cache;
     }
 
     public async Task<Guid> Handle(
@@ -94,6 +97,12 @@ public class CreateReviewCommandHandler
 
         await _context.SaveChangesAsync(
             cancellationToken);
+
+        // GetProductReviewsQuery's cache key includes ProductId, but the
+        // tag itself covers every product's reviews — invalidating it here
+        // is correct and simpler than tracking each individual product's
+        // cached key.
+        await _cache.InvalidateTagAsync("Reviews");
 
         return review.Id;
     }

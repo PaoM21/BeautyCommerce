@@ -1,4 +1,5 @@
-﻿using BeautyCommerce.Application.Common.Models;
+﻿using BeautyCommerce.Application.Common.Constants;
+using BeautyCommerce.Application.Common.Models;
 using BeautyCommerce.Application.Features.Products.Commands.CreateProduct;
 using BeautyCommerce.Application.Features.Products.Commands.DeleteProduct;
 using BeautyCommerce.Application.Features.Products.Commands.UpdateProduct;
@@ -23,6 +24,7 @@ public class ProductsController : ControllerBase
         _mediator = mediator;
     }
 
+    [Authorize(Roles = Roles.Admin)]
     [HttpPost]
     public async Task<IActionResult> Create(CreateProductCommand command)
     {
@@ -60,6 +62,7 @@ public class ProductsController : ControllerBase
         return Ok(result);
     }
 
+    [Authorize(Roles = Roles.Admin)]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(
     Guid id,
@@ -72,6 +75,7 @@ public class ProductsController : ControllerBase
         return NoContent();
     }
 
+    [Authorize(Roles = Roles.Admin)]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {

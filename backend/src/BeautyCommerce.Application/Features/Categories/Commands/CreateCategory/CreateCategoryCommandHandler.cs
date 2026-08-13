@@ -8,10 +8,12 @@ public class CreateCategoryCommandHandler
     : IRequestHandler<CreateCategoryCommand, Guid>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICacheService _cache;
 
-    public CreateCategoryCommandHandler(IApplicationDbContext context)
+    public CreateCategoryCommandHandler(IApplicationDbContext context, ICacheService cache)
     {
         _context = context;
+        _cache = cache;
     }
 
     public async Task<Guid> Handle(
@@ -30,6 +32,8 @@ public class CreateCategoryCommandHandler
         await _context.Categories.AddAsync(category, cancellationToken);
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _cache.InvalidateTagAsync("Categories");
 
         return category.Id;
     }

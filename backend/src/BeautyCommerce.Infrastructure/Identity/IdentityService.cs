@@ -1,4 +1,5 @@
-﻿using BeautyCommerce.Application.Common.Interfaces;
+﻿using BeautyCommerce.Application.Common.Exceptions;
+using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Application.Features.Authentication.DTOs;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -34,7 +35,7 @@ public class IdentityService : IIdentityService
         if (exists != null)
         {
             _logger?.LogWarning("Register failed: email already exists {Email}", email);
-            throw new Exception("El correo ya está registrado.");
+            throw new ConflictException("El correo ya está registrado.");
         }
 
         var user = new ApplicationUser
@@ -51,7 +52,7 @@ public class IdentityService : IIdentityService
         {
             var errors = string.Join(", ", result.Errors.Select(x => x.Description));
             _logger?.LogError("Register failed for {Email}: {Errors}", email, errors);
-            throw new Exception(errors);
+            throw new BadRequestException(errors);
         }
 
         await _userManager.AddToRoleAsync(user, "Customer");
@@ -72,7 +73,7 @@ public class IdentityService : IIdentityService
         if (user == null)
         {
             _logger?.LogWarning("Login failed: user not found {Email}", email);
-            throw new Exception("Correo o contraseña incorrectos.");
+            throw new UnauthorizedException("Correo o contraseña incorrectos.");
         }
 
         var valid = await _userManager.CheckPasswordAsync(user, password);
@@ -80,7 +81,7 @@ public class IdentityService : IIdentityService
         if (!valid)
         {
             _logger?.LogWarning("Login failed: invalid credentials for {Email}", email);
-            throw new Exception("Correo o contraseña incorrectos.");
+            throw new UnauthorizedException("Correo o contraseña incorrectos.");
         }
 
         var roles = await _userManager.GetRolesAsync(user);

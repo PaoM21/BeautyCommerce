@@ -1,4 +1,5 @@
-﻿using BeautyCommerce.Application.Common.Models;
+﻿using BeautyCommerce.Application.Common.Constants;
+using BeautyCommerce.Application.Common.Models;
 using BeautyCommerce.Application.Features.Categories.Commands.CreateCategory;
 using BeautyCommerce.Application.Features.Categories.Commands.DeleteCategory;
 using BeautyCommerce.Application.Features.Categories.Commands.UpdateCategory;
@@ -23,6 +24,7 @@ public class CategoriesController : ControllerBase
         _mediator = mediator;
     }
 
+    [Authorize(Roles = Roles.Admin)]
     [HttpPost]
     public async Task<IActionResult> Create(CreateCategoryCommand command)
     {
@@ -74,6 +76,7 @@ public class CategoriesController : ControllerBase
         });
     }
 
+    [Authorize(Roles = Roles.Admin)]
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, UpdateCategoryDto dto)
     {
@@ -99,6 +102,7 @@ public class CategoriesController : ControllerBase
         });
     }
 
+    [Authorize(Roles = Roles.Admin)]
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {

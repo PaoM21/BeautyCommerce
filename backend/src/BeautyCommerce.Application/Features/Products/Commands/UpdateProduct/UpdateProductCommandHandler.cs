@@ -1,4 +1,5 @@
-﻿using BeautyCommerce.Application.Common.Interfaces;
+﻿using BeautyCommerce.Application.Common.Exceptions;
+using BeautyCommerce.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,7 +27,7 @@ public class UpdateProductCommandHandler
             .FirstOrDefaultAsync(x => x.Id == request.Id, cancellationToken);
 
         if (product == null)
-            throw new Exception("Producto no encontrado.");
+            throw new NotFoundException("Producto no encontrado.");
 
         product.Name = request.Name;
         product.Description = request.Description;

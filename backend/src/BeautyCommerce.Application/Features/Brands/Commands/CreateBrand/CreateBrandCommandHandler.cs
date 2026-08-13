@@ -8,10 +8,12 @@ public class CreateBrandCommandHandler
     : IRequestHandler<CreateBrandCommand, Guid>
 {
     private readonly IApplicationDbContext _context;
+    private readonly ICacheService _cache;
 
-    public CreateBrandCommandHandler(IApplicationDbContext context)
+    public CreateBrandCommandHandler(IApplicationDbContext context, ICacheService cache)
     {
         _context = context;
+        _cache = cache;
     }
 
     public async Task<Guid> Handle(
@@ -28,6 +30,8 @@ public class CreateBrandCommandHandler
         await _context.Brands.AddAsync(brand, cancellationToken);
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _cache.InvalidateTagAsync("Brands");
 
         return brand.Id;
     }
