@@ -265,9 +265,9 @@ export default function AdminProductCreate() {
         <Typography sx={{ fontSize: 22, mb: 3 }}>Variante inicial</Typography>
 
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 3, mb: 6 }}>
-          <TextField label="Precio" type="number" value={price} onChange={(event) => setPrice(event.target.value)} inputProps={{ min: 0, step: "0.01" }} required />
+          <TextField label="Precio" type="number" value={price} onChange={(event) => setPrice(event.target.value)} slotProps={{ htmlInput: { min: 0, step: "0.01" } }} required />
 
-          <TextField label="Stock inicial" type="number" value={stock} onChange={(event) => setStock(event.target.value)} inputProps={{ min: 0, step: 1 }} required />
+          <TextField label="Stock inicial" type="number" value={stock} onChange={(event) => setStock(event.target.value)} slotProps={{ htmlInput: { min: 0, step: 1 } }} required />
 
           <TextField label="Color" value={color} onChange={(event) => setColor(event.target.value)} required />
 

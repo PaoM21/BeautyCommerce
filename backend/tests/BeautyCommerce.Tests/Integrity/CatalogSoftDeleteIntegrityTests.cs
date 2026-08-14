@@ -1,3 +1,4 @@
+using BeautyCommerce.Application.Common.Behaviors;
 using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Application.Common.Models;
 using BeautyCommerce.Application.Features.Orders.Commands.Checkout;
@@ -156,9 +157,15 @@ public class CatalogSoftDeleteIntegrityTests : IAsyncLifetime
         var handler = new CheckoutCommandHandler(
             context, currentUser.Object, payment.Object, inventoryService, cache.Object, NullLogger<CheckoutCommandHandler>.Instance);
 
+        var transactionBehavior = new TransactionBehavior<CheckoutCommand, Guid>(
+            context, NullLogger<TransactionBehavior<CheckoutCommand, Guid>>.Instance);
+
         try
         {
-            return await handler.Handle(new CheckoutCommand(), default);
+            return await transactionBehavior.Handle(
+                new CheckoutCommand(),
+                _ => handler.Handle(new CheckoutCommand(), default),
+                default);
         }
         catch (BeautyCommerce.Application.Common.Exceptions.BadRequestException)
         {

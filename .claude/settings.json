@@ -6,7 +6,25 @@
       "Bash(ls \"/c/Users/PaoM/.claude/projects/c--Users-PaoM-Desktop-BeautyCommerce/memory/\" 2>/dev/null)",
       "Read(//c/Users/PaoM/.claude/projects/c--Users-PaoM-Desktop-BeautyCommerce/memory//**)",
       "Bash(ls -la \"/c/Users/PaoM/.claude/projects/c--Users-PaoM-Desktop-BeautyCommerce/memory/\" 2>&1)",
-      "Bash(dotnet clean *)"
+      "Bash(dotnet clean *)",
+      "Bash(xargs grep -l -i \"debug\\\\|seed\")",
+      "Bash(cd \"/c/Users/PaoM/Desktop/BeautyCommerce/backend\" && dotnet test BeautyCommerce.sln --no-build > /tmp/fullrun.log 2>&1; grep -n \"FAIL\\\\|Mensaje de error\\\\|Expected\\\\|but \\\\|Superado\" /tmp/fullrun.log | head -n 60)",
+      "Read(//tmp/**)",
+      "Bash(grep -A6 \"Expected loserMessage\" /tmp/run4.log)",
+      "Bash(git -C \"C:\\\\Users\\\\PaoM\\\\Desktop\\\\BeautyCommerce\" log --oneline -3 -- \"backend/src/BeautyCommerce.Infrastructure/Migrations/20260812122556_RemoveLegacyUserRoleAndRefreshToken.cs\")",
+      "Bash(git -C \"C:\\\\Users\\\\PaoM\\\\Desktop\\\\BeautyCommerce\" show --stat 20260812122556)",
+      "Bash(cd \"/c/Users/PaoM/Desktop/BeautyCommerce/backend\")",
+      "Bash(npm run *)",
+      "Bash(npm ls *)",
+      "Bash(echo \"---exit: $?\")",
+      "Bash(npx vite *)",
+      "Bash(Jwt__Key=\"\" ASPNETCORE_URLS=\"http://localhost:15179\" nohup dotnet run --no-launch-profile)",
+      "Bash(echo \"PID=$!\")",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:15179/health)",
+      "Bash(curl -s http://localhost:15179/health)",
+      "Bash(pkill -f \"dotnet run\")",
+      "Bash(pkill -f \"BeautyCommerce.API.dll\")",
+      "Bash(kill -9 1045 1047)"
     ]
   }
 }

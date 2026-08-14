@@ -16,21 +16,22 @@ namespace BeautyCommerce.Tests.Integrity;
 
 public class LoginLockoutReproductionTests
 {
-    [Fact]
-    public async Task Repeated_Failed_Logins_Never_Trigger_Lockout_And_The_Correct_Password_Still_Authenticates()
+    private const string Email = "qa-lockout@test.local";
+    private const string CorrectPassword = "Correct123";
+    private const string WrongPassword = "WrongPass9";
+
+    private static async Task<(IdentityService IdentityService, UserManager<ApplicationUser> UserManager, ApplicationUser User)> SeedRealIdentityAsync()
     {
         var connection = new SqliteConnection("DataSource=:memory:");
-        using var _ = connection;
         connection.Open();
 
         var services = new ServiceCollection();
         services.AddLogging();
-        services.AddDataProtection();
         services.AddScoped(_ => Mock.Of<ICurrentUserService>());
         services.AddDbContext<ApplicationDbContext>(o => o.UseSqlite(connection));
 
         services
-            .AddIdentityCore<ApplicationUser>(options =>
+            .AddIdentity<ApplicationUser, ApplicationRole>(options =>
             {
                 options.Password.RequiredLength = 8;
                 options.Password.RequireDigit = true;
@@ -38,32 +39,28 @@ public class LoginLockoutReproductionTests
                 options.Password.RequireLowercase = true;
                 options.Password.RequireNonAlphanumeric = false;
             })
-            .AddRoles<ApplicationRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
             .AddDefaultTokenProviders();
 
-        await using var provider = services.BuildServiceProvider();
-        using var scope = provider.CreateScope();
+        var provider = services.BuildServiceProvider();
+        var scope = provider.CreateScope();
 
         var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await context.Database.EnsureCreatedAsync();
 
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-
-        const string email = "qa-lockout@test.local";
-        const string correctPassword = "Correct123";
-        const string wrongPassword = "WrongPass9";
+        var signInManager = scope.ServiceProvider.GetRequiredService<SignInManager<ApplicationUser>>();
 
         var user = new ApplicationUser
         {
-            UserName = email,
-            Email = email,
+            UserName = Email,
+            Email = Email,
             FirstName = "QA",
             LastName = "Lockout",
             EmailConfirmed = true
         };
 
-        var createResult = await userManager.CreateAsync(user, correctPassword);
+        var createResult = await userManager.CreateAsync(user, CorrectPassword);
         createResult.Succeeded.Should().BeTrue(
             string.Join(";", createResult.Errors.Select(e => e.Description)));
 
@@ -77,44 +74,98 @@ public class LoginLockoutReproductionTests
 
         var identityService = new IdentityService(
             userManager,
+            signInManager,
             new JwtTokenGenerator(jwtOptions),
             NullLogger<IdentityService>.Instance);
 
-        var before = await userManager.FindByEmailAsync(email);
-        before!.AccessFailedCount.Should().Be(0);
-        before.LockoutEnd.Should().BeNull();
-        (await userManager.IsLockedOutAsync(before)).Should().BeFalse();
+        return (identityService, userManager, user);
+    }
 
-        const int attempts = 10;
-        var failuresObserved = 0;
+    [Fact]
+    public async Task Correct_Password_Authenticates_Normally_When_Not_Locked_Out()
+    {
+        var (identityService, _, _) = await SeedRealIdentityAsync();
 
-        for (var i = 0; i < attempts; i++)
+        var login = await identityService.LoginAsync(Email, CorrectPassword);
+
+        login.Should().NotBeNull();
+        login.Token.Should().NotBeNullOrEmpty();
+        login.Email.Should().Be(Email);
+    }
+
+    [Fact]
+    public async Task Fifth_Failed_Attempt_Locks_The_Account_And_The_Sixth_Attempt_Is_Rejected_Even_With_The_Correct_Password()
+    {
+        var (identityService, userManager, _) = await SeedRealIdentityAsync();
+
+        for (var i = 1; i <= 5; i++)
         {
-            try
-            {
-                await identityService.LoginAsync(email, wrongPassword);
-            }
-            catch (UnauthorizedException)
-            {
-                failuresObserved++;
-            }
+            var act = async () => await identityService.LoginAsync(Email, WrongPassword);
+            await act.Should().ThrowAsync<UnauthorizedException>(
+                $"attempt {i} is a plain wrong-password rejection");
         }
 
-        failuresObserved.Should().Be(attempts,
-            "every one of the 10 wrong-password attempts must be rejected on its own merit (wrong password), not by a lockout kicking in early");
+        var afterFifth = await userManager.FindByEmailAsync(Email);
+        (await userManager.IsLockedOutAsync(afterFifth!)).Should().BeTrue(
+            "the fifth failed attempt must cross Identity's default MaxFailedAccessAttempts threshold");
+        afterFifth!.LockoutEnd.Should().NotBeNull();
 
-        var after = await userManager.FindByEmailAsync(email);
-        after!.AccessFailedCount.Should().Be(0,
-            "CheckPasswordAsync alone never increments AccessFailedCount — only PasswordSignInAsync/AccessFailedAsync do, and neither is ever called");
-        after.LockoutEnd.Should().BeNull(
-            "with AccessFailedCount never incremented, LockoutEnd is never set");
-        (await userManager.IsLockedOutAsync(after)).Should().BeFalse(
-            "no lockout is ever engaged, regardless of how many wrong passwords were tried");
+        var sixthAttempt = async () => await identityService.LoginAsync(Email, CorrectPassword);
+        await sixthAttempt.Should().ThrowAsync<UnauthorizedException>(
+            "a locked account must reject even the correct password until the lockout expires")
+            .WithMessage("Correo o contraseña incorrectos.");
+    }
 
-        var successfulLogin = await identityService.LoginAsync(email, correctPassword);
-        successfulLogin.Should().NotBeNull();
-        successfulLogin.Token.Should().NotBeNullOrEmpty(
-            "the correct password must still authenticate immediately after 10 failed attempts, with no delay or extra friction");
-        successfulLogin.Email.Should().Be(email);
+    [Fact]
+    public async Task After_Lockout_Expires_The_Correct_Password_Succeeds_And_AccessFailedCount_Resets()
+    {
+        var (identityService, userManager, user) = await SeedRealIdentityAsync();
+
+        for (var i = 0; i < 5; i++)
+        {
+            try { await identityService.LoginAsync(Email, WrongPassword); }
+            catch (UnauthorizedException) { }
+        }
+
+        (await userManager.IsLockedOutAsync(user)).Should().BeTrue("5 failed attempts must have locked the account");
+
+        await userManager.SetLockoutEndDateAsync(user, DateTimeOffset.UtcNow.AddSeconds(-1));
+
+        (await userManager.IsLockedOutAsync(user)).Should().BeFalse("an expired LockoutEnd must no longer count as locked out");
+
+        var login = await identityService.LoginAsync(Email, CorrectPassword);
+        login.Token.Should().NotBeNullOrEmpty("the correct password must succeed again once the lockout window has passed");
+
+        var afterSuccess = await userManager.FindByEmailAsync(Email);
+        afterSuccess!.AccessFailedCount.Should().Be(0,
+            "a successful sign-in must reset AccessFailedCount, exactly like ASP.NET Identity's own contract");
+    }
+
+    [Fact]
+    public async Task Nonexistent_User_Wrong_Password_And_Locked_Out_User_Share_The_Same_401_Message()
+    {
+        var (identityService, userManager, user) = await SeedRealIdentityAsync();
+        
+        var nonexistent = async () => await identityService.LoginAsync("qa-does-not-exist@test.local", WrongPassword);
+        var nonexistentEx = await nonexistent.Should().ThrowAsync<UnauthorizedException>();
+        var wrongPassword = async () => await identityService.LoginAsync(Email, WrongPassword);
+        var wrongPasswordEx = await wrongPassword.Should().ThrowAsync<UnauthorizedException>();
+
+        for (var i = 0; i < 4; i++)
+        {
+            try { await identityService.LoginAsync(Email, WrongPassword); }
+            catch (UnauthorizedException) { }
+        }
+        (await userManager.IsLockedOutAsync(user)).Should().BeTrue();
+
+        var lockedOut = async () => await identityService.LoginAsync(Email, CorrectPassword);
+        var lockedOutEx = await lockedOut.Should().ThrowAsync<UnauthorizedException>();
+
+        const string expectedMessage = "Correo o contraseña incorrectos.";
+
+        nonexistentEx.Which.Message.Should().Be(expectedMessage);
+        wrongPasswordEx.Which.Message.Should().Be(expectedMessage);
+        lockedOutEx.Which.Message.Should().Be(expectedMessage,
+            "a locked-out account must be indistinguishable from a plain wrong password — a different message would let an attacker use the lockout itself to enumerate registered emails");
     }
 }

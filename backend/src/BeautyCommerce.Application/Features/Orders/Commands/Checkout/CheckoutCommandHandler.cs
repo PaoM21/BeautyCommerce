@@ -60,7 +60,22 @@ public class CheckoutCommandHandler
             throw new BadRequestException(
                 "El carrito está vacío.");
 
-        foreach (var item in cart.Items)
+
+        var cartItems = cart.Items.ToList();
+
+        _context.ShoppingCartItems.RemoveRange(cartItems);
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateConcurrencyException)
+        {
+            throw new BadRequestException(
+                "Este carrito ya fue procesado.");
+        }
+
+        foreach (var item in cartItems)
         {
             if (item.ProductVariant == null)
             {
@@ -75,7 +90,7 @@ public class CheckoutCommandHandler
             }
         }
 
-        var variantIds = cart.Items
+        var variantIds = cartItems
             .Select(i => i.ProductVariantId)
             .Distinct()
             .ToList();
@@ -93,7 +108,7 @@ public class CheckoutCommandHandler
                 "Uno de los productos de tu carrito ya no está disponible.");
         }
 
-        var subTotal = cart.Items.Sum(
+        var subTotal = cartItems.Sum(
             item => item.Quantity * item.UnitPrice);
 
         var shippingCost = 0m;
@@ -106,7 +121,7 @@ public class CheckoutCommandHandler
 
         var orderNumber = $"ORD-{Guid.NewGuid():N}";
 
-        foreach (var item in cart.Items)
+        foreach (var item in cartItems)
         {
             var reserved = await _inventoryService.TryRegisterExitAsync(
                 item.ProductVariantId,
@@ -154,7 +169,7 @@ public class CheckoutCommandHandler
 
         _context.Orders.Add(order);
 
-        foreach (var item in cart.Items)
+        foreach (var item in cartItems)
         {
             var orderItem = new OrderItem
             {
@@ -182,8 +197,6 @@ public class CheckoutCommandHandler
         };
 
         _context.OutboxMessages.Add(message);
-
-        _context.ShoppingCartItems.RemoveRange(cart.Items);
 
         await _context.SaveChangesAsync(cancellationToken);
 

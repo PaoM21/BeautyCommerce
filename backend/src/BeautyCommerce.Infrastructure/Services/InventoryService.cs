@@ -25,8 +25,7 @@ public class InventoryService : IInventoryService
         if (quantity <= 0)
         {
             throw new ArgumentException(
-                "La cantidad debe ser mayor que cero.",
-                nameof(quantity));
+                "La cantidad debe ser mayor que cero.");
         }
 
         var affectedRows = await _context.ProductVariants
@@ -84,8 +83,7 @@ public class InventoryService : IInventoryService
         if (quantity <= 0)
         {
             throw new ArgumentException(
-                "La cantidad debe ser mayor que cero.",
-                nameof(quantity));
+                "La cantidad debe ser mayor que cero.");
         }
 
         var affectedRows = await _context.ProductVariants

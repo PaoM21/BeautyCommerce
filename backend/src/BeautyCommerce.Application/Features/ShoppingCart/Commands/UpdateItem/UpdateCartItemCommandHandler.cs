@@ -50,6 +50,7 @@ namespace BeautyCommerce.Application.Features.ShoppingCart.Commands.UpdateItem
                 throw new BadRequestException("No hay stock suficiente.");
 
             item.Quantity = request.Item.Quantity;
+            item.UnitPrice = variant.Price;
 
             await _context.SaveChangesAsync(cancellationToken);
         }

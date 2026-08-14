@@ -230,7 +230,7 @@ function ProductCard({ product }: { product: Product }) {
         </Typography>
       </Box>
 
-      <Typography fontWeight={500}>
+      <Typography sx={{ fontWeight: 500 }}>
         ${product.price.toLocaleString("es-CO")}
       </Typography>
     </Box>

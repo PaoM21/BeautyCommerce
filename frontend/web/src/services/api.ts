@@ -1,7 +1,15 @@
 import axios from "axios";
 
+const baseURL = import.meta.env.VITE_API_URL;
+
+if (!baseURL) {
+  throw new Error(
+    "VITE_API_URL no está configurada. Define esta variable de entorno antes de compilar o ejecutar la aplicación."
+  );
+}
+
 export const api = axios.create({
-  baseURL: "https://localhost:44353/api",
+  baseURL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -24,7 +32,6 @@ api.interceptors.request.use(
   }
 );
 
-// Global response interceptor: handle auth errors and provide better dev logging
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -33,17 +40,12 @@ api.interceptors.response.use(
 
     // If unauthorized
     if (status === 401) {
-      // If there is no token in storage, this was an anonymous request
-      // (e.g., public product list). Do not force a redirect to login
-      // for anonymous requests — let callers handle 401 if needed.
       const token = localStorage.getItem("beauty_token");
 
-      // Do not redirect for auth endpoints
       if (!token || (config?.url && config.url.includes("/auth"))) {
         return Promise.reject(error);
       }
 
-      // Otherwise token existed and was invalid/expired: clear it and redirect
       try {
         localStorage.removeItem("beauty_token");
         if (typeof window !== "undefined") {

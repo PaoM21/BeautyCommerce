@@ -316,7 +316,7 @@ export default function AdminOrderDetail() {
                 textAlign: "right",
               }}
             >
-              <Typography fontWeight={500}>
+              <Typography sx={{ fontWeight: 500 }}>
                 $
                 {item.subtotal.toLocaleString(
                   "es-CO"

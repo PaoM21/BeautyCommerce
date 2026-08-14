@@ -1,3 +1,4 @@
+using BeautyCommerce.Application.Common.Exceptions;
 using BeautyCommerce.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -27,10 +28,9 @@ public class AddCartItemCommandHandler
 
         if (!userId.HasValue)
         {
-            throw new UnauthorizedAccessException(
-                "User is not authenticated.");
+            throw new UnauthorizedAccessException();
         }
-        
+
         var variant = await _context.ProductVariants
             .FirstOrDefaultAsync(
                 pv => pv.Id == request.Item.ProductVariantId,
@@ -38,14 +38,14 @@ public class AddCartItemCommandHandler
 
         if (variant == null)
         {
-            throw new KeyNotFoundException(
-                "Product variant not found.");
+            throw new NotFoundException(
+                "La variante del producto no existe.");
         }
-        
+
         if (variant.Stock < request.Item.Quantity)
         {
-            throw new InvalidOperationException(
-                "Insufficient stock for the requested quantity.");
+            throw new BadRequestException(
+                "No hay stock suficiente.");
         }
         
         var cart = await _context.ShoppingCarts
@@ -63,7 +63,27 @@ public class AddCartItemCommandHandler
 
             _context.ShoppingCarts.Add(cart);
 
-            await _context.SaveChangesAsync(cancellationToken);
+            var transaction = _context.Database.CurrentTransaction;
+            var useSavepoint = transaction?.SupportsSavepoints ?? false;
+
+            if (useSavepoint)
+                await transaction!.CreateSavepointAsync("BeforeCartCreate", cancellationToken);
+
+            try
+            {
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException)
+            {
+                if (useSavepoint)
+                    await transaction!.RollbackToSavepointAsync("BeforeCartCreate", cancellationToken);
+
+                _context.ShoppingCarts.Remove(cart);
+
+                cart = await _context.ShoppingCarts
+                    .Include(c => c.Items)
+                    .FirstAsync(c => c.UserId == userId.Value, cancellationToken);
+            }
         }
         
         var existingItem = cart.Items

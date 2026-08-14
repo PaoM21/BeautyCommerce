@@ -31,5 +31,10 @@ public class CreateProductValidator
                 .NotEmpty()
                 .WithMessage("La talla de la variante es obligatoria.");
         });
+
+        RuleForEach(x => x.Images).Must(url =>
+            Uri.TryCreate(url, UriKind.Absolute, out var uri) &&
+            (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+            .WithMessage("La URL de la imagen no es válida.");
     }
 }

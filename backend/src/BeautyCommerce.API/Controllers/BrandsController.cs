@@ -50,6 +50,7 @@ public class BrandsController : ApiControllerBase
         });
     }
 
+    [AllowAnonymous]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {

@@ -13,6 +13,9 @@ public class ShoppingCartConfiguration
 
         builder.HasKey(x => x.Id);
 
+        builder.HasIndex(x => x.UserId)
+            .IsUnique();
+
         builder.HasMany(x => x.Items)
             .WithOne(x => x.ShoppingCart)
             .HasForeignKey(x => x.ShoppingCartId);

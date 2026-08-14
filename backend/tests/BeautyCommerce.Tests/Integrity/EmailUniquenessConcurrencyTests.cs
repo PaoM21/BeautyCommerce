@@ -11,25 +11,6 @@ using Npgsql;
 
 namespace BeautyCommerce.Tests.Integrity;
 
-// 6.4.2 finding #3: Program.cs sets options.User.RequireUniqueEmail = true,
-// but the real unique index on AspNetUsers only covered NormalizedUserName
-// (EmailIndex was non-unique) — confirmed by inspecting the schema directly
-// in 6.4.1. RequireUniqueEmail only adds an application-level check inside
-// UserManager.CreateAsync; it did not add a database constraint. A code
-// audit (6.4.6-A.1) then confirmed IdentityService.RegisterAsync is the
-// only place that ever creates a user, and it happens to set
-// UserName = Email — but nothing enforces that as an invariant, so the old
-// protection (piggybacking on UserNameIndex) was accidental, not designed.
-//
-// 6.4.6-A.3 closed that gap: migration 20260813043827_MakeEmailIndexUnique
-// redefines the existing EmailIndex as UNIQUE on NormalizedEmail, instead
-// of relying on UserName always mirroring Email. These tests cover both
-// angles: Concurrent_Registrations_With_The_Same_Email and
-// Concurrent_Registrations_With_The_Same_Email_Different_Case exercise the
-// real IdentityService.RegisterAsync end-to-end; Database_Rejects_Duplicate_NormalizedEmail_Even_When_UserName_Differs
-// bypasses the app layer entirely (like 6.4.4/6.4.5's raw-SQL tests) to
-// prove EmailIndex itself is what rejects the duplicate — not
-// UserNameIndex riding along for the ride.
 [Trait("Category", "Integration")]
 public class EmailUniquenessConcurrencyTests
 {
@@ -43,14 +24,13 @@ public class EmailUniquenessConcurrencyTests
                 .Options,
             null);
 
-    // Mirrors Program.cs's AddIdentity<ApplicationUser, ApplicationRole>(...)
-    // configuration exactly, so the behavior under test is the real
-    // production configuration, not a simplified stand-in.
-    private static UserManager<ApplicationUser> BuildUserManager(ApplicationDbContext context)
+    private static (UserManager<ApplicationUser> UserManager, SignInManager<ApplicationUser> SignInManager) BuildIdentityManagers(ApplicationDbContext context)
     {
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddDataProtection();
+        services.AddHttpContextAccessor();
+        services.AddAuthentication();
         services.AddSingleton(context);
 
         services
@@ -66,9 +46,13 @@ public class EmailUniquenessConcurrencyTests
             })
             .AddRoles<ApplicationRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddSignInManager()
             .AddDefaultTokenProviders();
 
-        return services.BuildServiceProvider().GetRequiredService<UserManager<ApplicationUser>>();
+        var provider = services.BuildServiceProvider();
+        return (
+            provider.GetRequiredService<UserManager<ApplicationUser>>(),
+            provider.GetRequiredService<SignInManager<ApplicationUser>>());
     }
 
     private async Task<(int successCount, List<ApplicationUser> usersWithThisEmail)> RaceTwoRegistrationsAsync(
@@ -77,9 +61,9 @@ public class EmailUniquenessConcurrencyTests
         async Task<bool> TryRegister(string firstName, string email)
         {
             await using var context = NewContext();
-            var userManager = BuildUserManager(context);
+            var (userManager, signInManager) = BuildIdentityManagers(context);
             var identityService = new IdentityService(
-                userManager, Mock.Of<IJwtTokenGenerator>(), NullLogger<IdentityService>.Instance);
+                userManager, signInManager, Mock.Of<IJwtTokenGenerator>(), NullLogger<IdentityService>.Instance);
 
             try
             {
@@ -88,11 +72,6 @@ public class EmailUniquenessConcurrencyTests
             }
             catch (Exception)
             {
-                // IdentityService.RegisterAsync throws (either a
-                // ConflictException from its own pre-check, or a raw
-                // exception wrapping the PostgreSQL unique_violation if
-                // both requests got past the pre-check simultaneously) when
-                // the email is already taken.
                 return false;
             }
         }
@@ -120,9 +99,6 @@ public class EmailUniquenessConcurrencyTests
 
         try
         {
-            // Now double-protected: UserNameIndex (UserName == Email at
-            // registration) AND EmailIndex (NormalizedEmail, added in
-            // 6.4.6-A.3) both independently reject the loser.
             successCount.Should().Be(1, "exactly one registration should win the race");
 
             usersWithThisEmail.Should().HaveCount(
@@ -141,9 +117,6 @@ public class EmailUniquenessConcurrencyTests
     [Fact]
     public async Task Concurrent_Registrations_With_The_Same_Email_Different_Case()
     {
-        // Uniqueness is enforced on NormalizedEmail (uppercase), so this
-        // must be rejected exactly like an identical string would be —
-        // "Test@Example.com" and "TEST@EXAMPLE.COM" are the same account.
         var suffix = Guid.NewGuid().ToString("N");
         var emailLower = $"qa-email-case-{suffix}@test.local";
         var emailUpper = $"QA-EMAIL-CASE-{suffix}@TEST.LOCAL";
@@ -170,12 +143,6 @@ public class EmailUniquenessConcurrencyTests
     [Fact]
     public async Task Database_Rejects_Duplicate_NormalizedEmail_Even_When_UserName_Differs()
     {
-        // Isolates EmailIndex from UserNameIndex: two rows with completely
-        // different UserName/NormalizedUserName (so UserNameIndex has
-        // nothing to say here) but the same NormalizedEmail. Bypasses
-        // IdentityService/UserManager entirely via raw SQL, the same way
-        // 6.4.4/6.4.5 proved their constraints directly. If this is
-        // rejected, it can only be EmailIndex doing it.
         var email = $"qa-email-raw-{Guid.NewGuid():N}@test.local";
         var normalizedEmail = email.ToUpperInvariant();
 
