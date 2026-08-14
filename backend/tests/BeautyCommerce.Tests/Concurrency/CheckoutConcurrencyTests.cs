@@ -12,13 +12,6 @@ using Moq;
 
 namespace BeautyCommerce.Tests.Concurrency;
 
-// 6.2.6: CheckoutCommandHandler no longer mutates ProductVariant.Stock or
-// InventoryMovement directly — it reserves stock through
-// IInventoryService.TryRegisterExitAsync (6.2.5), the same atomic
-// UPDATE ... WHERE Stock >= quantity used by the admin inventory flow. This
-// test replaces the 6.2.4 diagnostic (which documented 2 successful
-// checkouts overselling the same stock, 6/6 runs) and now requires the
-// correct outcome, repeated across many rounds against real PostgreSQL.
 [Trait("Category", "Integration")]
 public class CheckoutConcurrencyTests : IAsyncLifetime
 {
@@ -171,6 +164,7 @@ public class CheckoutConcurrencyTests : IAsyncLifetime
             currentUser.Object,
             payment.Object,
             inventoryService,
+            cache.Object,
             NullLogger<CheckoutCommandHandler>.Instance);
 
         try
@@ -194,24 +188,12 @@ public class CheckoutConcurrencyTests : IAsyncLifetime
     [Fact]
     public async Task Concurrent_Checkouts_Never_Both_Succeed()
     {
-        // Stock = 7, two different customers each have 7 units of the same
-        // variant in their cart and check out at the same time. This must
-        // land on exactly one success / one rejection every round — not
-        // "usually", not "most of the time". The 6.2.4 diagnostic proved
-        // the old code got this wrong 6/6 times under this exact scenario;
-        // this repeats it many times against the fixed code and requires
-        // every single round to be correct.
         const int rounds = 10;
 
         for (var round = 1; round <= rounds; round++)
         {
             await using (var reset = NewContext())
             {
-                // Clear out everything the previous round left behind —
-                // OrderItems/Orders included, not just stock and movements
-                // — otherwise round N's verification queries (scoped only
-                // by ProductVariantId) accumulate every prior round's
-                // orders too.
                 var roundOrderItems = await reset.OrderItems
                     .Where(x => x.ProductVariantId == _variantId)
                     .ToListAsync();

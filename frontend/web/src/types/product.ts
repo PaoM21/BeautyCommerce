@@ -27,6 +27,8 @@ export interface Product {
 
   images?: ProductImage[];
 
+  isFeatured?: boolean;
+
   variants?: ProductVariant[];
   averageRating?: number;
   reviewCount?: number;

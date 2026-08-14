@@ -39,13 +39,17 @@ public class GetProductByIdHandler
 
             Category = product.Category?.Name ?? "Sin categoría",
 
+            IsFeatured = product.IsFeatured,
+
             Variants = product.Variants
                 .Select(v => new ProductVariantDto
                 {
                     Id = v.Id,
-                    Name = v.SKU,
+                    SKU = v.SKU,
                     Price = v.Price,
-                    Stock = v.Stock
+                    Stock = v.Stock,
+                    Color = v.Color,
+                    Size = v.Size
                 })
                 .ToList(),
 

@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using BeautyCommerce.Application.Common.Interfaces;
+﻿using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Domain.Entities;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -45,7 +44,9 @@ public class CreateProductCommandHandler
                 SKU = await _identifierGenerator.GenerateSkuAsync(cancellationToken),
                 Barcode = await _identifierGenerator.GenerateBarcodeAsync(cancellationToken),
                 Price = variant.Price,
-                Stock = variant.Stock
+                Stock = variant.Stock,
+                Color = variant.Color,
+                Size = variant.Size
             });
         }
 

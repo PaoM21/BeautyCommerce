@@ -11,15 +11,6 @@ using Moq;
 
 namespace BeautyCommerce.Tests.Integrity;
 
-// 6.4.2 found that DeleteProductCommandHandler and
-// DeleteCategoryCommandHandler soft-delete only the entity itself — they
-// never touch child ProductVariants, and CheckoutCommandHandler never
-// checked the parent chain. 6.4.3 closed that gap: CheckoutCommandHandler
-// now explicitly rejects any cart item whose ProductVariant, Product, or
-// Category has IsDeleted = true. These are now regression tests against
-// real PostgreSQL and the real (fixed) CheckoutCommandHandler, proving the
-// purchase is rejected AND that rejection leaves no partial effects behind
-// (stock, inventory movements, orders, cart all untouched).
 [Trait("Category", "Integration")]
 public class CatalogSoftDeleteIntegrityTests : IAsyncLifetime
 {
@@ -116,9 +107,6 @@ public class CatalogSoftDeleteIntegrityTests : IAsyncLifetime
         context.OutboxMessages.RemoveRange(outboxMessages);
         await context.SaveChangesAsync();
 
-        // IgnoreQueryFilters: by the time we clean up, the Product/Category
-        // in the "soft-deleted" test may already be filtered out of normal
-        // queries — but they still physically exist and must be removed.
         var variant = await context.ProductVariants.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == _variantId);
         if (variant != null) context.ProductVariants.Remove(variant);
 
@@ -166,7 +154,7 @@ public class CatalogSoftDeleteIntegrityTests : IAsyncLifetime
         var inventoryService = new InventoryService(context, cache.Object);
 
         var handler = new CheckoutCommandHandler(
-            context, currentUser.Object, payment.Object, inventoryService, NullLogger<CheckoutCommandHandler>.Instance);
+            context, currentUser.Object, payment.Object, inventoryService, cache.Object, NullLogger<CheckoutCommandHandler>.Instance);
 
         try
         {
@@ -181,8 +169,6 @@ public class CatalogSoftDeleteIntegrityTests : IAsyncLifetime
     [Fact]
     public async Task Checkout_Behavior_When_The_Products_Own_Product_Is_Soft_Deleted()
     {
-        // Soft-delete the product exactly the way DeleteProductCommandHandler
-        // does it — IsActive/IsDeleted/DeletedAt, nothing else.
         await using (var setupContext = NewContext())
         {
             var product = await setupContext.Products.FirstAsync(x => x.Id == _productId);

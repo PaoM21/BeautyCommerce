@@ -3,7 +3,6 @@ using BeautyCommerce.Application.Common.Behaviors;
 using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Application.Common.Settings;
 using BeautyCommerce.Application.Features.Brands.Commands.CreateBrand;
-using BeautyCommerce.Application.Mappings;
 using BeautyCommerce.Infrastructure.Configurations;
 using BeautyCommerce.Infrastructure.Identity;
 using BeautyCommerce.Infrastructure.Persistence;
@@ -48,14 +47,12 @@ public class Program
 
         builder.Services.AddHttpContextAccessor();
 
-        builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
         builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
         builder.Services.AddScoped<IIdentityService, IdentityService>();
         builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         builder.Services.AddScoped<IImageStorageService, LocalImageStorageService>();
         builder.Services.AddScoped<IInventoryService, InventoryService>();
         builder.Services.AddScoped<IProductVariantIdentifierGenerator, ProductVariantIdentifierGenerator>();
-        builder.Services.AddScoped<BeautyCommerce.Application.Common.Interfaces.IPaymentService, BeautyCommerce.Infrastructure.Services.PaymentService>();
         builder.Services.AddMemoryCache();
         builder.Services.AddScoped<BeautyCommerce.Application.Common.Interfaces.ICacheService, BeautyCommerce.Infrastructure.Services.MemoryCacheService>();
 
@@ -111,8 +108,6 @@ public class Program
             cfg.RegisterServicesFromAssembly(typeof(CreateBrandCommand).Assembly);
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
-
-        builder.Services.AddAutoMapper(cfg => { }, typeof(ProductProfile));
 
         builder.Services.AddFluentValidationAutoValidation();
 

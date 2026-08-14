@@ -103,11 +103,9 @@ export default function AdminProductEdit() {
       product.categoryId ?? ""
     );
 
-    /*
-     * Actualmente ProductDetailDto no devuelve
-     * IsFeatured, así que dejamos el valor inicial
-     * en false hasta que decidamos exponerlo.
-     */
+    setIsFeatured(
+      product.isFeatured ?? false
+    );
   }, [product]);
 
   /*

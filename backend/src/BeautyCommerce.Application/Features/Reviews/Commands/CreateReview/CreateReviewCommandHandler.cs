@@ -97,6 +97,8 @@ public class CreateReviewCommandHandler
             cancellationToken);
             
         await _cache.InvalidateTagAsync("Reviews");
+        
+        await _cache.InvalidateTagAsync("Products");
 
         return review.Id;
     }

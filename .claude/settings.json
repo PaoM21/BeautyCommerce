@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /c/Users/PaoM/Desktop/BeautyCommerce diff --stat -- frontend/web/src/pages/Admin/Products/AdminProductDetail.tsx backend/src/BeautyCommerce.Application/Features/Products/Commands/CreateProduct/CreateProductCommand.cs backend/src/BeautyCommerce.Application/Features/Products/DTOs/CreateVariantDto.cs)",
+      "Bash('/c/Program Files/PostgreSQL/17/bin/psql.exe' -h localhost -U postgres -d BeautyCommerceDb -c ' *)",
+      "Bash(ls \"/c/Users/PaoM/.claude/projects/c--Users-PaoM-Desktop-BeautyCommerce/memory/\" 2>/dev/null)",
+      "Read(//c/Users/PaoM/.claude/projects/c--Users-PaoM-Desktop-BeautyCommerce/memory//**)",
+      "Bash(ls -la \"/c/Users/PaoM/.claude/projects/c--Users-PaoM-Desktop-BeautyCommerce/memory/\" 2>&1)",
+      "Bash(dotnet clean *)"
+    ]
+  }
+}

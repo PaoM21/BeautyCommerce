@@ -22,10 +22,6 @@ public class GetProductsQueryHandler
     {
         var query = _context.Products
             .AsNoTracking()
-            .Include(x => x.Brand)
-            .Include(x => x.Category)
-            .Include(x => x.Images)
-            .Include(x => x.Variants)
             .AsQueryable();
 
         var filter = request.Filter;
@@ -73,21 +69,12 @@ public class GetProductsQueryHandler
             ? 12
             : filter.PageSize;
 
-        var products = await query
+
+        var items = await query
             .OrderByDescending(x => x.CreatedAt)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync(cancellationToken);
-
-        return new PagedResult<ProductListItemDto>
-        {
-            Page = page,
-            PageSize = pageSize,
-            TotalRecords = totalRecords,
-            TotalPages = (int)Math.Ceiling(
-                totalRecords / (double)pageSize),
-
-            Items = products.Select(x => new ProductListItemDto
+            .Select(x => new ProductListItemDto
             {
                 Id = x.Id,
                 Name = x.Name,
@@ -106,9 +93,27 @@ public class GetProductsQueryHandler
                     .FirstOrDefault()
                     ?? x.Images
                         .Select(i => i.ImageUrl)
-                        .FirstOrDefault()
+                        .FirstOrDefault(),
 
-            }).ToList()
+                AverageRating = _context.Reviews
+                    .Where(r => r.ProductId == x.Id)
+                    .Average(r => (decimal?)r.Rating),
+
+                ReviewCount = _context.Reviews
+                    .Count(r => r.ProductId == x.Id)
+
+            })
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<ProductListItemDto>
+        {
+            Page = page,
+            PageSize = pageSize,
+            TotalRecords = totalRecords,
+            TotalPages = (int)Math.Ceiling(
+                totalRecords / (double)pageSize),
+
+            Items = items
         };
     }
 }

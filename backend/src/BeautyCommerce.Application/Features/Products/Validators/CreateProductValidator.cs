@@ -20,5 +20,16 @@ public class CreateProductValidator
 
         RuleFor(x => x.Variants)
             .NotEmpty();
+            
+        RuleForEach(x => x.Variants).ChildRules(variant =>
+        {
+            variant.RuleFor(v => v.Color)
+                .NotEmpty()
+                .WithMessage("El color de la variante es obligatorio.");
+
+            variant.RuleFor(v => v.Size)
+                .NotEmpty()
+                .WithMessage("La talla de la variante es obligatoria.");
+        });
     }
 }

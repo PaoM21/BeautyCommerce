@@ -17,6 +17,7 @@ public class CheckoutCommandHandler
     private readonly ICurrentUserService _currentUser;
     private readonly IPaymentService _paymentService;
     private readonly IInventoryService _inventoryService;
+    private readonly ICacheService _cache;
     private readonly ILogger<CheckoutCommandHandler> _logger;
 
     public CheckoutCommandHandler(
@@ -24,12 +25,14 @@ public class CheckoutCommandHandler
         ICurrentUserService currentUser,
         IPaymentService paymentService,
         IInventoryService inventoryService,
+        ICacheService cache,
         ILogger<CheckoutCommandHandler> logger)
     {
         _context = context;
         _currentUser = currentUser;
         _paymentService = paymentService;
         _inventoryService = inventoryService;
+        _cache = cache;
         _logger = logger;
     }
 
@@ -183,6 +186,8 @@ public class CheckoutCommandHandler
         _context.ShoppingCartItems.RemoveRange(cart.Items);
 
         await _context.SaveChangesAsync(cancellationToken);
+
+        await _cache.InvalidateTagAsync("Orders");
 
         _logger.LogInformation(
             "Order created successfully. OrderId {OrderId}, UserId {UserId}, Total {Total}",
