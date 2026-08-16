@@ -13,15 +13,21 @@ public class UpdateOrderStatusCommandHandler
     private readonly IApplicationDbContext _context;
     private readonly ILoyaltyService _loyaltyService;
     private readonly ICacheService _cache;
+    private readonly IInventoryService _inventoryService;
+    private readonly ICurrentUserService _currentUser;
 
     public UpdateOrderStatusCommandHandler(
         IApplicationDbContext context,
         ILoyaltyService loyaltyService,
-        ICacheService cache)
+        ICacheService cache,
+        IInventoryService inventoryService,
+        ICurrentUserService currentUser)
     {
         _context = context;
         _loyaltyService = loyaltyService;
         _cache = cache;
+        _inventoryService = inventoryService;
+        _currentUser = currentUser;
     }
 
     public async Task<bool> Handle(
@@ -29,6 +35,7 @@ public class UpdateOrderStatusCommandHandler
         CancellationToken cancellationToken)
     {
         var order = await _context.Orders
+            .Include(x => x.Items)
             .FirstOrDefaultAsync(
                 x => x.Id == request.OrderId,
                 cancellationToken);
@@ -48,9 +55,23 @@ public class UpdateOrderStatusCommandHandler
 
         order.Status = request.Status;
 
+        if (previousStatus == OrderStatus.Paid &&
+            order.Status == OrderStatus.Cancelled)
+        {
+            foreach (var item in order.Items)
+            {
+                await _inventoryService.RegisterEntryAsync(
+                    item.ProductVariantId,
+                    item.Quantity,
+                    $"Restitución por cancelación del pedido {order.OrderNumber}",
+                    _currentUser.UserId,
+                    cancellationToken);
+            }
+        }
+
         await _context.SaveChangesAsync(
             cancellationToken);
-            
+
         await _cache.InvalidateTagAsync("Orders");
 
         if (previousStatus != OrderStatus.Delivered &&

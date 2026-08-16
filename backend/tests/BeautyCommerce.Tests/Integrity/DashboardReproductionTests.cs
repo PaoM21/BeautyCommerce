@@ -136,7 +136,12 @@ public class DashboardReproductionTests : IAsyncLifetime
     {
         await using var context = NewContext();
 
-        var handler = new UpdateOrderStatusCommandHandler(context, Mock.Of<ILoyaltyService>(), Mock.Of<ICacheService>());
+        var cacheMock = new Mock<ICacheService>();
+        var inventoryService = new InventoryService(context, cacheMock.Object);
+        var currentUserMock = new Mock<ICurrentUserService>();
+
+        var handler = new UpdateOrderStatusCommandHandler(
+            context, Mock.Of<ILoyaltyService>(), cacheMock.Object, inventoryService, currentUserMock.Object);
         var behavior = new TransactionBehavior<UpdateOrderStatusCommand, bool>(
             context, NullLogger<TransactionBehavior<UpdateOrderStatusCommand, bool>>.Instance);
 
