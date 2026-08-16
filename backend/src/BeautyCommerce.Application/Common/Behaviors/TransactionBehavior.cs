@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
+using BeautyCommerce.Application.Common.Exceptions;
 using BeautyCommerce.Application.Common.Interfaces;
 
 namespace BeautyCommerce.Application.Common.Behaviors;
@@ -21,7 +22,6 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
         RequestHandlerDelegate<TResponse> next,
         CancellationToken cancellationToken)
     {
-        // Only wrap commands to avoid unnecessary transactions for queries
         if (!typeof(TRequest).Name.EndsWith("Command"))
             return await next();
 
@@ -40,9 +40,25 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Transaction failed for {Request}", typeof(TRequest).Name);
+            if (IsExpectedBusinessException(ex))
+            {
+                _logger.LogWarning(ex, "Transaction rolled back for {Request}: {Message}", typeof(TRequest).Name, ex.Message);
+            }
+            else
+            {
+                _logger.LogError(ex, "Transaction failed for {Request}", typeof(TRequest).Name);
+            }
+
             await transaction.RollbackAsync(cancellationToken);
             throw;
         }
     }
+
+    private static bool IsExpectedBusinessException(Exception exception) =>
+        exception is BadRequestException
+            or NotFoundException
+            or ConflictException
+            or UnauthorizedException
+            or UnauthorizedAccessException
+            or FluentValidation.ValidationException;
 }

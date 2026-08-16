@@ -59,6 +59,31 @@ public class AddWishlistCommandHandler : IRequestHandler<AddWishlistCommand>
 
         _context.WishlistItems.Add(item);
 
-        await _context.SaveChangesAsync(cancellationToken);
+        var transaction = _context.Database.CurrentTransaction;
+        var useSavepoint = transaction?.SupportsSavepoints ?? false;
+
+        if (useSavepoint)
+            await transaction!.CreateSavepointAsync("BeforeWishlistItemInsert", cancellationToken);
+
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException)
+        {
+            if (useSavepoint)
+                await transaction!.RollbackToSavepointAsync("BeforeWishlistItemInsert", cancellationToken);
+
+            _context.WishlistItems.Remove(item);
+
+            var alreadyExists = await _context.WishlistItems
+                .IgnoreQueryFilters()
+                .AnyAsync(
+                    x => x.UserId == userId.Value && x.ProductId == request.ProductId,
+                    cancellationToken);
+
+            if (!alreadyExists)
+                throw;
+        }
     }
 }

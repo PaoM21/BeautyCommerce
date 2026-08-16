@@ -77,12 +77,6 @@ public class CheckoutCommandHandler
 
         foreach (var item in cartItems)
         {
-            if (item.ProductVariant == null)
-            {
-                throw new BadRequestException(
-                    $"La variante {item.ProductVariantId} no existe.");
-            }
-
             if (item.Quantity <= 0)
             {
                 throw new BadRequestException(
@@ -132,8 +126,13 @@ public class CheckoutCommandHandler
 
             if (!reserved)
             {
+                _logger.LogWarning(
+                    "Checkout blocked: insufficient stock for ProductVariant {ProductVariantId} for user {UserId}",
+                    item.ProductVariantId,
+                    userId);
+
                 throw new BadRequestException(
-                    $"No hay stock suficiente para la variante {item.ProductVariantId}.");
+                    "No hay stock suficiente para uno de los productos de tu carrito.");
             }
         }
 

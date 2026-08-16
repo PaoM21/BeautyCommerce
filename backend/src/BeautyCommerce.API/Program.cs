@@ -6,7 +6,6 @@ using BeautyCommerce.Application.Features.Brands.Commands.CreateBrand;
 using BeautyCommerce.Infrastructure.Configurations;
 using BeautyCommerce.Infrastructure.Identity;
 using BeautyCommerce.Infrastructure.Persistence;
-using BeautyCommerce.Infrastructure.Persistence.Seed;
 using BeautyCommerce.Infrastructure.Services;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -74,6 +73,7 @@ public class Program
                 options.User.RequireUniqueEmail = true;
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddErrorDescriber<SpanishIdentityErrorDescriber>()
             .AddDefaultTokenProviders();
 
         builder.Services.ConfigureApplicationCookie(options =>
@@ -114,8 +114,12 @@ public class Program
         builder.Services.AddValidatorsFromAssembly(
             Assembly.Load("BeautyCommerce.Application"));
 
-        builder.Services.Configure<JwtSettings>(
-            builder.Configuration.GetSection("Jwt"));
+        builder.Services.AddOptions<JwtSettings>()
+            .Bind(builder.Configuration.GetSection("Jwt"))
+            .Validate(
+                settings => !string.IsNullOrWhiteSpace(settings.Key) && Encoding.UTF8.GetByteCount(settings.Key) >= 16,
+                "Jwt:Key debe estar presente y tener al menos 16 bytes (128 bits), el mínimo requerido por el algoritmo HS256.")
+            .ValidateOnStart();
 
         builder.Services
             .AddAuthentication(options =>
@@ -154,11 +158,20 @@ public class Program
                     new JsonStringEnumConverter());
             });
 
+        builder.Services.AddOptions<CorsSettings>()
+            .Bind(builder.Configuration.GetSection("Cors"))
+            .Validate(
+                settings => settings.AllowedOrigins is { Length: > 0 } &&
+                            settings.AllowedOrigins.All(origin => !string.IsNullOrWhiteSpace(origin)),
+                "Cors:AllowedOrigins debe contener al menos un origin no vacío.")
+            .ValidateOnStart();
+
         builder.Services.AddCors(options =>
         {
-            options.AddPolicy("DefaultCorsPolicy", builder =>
+            options.AddPolicy("DefaultCorsPolicy", policy =>
             {
-                builder.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:5173");
+                policy.AllowAnyHeader().AllowAnyMethod()
+                    .WithOrigins(builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>());
             });
         });
 
