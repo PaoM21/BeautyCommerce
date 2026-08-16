@@ -155,7 +155,13 @@
       "Bash(curl -s -X PUT http://localhost:15200/api/inventory/stock -H 'Content-Type: application/json' -H 'Authorization: Bearer __CMDSUB_OUTPUT__' -d '{\"productVariantId\":\"__TRACKED_VAR__\",\"quantity\":0,\"isEntry\":true,\"reason\":\"QA test\"}' -w '\\\\nHTTP:%{http_code}\\\\n')",
       "Bash(echo \"=== 2\\) 400 error de actualización \\(stock insuficiente: pedir salida de 999 cuando hay 3\\) ===\")",
       "Bash(kill -9 1307 1289)",
-      "Bash(rm -f /c/Users/PaoM/Desktop/BeautyCommerce/backend/tests/BeautyCommerce.Tests/Scratch/CleanupFinal43.cs *)"
+      "Bash(rm -f /c/Users/PaoM/Desktop/BeautyCommerce/backend/tests/BeautyCommerce.Tests/Scratch/CleanupFinal43.cs *)",
+      "Bash(ASPNETCORE_ENVIRONMENT=\"Development\" Jwt__Key=\"rc-verification-key-2026-secure!!\" ASPNETCORE_URLS=\"http://localhost:15201\" nohup dotnet run --no-launch-profile)",
+      "Bash(cat /tmp/final46_token.txt)",
+      "Bash(curl -s -X POST http://localhost:15201/api/products -H 'Content-Type: application/json' -H 'Authorization: Bearer __CMDSUB_OUTPUT__' -d '{\"name\":\"QA 46 Casing Fix Product\",\"description\":\"QA verification for lowercase /products\",\"brandId\":\"__TRACKED_VAR__\",\"categoryId\":\"__TRACKED_VAR__\",\"isFeatured\":false,\"variants\":[{\"price\":9.99,\"stock\":4,\"color\":\"Blanco\",\"size\":\"S\"}],\"images\":[]}' -o /tmp/final46_prod.json -w '\\\\nHTTP:%{http_code}\\\\n')",
+      "Bash(cat /tmp/final46_prod.json)",
+      "Bash(kill -9 527 509)",
+      "Bash(rm -f /c/Users/PaoM/Desktop/BeautyCommerce/backend/tests/BeautyCommerce.Tests/Scratch/CleanupFinal46.cs *)"
     ],
     "additionalDirectories": [
       "\\tmp"

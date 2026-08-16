@@ -193,7 +193,7 @@ export async function createProduct(
   product: CreateProductRequest
 ): Promise<string> {
   const response = await api.post<string>(
-    "/Products",
+    "/products",
     product
   );
 
