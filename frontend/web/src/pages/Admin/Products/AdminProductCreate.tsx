@@ -42,6 +42,8 @@ export default function AdminProductCreate() {
 
   const [price, setPrice] = useState("");
   const [stock, setStock] = useState("");
+  const [color, setColor] = useState("");
+  const [size, setSize] = useState("");
 
   const [images, setImages] = useState<string[]>([""]);
 
@@ -135,6 +137,16 @@ export default function AdminProductCreate() {
       return;
     }
 
+    if (!color.trim()) {
+      setErrorMessage("El color de la variante es obligatorio.");
+      return;
+    }
+
+    if (!size.trim()) {
+      setErrorMessage("La talla de la variante es obligatoria.");
+      return;
+    }
+
     mutation.mutate({
       name: name.trim(),
       description: description.trim(),
@@ -145,6 +157,8 @@ export default function AdminProductCreate() {
         {
           price: parsedPrice,
           stock: parsedStock,
+          color: color.trim(),
+          size: size.trim(),
         },
       ],
       images: images.map((image) => image.trim()).filter(Boolean),
@@ -251,9 +265,13 @@ export default function AdminProductCreate() {
         <Typography sx={{ fontSize: 22, mb: 3 }}>Variante inicial</Typography>
 
         <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 3, mb: 6 }}>
-          <TextField label="Precio" type="number" value={price} onChange={(event) => setPrice(event.target.value)} inputProps={{ min: 0, step: "0.01" }} required />
+          <TextField label="Precio" type="number" value={price} onChange={(event) => setPrice(event.target.value)} slotProps={{ htmlInput: { min: 0, step: "0.01" } }} required />
 
-          <TextField label="Stock inicial" type="number" value={stock} onChange={(event) => setStock(event.target.value)} inputProps={{ min: 0, step: 1 }} required />
+          <TextField label="Stock inicial" type="number" value={stock} onChange={(event) => setStock(event.target.value)} slotProps={{ htmlInput: { min: 0, step: 1 } }} required />
+
+          <TextField label="Color" value={color} onChange={(event) => setColor(event.target.value)} required />
+
+          <TextField label="Talla" value={size} onChange={(event) => setSize(event.target.value)} required />
         </Box>
 
         <Divider sx={{ mb: 5 }} />

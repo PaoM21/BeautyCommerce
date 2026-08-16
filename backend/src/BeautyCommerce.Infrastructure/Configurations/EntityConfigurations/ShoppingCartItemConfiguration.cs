@@ -9,7 +9,11 @@ public class ShoppingCartItemConfiguration
 {
     public void Configure(EntityTypeBuilder<ShoppingCartItem> builder)
     {
-        builder.ToTable("ShoppingCartItems");
+        builder.ToTable("ShoppingCartItems", t =>
+        {
+            t.HasCheckConstraint("CK_ShoppingCartItems_Quantity_Positive", "\"Quantity\" > 0");
+            t.HasCheckConstraint("CK_ShoppingCartItems_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
+        });
 
         builder.HasKey(x => x.Id);
 

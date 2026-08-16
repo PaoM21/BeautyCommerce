@@ -21,5 +21,9 @@ namespace BeautyCommerce.Application.Features.Products.DTOs
         public int Stock { get; set; }
 
         public string? Image { get; set; }
+
+        public decimal? AverageRating { get; set; }
+
+        public int ReviewCount { get; set; }
     }
 }

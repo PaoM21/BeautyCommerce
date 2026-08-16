@@ -9,7 +9,11 @@ public class OrderConfiguration
 {
     public void Configure(EntityTypeBuilder<Order> builder)
     {
-        builder.ToTable("Orders");
+        builder.ToTable("Orders", t =>
+        {
+            t.HasCheckConstraint("CK_Orders_Total_NonNegative", "\"Total\" >= 0");
+            t.HasCheckConstraint("CK_Orders_SubTotal_NonNegative", "\"SubTotal\" >= 0");
+        });
 
         builder.HasKey(x => x.Id);
 

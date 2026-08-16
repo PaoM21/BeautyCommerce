@@ -1,8 +1,6 @@
 import { api } from "./api";
 import type { Product } from "../types/product";
 
-// The API returns a PagedResult with an `items` array. Map it to the
-// frontend Product[] shape expected by the UI.
 export async function getProducts(): Promise<Product[]> {
   const response = await api.get<any>("/products");
 
@@ -70,7 +68,7 @@ export async function getProductById(
     ? p.variants.map((v: any) => ({
         id: v.id,
         productId: p.id,
-        sku: v.name ?? "",
+        sku: v.sku ?? "",
         color: v.color ?? "",
         size: v.size ?? "",
         stock: Number(v.stock ?? 0),
@@ -108,6 +106,7 @@ export async function getProductById(
         }
       : undefined,
     images: images,
+    isFeatured: p.isFeatured ?? false,
     variants: variants,
     averageRating: p.averageRating ?? undefined,
     reviewCount: p.reviewCount ?? undefined,
@@ -178,6 +177,8 @@ export async function updateProduct(
 export interface CreateProductVariant {
   price: number;
   stock: number;
+  color: string;
+  size: string;
 }
 
 export interface CreateProductRequest {

@@ -27,8 +27,7 @@ public class DeleteProductCommandHandler
 
         if (product == null)
             return false;
-
-        // Soft Delete
+            
         product.IsActive = false;
         product.IsDeleted = true;
         product.DeletedAt = DateTime.UtcNow;

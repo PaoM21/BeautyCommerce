@@ -9,7 +9,10 @@ public class InventoryMovementConfiguration
 {
     public void Configure(EntityTypeBuilder<InventoryMovement> builder)
     {
-        builder.ToTable("InventoryMovements");
+        builder.ToTable("InventoryMovements", t =>
+        {
+            t.HasCheckConstraint("CK_InventoryMovements_Quantity_Positive", "\"Quantity\" > 0");
+        });
 
         builder.HasKey(x => x.Id);
 

@@ -56,6 +56,7 @@ public class CascadeDeleteTests
             {
                 ProductId = product.Id,
                 SKU = $"QA-CASC-{Guid.NewGuid():N}"[..20],
+                Barcode = $"QA-BC-{Guid.NewGuid():N}"[..20],
                 Price = 10m,
                 Stock = 5,
                 MinimumStock = 0

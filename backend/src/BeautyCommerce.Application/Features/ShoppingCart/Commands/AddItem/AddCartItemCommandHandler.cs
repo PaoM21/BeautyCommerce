@@ -1,3 +1,4 @@
+using BeautyCommerce.Application.Common.Exceptions;
 using BeautyCommerce.Application.Common.Interfaces;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -27,16 +28,9 @@ public class AddCartItemCommandHandler
 
         if (!userId.HasValue)
         {
-            throw new UnauthorizedAccessException(
-                "User is not authenticated.");
+            throw new UnauthorizedAccessException();
         }
 
-        // NOTE: In test environments the Identity user may not be present
-        // in the same DbContext instance. We proceed assuming the
-        // authenticated user is valid. If necessary, add explicit
-        // existence checks at a higher layer.
-
-        // Find product variant.
         var variant = await _context.ProductVariants
             .FirstOrDefaultAsync(
                 pv => pv.Id == request.Item.ProductVariantId,
@@ -44,25 +38,22 @@ public class AddCartItemCommandHandler
 
         if (variant == null)
         {
-            throw new KeyNotFoundException(
-                "Product variant not found.");
+            throw new NotFoundException(
+                "La variante del producto no existe.");
         }
 
-        // Validate stock.
         if (variant.Stock < request.Item.Quantity)
         {
-            throw new InvalidOperationException(
-                "Insufficient stock for the requested quantity.");
+            throw new BadRequestException(
+                "No hay stock suficiente.");
         }
-
-        // Find existing cart for authenticated user.
+        
         var cart = await _context.ShoppingCarts
             .Include(c => c.Items)
             .FirstOrDefaultAsync(
                 c => c.UserId == userId.Value,
                 cancellationToken);
-
-        // Create cart if it doesn't exist.
+                
         if (cart == null)
         {
             cart = new global::BeautyCommerce.Domain.Entities.ShoppingCart
@@ -72,10 +63,29 @@ public class AddCartItemCommandHandler
 
             _context.ShoppingCarts.Add(cart);
 
-            await _context.SaveChangesAsync(cancellationToken);
-        }
+            var transaction = _context.Database.CurrentTransaction;
+            var useSavepoint = transaction?.SupportsSavepoints ?? false;
 
-        // Check if product variant is already in cart.
+            if (useSavepoint)
+                await transaction!.CreateSavepointAsync("BeforeCartCreate", cancellationToken);
+
+            try
+            {
+                await _context.SaveChangesAsync(cancellationToken);
+            }
+            catch (DbUpdateException)
+            {
+                if (useSavepoint)
+                    await transaction!.RollbackToSavepointAsync("BeforeCartCreate", cancellationToken);
+
+                _context.ShoppingCarts.Remove(cart);
+
+                cart = await _context.ShoppingCarts
+                    .Include(c => c.Items)
+                    .FirstAsync(c => c.UserId == userId.Value, cancellationToken);
+            }
+        }
+        
         var existingItem = cart.Items
             .FirstOrDefault(
                 i => i.ProductVariantId == variant.Id);

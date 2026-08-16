@@ -381,7 +381,9 @@ export default function AdminInventory() {
               value={quantity}
               onChange={(event) => setQuantity(event.target.value)}
               sx={{ mb: 3 }}
-              inputProps={{ min: 1 }}
+              slotProps={{
+                htmlInput: { min: 1 },
+              }}
             />
 
             <TextField

@@ -3,11 +3,9 @@ using BeautyCommerce.Application.Common.Behaviors;
 using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Application.Common.Settings;
 using BeautyCommerce.Application.Features.Brands.Commands.CreateBrand;
-using BeautyCommerce.Application.Mappings;
 using BeautyCommerce.Infrastructure.Configurations;
 using BeautyCommerce.Infrastructure.Identity;
 using BeautyCommerce.Infrastructure.Persistence;
-using BeautyCommerce.Infrastructure.Persistence.Seed;
 using BeautyCommerce.Infrastructure.Services;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -48,13 +46,12 @@ public class Program
 
         builder.Services.AddHttpContextAccessor();
 
-        builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
         builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
         builder.Services.AddScoped<IIdentityService, IdentityService>();
         builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         builder.Services.AddScoped<IImageStorageService, LocalImageStorageService>();
         builder.Services.AddScoped<IInventoryService, InventoryService>();
-        builder.Services.AddScoped<BeautyCommerce.Application.Common.Interfaces.IPaymentService, BeautyCommerce.Infrastructure.Services.PaymentService>();
+        builder.Services.AddScoped<IProductVariantIdentifierGenerator, ProductVariantIdentifierGenerator>();
         builder.Services.AddMemoryCache();
         builder.Services.AddScoped<BeautyCommerce.Application.Common.Interfaces.ICacheService, BeautyCommerce.Infrastructure.Services.MemoryCacheService>();
 
@@ -76,6 +73,7 @@ public class Program
                 options.User.RequireUniqueEmail = true;
             })
             .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddErrorDescriber<SpanishIdentityErrorDescriber>()
             .AddDefaultTokenProviders();
 
         builder.Services.ConfigureApplicationCookie(options =>
@@ -111,15 +109,17 @@ public class Program
             cfg.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
 
-        builder.Services.AddAutoMapper(cfg => { }, typeof(ProductProfile));
-
         builder.Services.AddFluentValidationAutoValidation();
 
         builder.Services.AddValidatorsFromAssembly(
             Assembly.Load("BeautyCommerce.Application"));
 
-        builder.Services.Configure<JwtSettings>(
-            builder.Configuration.GetSection("Jwt"));
+        builder.Services.AddOptions<JwtSettings>()
+            .Bind(builder.Configuration.GetSection("Jwt"))
+            .Validate(
+                settings => !string.IsNullOrWhiteSpace(settings.Key) && Encoding.UTF8.GetByteCount(settings.Key) >= 16,
+                "Jwt:Key debe estar presente y tener al menos 16 bytes (128 bits), el mínimo requerido por el algoritmo HS256.")
+            .ValidateOnStart();
 
         builder.Services
             .AddAuthentication(options =>
@@ -158,11 +158,20 @@ public class Program
                     new JsonStringEnumConverter());
             });
 
+        builder.Services.AddOptions<CorsSettings>()
+            .Bind(builder.Configuration.GetSection("Cors"))
+            .Validate(
+                settings => settings.AllowedOrigins is { Length: > 0 } &&
+                            settings.AllowedOrigins.All(origin => !string.IsNullOrWhiteSpace(origin)),
+                "Cors:AllowedOrigins debe contener al menos un origin no vacío.")
+            .ValidateOnStart();
+
         builder.Services.AddCors(options =>
         {
-            options.AddPolicy("DefaultCorsPolicy", builder =>
+            options.AddPolicy("DefaultCorsPolicy", policy =>
             {
-                builder.AllowAnyHeader().AllowAnyMethod().WithOrigins("http://localhost:5173");
+                policy.AllowAnyHeader().AllowAnyMethod()
+                    .WithOrigins(builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>());
             });
         });
 

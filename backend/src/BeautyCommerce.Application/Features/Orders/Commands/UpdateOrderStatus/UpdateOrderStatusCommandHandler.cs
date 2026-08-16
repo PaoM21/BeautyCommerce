@@ -50,10 +50,7 @@ public class UpdateOrderStatusCommandHandler
 
         await _context.SaveChangesAsync(
             cancellationToken);
-
-        // Invalida todas las consultas cacheadas del feature Orders (listados y
-        // detalles, tanto administrativos como del cliente), ya que todas
-        // comparten el tag "Orders" generado por CachingBehavior.
+            
         await _cache.InvalidateTagAsync("Orders");
 
         if (previousStatus != OrderStatus.Delivered &&

@@ -11,15 +11,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 
 namespace BeautyCommerce.Tests.Integrity;
-
-// 6.2.7: proves — against real PostgreSQL, not a mock that would hide it —
-// that checkout's failure and success paths each leave the database in a
-// fully consistent state. Nothing in CheckoutCommandHandler,
-// InventoryService, or TransactionBehavior is modified for this; the
-// "controlled failure" is a real, already-existing failure path (a failed
-// payment), which now happens AFTER stock has been atomically reserved
-// (6.2.5), making it the natural place to prove the rollback actually
-// covers everything.
 [Trait("Category", "Integration")]
 public class CheckoutTransactionIntegrityTests : IAsyncLifetime
 {
@@ -62,6 +53,7 @@ public class CheckoutTransactionIntegrityTests : IAsyncLifetime
         {
             ProductId = product.Id,
             SKU = $"QA-INT-{Guid.NewGuid():N}"[..20],
+            Barcode = $"QA-BC-{Guid.NewGuid():N}"[..20],
             Price = 10m,
             Stock = InitialStock,
             MinimumStock = 0
@@ -183,13 +175,9 @@ public class CheckoutTransactionIntegrityTests : IAsyncLifetime
             currentUser.Object,
             payment.Object,
             inventoryService,
+            cache.Object,
             NullLogger<CheckoutCommandHandler>.Instance);
 
-        // Stock is reserved (6.2.5 order: reserve before charging) before
-        // the payment call, so by the time this throws, an UPDATE and an
-        // InventoryMovement INSERT have already happened on this
-        // connection — uncommitted. This is exactly the "failure after a
-        // partial effect" scenario 6.2.7 needs to prove rolls back cleanly.
         var act = async () => await handler.Handle(new CheckoutCommand(), default);
 
         await act.Should().ThrowAsync<BadRequestException>()
@@ -267,6 +255,7 @@ public class CheckoutTransactionIntegrityTests : IAsyncLifetime
             currentUser.Object,
             payment.Object,
             inventoryService,
+            cache.Object,
             NullLogger<CheckoutCommandHandler>.Instance);
 
         var orderId = await handler.Handle(new CheckoutCommand(), default);
@@ -298,10 +287,7 @@ public class CheckoutTransactionIntegrityTests : IAsyncLifetime
         orderItems.Should().HaveCount(1);
         orderItems[0].Quantity.Should().Be(7);
         orderItems[0].OrderId.Should().Be(orderId);
-
-        // The core 6.2.7 invariant: what the order says was sold, what the
-        // movement log says left the building, and what actually
-        // disappeared from Stock must all be the exact same number.
+        
         orderItems[0].Quantity.Should().Be(movements[0].Quantity);
         (InitialStock - finalVariant.Stock).Should().Be(movements[0].Quantity);
     }

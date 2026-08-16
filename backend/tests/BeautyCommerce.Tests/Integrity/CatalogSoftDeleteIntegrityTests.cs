@@ -1,3 +1,4 @@
+using BeautyCommerce.Application.Common.Behaviors;
 using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Application.Common.Models;
 using BeautyCommerce.Application.Features.Orders.Commands.Checkout;
@@ -11,14 +12,6 @@ using Moq;
 
 namespace BeautyCommerce.Tests.Integrity;
 
-// 6.4.2 finding #1 (highest business priority): DeleteProductCommandHandler
-// and DeleteCategoryCommandHandler soft-delete only the entity itself —
-// they never touch child ProductVariants. This test proves, against real
-// PostgreSQL and the real (unmodified) CheckoutCommandHandler, whether a
-// customer can still complete a purchase of a variant whose parent
-// Product — or whose parent Category — has been soft-deleted. Nothing in
-// production is changed here; this documents the current behavior so a
-// fix can be evaluated with evidence instead of assumption.
 [Trait("Category", "Integration")]
 public class CatalogSoftDeleteIntegrityTests : IAsyncLifetime
 {
@@ -63,6 +56,7 @@ public class CatalogSoftDeleteIntegrityTests : IAsyncLifetime
         {
             ProductId = product.Id,
             SKU = $"QA-SD-{Guid.NewGuid():N}"[..20],
+            Barcode = $"QA-BC-{Guid.NewGuid():N}"[..20],
             Price = 10m,
             Stock = 10,
             MinimumStock = 0
@@ -114,9 +108,6 @@ public class CatalogSoftDeleteIntegrityTests : IAsyncLifetime
         context.OutboxMessages.RemoveRange(outboxMessages);
         await context.SaveChangesAsync();
 
-        // IgnoreQueryFilters: by the time we clean up, the Product/Category
-        // in the "soft-deleted" test may already be filtered out of normal
-        // queries — but they still physically exist and must be removed.
         var variant = await context.ProductVariants.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Id == _variantId);
         if (variant != null) context.ProductVariants.Remove(variant);
 
@@ -164,11 +155,17 @@ public class CatalogSoftDeleteIntegrityTests : IAsyncLifetime
         var inventoryService = new InventoryService(context, cache.Object);
 
         var handler = new CheckoutCommandHandler(
-            context, currentUser.Object, payment.Object, inventoryService, NullLogger<CheckoutCommandHandler>.Instance);
+            context, currentUser.Object, payment.Object, inventoryService, cache.Object, NullLogger<CheckoutCommandHandler>.Instance);
+
+        var transactionBehavior = new TransactionBehavior<CheckoutCommand, Guid>(
+            context, NullLogger<TransactionBehavior<CheckoutCommand, Guid>>.Instance);
 
         try
         {
-            return await handler.Handle(new CheckoutCommand(), default);
+            return await transactionBehavior.Handle(
+                new CheckoutCommand(),
+                _ => handler.Handle(new CheckoutCommand(), default),
+                default);
         }
         catch (BeautyCommerce.Application.Common.Exceptions.BadRequestException)
         {
@@ -179,8 +176,6 @@ public class CatalogSoftDeleteIntegrityTests : IAsyncLifetime
     [Fact]
     public async Task Checkout_Behavior_When_The_Products_Own_Product_Is_Soft_Deleted()
     {
-        // Soft-delete the product exactly the way DeleteProductCommandHandler
-        // does it — IsActive/IsDeleted/DeletedAt, nothing else.
         await using (var setupContext = NewContext())
         {
             var product = await setupContext.Products.FirstAsync(x => x.Id == _productId);
@@ -197,17 +192,32 @@ public class CatalogSoftDeleteIntegrityTests : IAsyncLifetime
         await using var checkoutContext = NewContext();
         var orderId = await RunCheckoutAsync(checkoutContext, userId);
 
-        // This documents current behavior — it is not asserting what
-        // SHOULD happen, only what the real, unmodified code actually
-        // does today.
-        orderId.Should().NotBeNull(
-            "current behavior: the variant's own IsDeleted is still false, so checkout does not check the parent " +
-            "Product's soft-delete status at all and completes the purchase of a delisted product");
+        orderId.Should().BeNull(
+            "checkout must reject a cart item whose parent Product has been soft-deleted, even though the " +
+            "variant's own IsDeleted is still false");
 
         await using var verify = NewContext();
+
+        var stock = await verify.ProductVariants.AsNoTracking()
+            .Where(x => x.Id == _variantId).Select(x => x.Stock).FirstAsync();
+        stock.Should().Be(10, "a rejected checkout must not reserve/consume any stock");
+
+        var movements = await verify.InventoryMovements.AsNoTracking()
+            .Where(x => x.ProductVariantId == _variantId).ToListAsync();
+        movements.Should().BeEmpty("a rejected checkout must not create any inventory movement");
+
         var orderItems = await verify.OrderItems.AsNoTracking()
             .Where(x => x.ProductVariantId == _variantId).ToListAsync();
-        orderItems.Should().HaveCount(1, "the purchase of the delisted product's variant actually went through");
+        orderItems.Should().BeEmpty("a rejected checkout must not create any order item");
+
+        var orders = await verify.Orders.AsNoTracking()
+            .Where(x => x.UserId == userId).ToListAsync();
+        orders.Should().BeEmpty("a rejected checkout must not create any order");
+
+        var cartItems = await verify.ShoppingCartItems.AsNoTracking()
+            .Where(x => x.ProductVariantId == _variantId).ToListAsync();
+        cartItems.Should().HaveCount(1, "the cart item must remain untouched after a rejected checkout");
+        cartItems[0].Quantity.Should().Be(3);
     }
 
     [Fact]
@@ -229,13 +239,31 @@ public class CatalogSoftDeleteIntegrityTests : IAsyncLifetime
         await using var checkoutContext = NewContext();
         var orderId = await RunCheckoutAsync(checkoutContext, userId);
 
-        orderId.Should().NotBeNull(
-            "current behavior: soft-deleting a Category never touches its Products or their variants, " +
-            "so checkout completes the purchase without ever noticing the category is gone");
+        orderId.Should().BeNull(
+            "checkout must reject a cart item whose Product's Category has been soft-deleted, even though " +
+            "neither the variant nor the product itself is marked deleted");
 
         await using var verify = NewContext();
+
+        var stock = await verify.ProductVariants.AsNoTracking()
+            .Where(x => x.Id == _variantId).Select(x => x.Stock).FirstAsync();
+        stock.Should().Be(10, "a rejected checkout must not reserve/consume any stock");
+
+        var movements = await verify.InventoryMovements.AsNoTracking()
+            .Where(x => x.ProductVariantId == _variantId).ToListAsync();
+        movements.Should().BeEmpty("a rejected checkout must not create any inventory movement");
+
         var orderItems = await verify.OrderItems.AsNoTracking()
             .Where(x => x.ProductVariantId == _variantId).ToListAsync();
-        orderItems.Should().HaveCount(1);
+        orderItems.Should().BeEmpty("a rejected checkout must not create any order item");
+
+        var orders = await verify.Orders.AsNoTracking()
+            .Where(x => x.UserId == userId).ToListAsync();
+        orders.Should().BeEmpty("a rejected checkout must not create any order");
+
+        var cartItems = await verify.ShoppingCartItems.AsNoTracking()
+            .Where(x => x.ProductVariantId == _variantId).ToListAsync();
+        cartItems.Should().HaveCount(1, "the cart item must remain untouched after a rejected checkout");
+        cartItems[0].Quantity.Should().Be(2);
     }
 }

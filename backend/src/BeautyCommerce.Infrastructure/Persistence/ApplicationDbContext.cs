@@ -13,6 +13,9 @@ public class ApplicationDbContext
     : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>,
       IApplicationDbContext
 {
+    private static readonly HashSet<string> SensitivePropertyNames =
+        new(StringComparer.OrdinalIgnoreCase) { "PasswordHash", "SecurityStamp" };
+
     private readonly ICurrentUserService? _currentUserService;
 
     public ApplicationDbContext(
@@ -123,7 +126,9 @@ public class ApplicationDbContext
                     try
                     {
                         var vals = string.Join(", ", e.CurrentValues.Properties.Select(p =>
-                            $"{p.Name}={e.CurrentValues[p]?.ToString() ?? "<null>"}"));
+                            SensitivePropertyNames.Contains(p.Name)
+                                ? $"{p.Name}=<redacted>"
+                                : $"{p.Name}={e.CurrentValues[p]?.ToString() ?? "<null>"}"));
 
                         System.Diagnostics.Debug.WriteLine($"Entity: {e.Entity.GetType().FullName}, State: {e.State}, Values: {vals}");
                     }
@@ -138,7 +143,6 @@ public class ApplicationDbContext
                 System.Diagnostics.Debug.WriteLine($"Error while logging SaveChangesAsync failure: {logEx.Message}");
             }
 
-            // Re-throw original exception so normal flow/handlers still observe it.
             throw;
         }
     }

@@ -26,6 +26,9 @@ public class GetWishlistQueryHandler : IRequestHandler<GetWishlistQuery, List<Wi
         var items = await _context.WishlistItems
             .AsNoTracking()
             .Include(x => x.Product)
+                .ThenInclude(p => p.Variants)
+            .Include(x => x.Product)
+                .ThenInclude(p => p.Images)
             .Where(x => x.UserId == userId)
             .ToListAsync(cancellationToken);
 

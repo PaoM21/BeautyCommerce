@@ -33,6 +33,9 @@ public class GetAdminOrderByIdQueryHandler
                 OrderNumber = x.OrderNumber,
                 OrderDate = x.OrderDate,
                 Status = x.Status.ToString(),
+                SubTotal = x.SubTotal,
+                ShippingCost = x.ShippingCost,
+                Tax = x.Tax,
                 Total = x.Total,
                 TransactionId = x.TransactionId,
 

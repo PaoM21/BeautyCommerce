@@ -9,9 +9,6 @@ public class MemoryCacheService : ICacheService
 {
     private readonly IMemoryCache _cache;
 
-    // Shared across requests: ICacheService is registered as Scoped, but tag
-    // tokens must outlive a single request to invalidate entries cached by
-    // earlier requests, so this is static rather than an instance field.
     private static readonly ConcurrentDictionary<string, CancellationTokenSource> _tagTokens = new();
 
     public MemoryCacheService(IMemoryCache cache)

@@ -38,6 +38,7 @@ public class CategoriesController : ControllerBase
         });
     }
 
+    [AllowAnonymous]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
@@ -51,6 +52,7 @@ public class CategoriesController : ControllerBase
         });
     }
 
+    [AllowAnonymous]
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {

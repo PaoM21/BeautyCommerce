@@ -9,15 +9,18 @@ namespace BeautyCommerce.Infrastructure.Identity;
 public class IdentityService : IIdentityService
 {
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly ILogger<IdentityService> _logger;
 
     public IdentityService(
         UserManager<ApplicationUser> userManager,
+        SignInManager<ApplicationUser> signInManager,
         IJwtTokenGenerator jwtTokenGenerator,
         ILogger<IdentityService> logger)
     {
         _userManager = userManager;
+        _signInManager = signInManager;
         _jwtTokenGenerator = jwtTokenGenerator;
         _logger = logger;
     }
@@ -76,11 +79,15 @@ public class IdentityService : IIdentityService
             throw new UnauthorizedException("Correo o contraseña incorrectos.");
         }
 
-        var valid = await _userManager.CheckPasswordAsync(user, password);
+        var result = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
 
-        if (!valid)
+        if (!result.Succeeded)
         {
-            _logger?.LogWarning("Login failed: invalid credentials for {Email}", email);
+
+            _logger?.LogWarning(
+                "Login failed for {Email}: {Reason}",
+                email,
+                result.IsLockedOut ? "locked out" : "invalid credentials");
             throw new UnauthorizedException("Correo o contraseña incorrectos.");
         }
 

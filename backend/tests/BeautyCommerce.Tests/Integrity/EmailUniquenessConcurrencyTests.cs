@@ -7,18 +7,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
+using Npgsql;
 
 namespace BeautyCommerce.Tests.Integrity;
 
-// 6.4.2 finding #3: Program.cs sets options.User.RequireUniqueEmail = true,
-// but the real unique index on AspNetUsers only covers NormalizedUserName
-// (EmailIndex is non-unique) — confirmed by inspecting the schema directly
-// in 6.4.1. RequireUniqueEmail only adds an application-level check inside
-// UserManager.CreateAsync; it does not add a database constraint. This
-// test drives the real IdentityService.RegisterAsync (via a real
-// UserManager<ApplicationUser>, configured exactly like Program.cs) twice,
-// concurrently, with the same email, against real PostgreSQL, to see what
-// actually happens — not what the option name implies should happen.
 [Trait("Category", "Integration")]
 public class EmailUniquenessConcurrencyTests
 {
@@ -32,14 +24,13 @@ public class EmailUniquenessConcurrencyTests
                 .Options,
             null);
 
-    // Mirrors Program.cs's AddIdentity<ApplicationUser, ApplicationRole>(...)
-    // configuration exactly, so the behavior under test is the real
-    // production configuration, not a simplified stand-in.
-    private static UserManager<ApplicationUser> BuildUserManager(ApplicationDbContext context)
+    private static (UserManager<ApplicationUser> UserManager, SignInManager<ApplicationUser> SignInManager) BuildIdentityManagers(ApplicationDbContext context)
     {
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddDataProtection();
+        services.AddHttpContextAccessor();
+        services.AddAuthentication();
         services.AddSingleton(context);
 
         services
@@ -55,22 +46,24 @@ public class EmailUniquenessConcurrencyTests
             })
             .AddRoles<ApplicationRole>()
             .AddEntityFrameworkStores<ApplicationDbContext>()
+            .AddSignInManager()
             .AddDefaultTokenProviders();
 
-        return services.BuildServiceProvider().GetRequiredService<UserManager<ApplicationUser>>();
+        var provider = services.BuildServiceProvider();
+        return (
+            provider.GetRequiredService<UserManager<ApplicationUser>>(),
+            provider.GetRequiredService<SignInManager<ApplicationUser>>());
     }
 
-    [Fact]
-    public async Task Concurrent_Registrations_With_The_Same_Email()
+    private async Task<(int successCount, List<ApplicationUser> usersWithThisEmail)> RaceTwoRegistrationsAsync(
+        string emailA, string emailB, string queryEmailForCleanup)
     {
-        var email = $"qa-email-race-{Guid.NewGuid():N}@test.local";
-
-        async Task<bool> TryRegister(string firstName)
+        async Task<bool> TryRegister(string firstName, string email)
         {
             await using var context = NewContext();
-            var userManager = BuildUserManager(context);
+            var (userManager, signInManager) = BuildIdentityManagers(context);
             var identityService = new IdentityService(
-                userManager, Mock.Of<IJwtTokenGenerator>(), NullLogger<IdentityService>.Instance);
+                userManager, signInManager, Mock.Of<IJwtTokenGenerator>(), NullLogger<IdentityService>.Instance);
 
             try
             {
@@ -79,41 +72,34 @@ public class EmailUniquenessConcurrencyTests
             }
             catch (Exception)
             {
-                // IdentityService.RegisterAsync throws a plain Exception
-                // (see 6.1) when UserManager reports the email/username is
-                // already taken — either a genuine "duplicate" outcome, or
-                // (if the DB truly has no constraint) both could avoid this
-                // entirely and both succeed.
                 return false;
             }
         }
 
-        var taskA = TryRegister("A");
-        var taskB = TryRegister("B");
+        var taskA = TryRegister("A", emailA);
+        var taskB = TryRegister("B", emailB);
 
         var results = await Task.WhenAll(taskA, taskB);
-
         var successCount = results.Count(x => x);
 
         await using var verify = NewContext();
         var usersWithThisEmail = await verify.Users
-            .Where(u => u.Email == email)
+            .Where(u => u.NormalizedEmail == queryEmailForCleanup.ToUpperInvariant())
             .ToListAsync();
+
+        return (successCount, usersWithThisEmail);
+    }
+
+    [Fact]
+    public async Task Concurrent_Registrations_With_The_Same_Email()
+    {
+        var email = $"qa-email-race-{Guid.NewGuid():N}@test.local";
+
+        var (successCount, usersWithThisEmail) = await RaceTwoRegistrationsAsync(email, email, email);
 
         try
         {
-            // Documents the real outcome. Per the audit: UserName is set
-            // equal to Email at registration, and NormalizedUserName *is*
-            // uniquely indexed — so today, one of the two concurrent
-            // registrations is expected to fail, but only as a side effect
-            // of the username collision, not because Email itself is
-            // protected. If this assertion ever fails with successCount
-            // == 2, it proves the accidental protection stopped working
-            // (e.g. if UserName and Email are ever allowed to diverge).
-            successCount.Should().Be(
-                1,
-                "exactly one registration should win — today this is only guaranteed by NormalizedUserName's " +
-                "unique index, since UserName is always set equal to Email, not by any constraint on Email itself");
+            successCount.Should().Be(1, "exactly one registration should win the race");
 
             usersWithThisEmail.Should().HaveCount(
                 1,
@@ -121,12 +107,87 @@ public class EmailUniquenessConcurrencyTests
         }
         finally
         {
+            await using var cleanup = NewContext();
             foreach (var user in usersWithThisEmail)
-            {
-                verify.Users.Remove(user);
-            }
+                cleanup.Users.Attach(user).State = Microsoft.EntityFrameworkCore.EntityState.Deleted;
+            await cleanup.SaveChangesAsync();
+        }
+    }
 
-            await verify.SaveChangesAsync();
+    [Fact]
+    public async Task Concurrent_Registrations_With_The_Same_Email_Different_Case()
+    {
+        var suffix = Guid.NewGuid().ToString("N");
+        var emailLower = $"qa-email-case-{suffix}@test.local";
+        var emailUpper = $"QA-EMAIL-CASE-{suffix}@TEST.LOCAL";
+
+        var (successCount, usersWithThisEmail) = await RaceTwoRegistrationsAsync(emailLower, emailUpper, emailLower);
+
+        try
+        {
+            successCount.Should().Be(
+                1,
+                "two emails differing only by case must be treated as the same account — exactly one registration should win");
+
+            usersWithThisEmail.Should().HaveCount(1, "only one account should exist after the race settles");
+        }
+        finally
+        {
+            await using var cleanup = NewContext();
+            foreach (var user in usersWithThisEmail)
+                cleanup.Users.Attach(user).State = Microsoft.EntityFrameworkCore.EntityState.Deleted;
+            await cleanup.SaveChangesAsync();
+        }
+    }
+
+    [Fact]
+    public async Task Database_Rejects_Duplicate_NormalizedEmail_Even_When_UserName_Differs()
+    {
+        var email = $"qa-email-raw-{Guid.NewGuid():N}@test.local";
+        var normalizedEmail = email.ToUpperInvariant();
+
+        await using var context = NewContext();
+
+        var idA = Guid.NewGuid();
+        var userNameA = $"qa-username-a-{idA:N}";
+        await context.Database.ExecuteSqlInterpolatedAsync($"""
+            INSERT INTO "AspNetUsers"
+                ("Id", "FirstName", "LastName", "IsActive", "UserName", "NormalizedUserName",
+                 "Email", "NormalizedEmail", "EmailConfirmed", "PhoneNumberConfirmed", "TwoFactorEnabled",
+                 "LockoutEnabled", "AccessFailedCount")
+            VALUES
+                ({idA}, 'QA', 'RawA', true, {userNameA}, {userNameA.ToUpperInvariant()},
+                 {email}, {normalizedEmail}, false, false, false, true, 0)
+            """);
+
+        try
+        {
+            var idB = Guid.NewGuid();
+            var userNameB = $"qa-username-b-{idB:N}";
+
+            var act = () => context.Database.ExecuteSqlInterpolatedAsync($"""
+                INSERT INTO "AspNetUsers"
+                    ("Id", "FirstName", "LastName", "IsActive", "UserName", "NormalizedUserName",
+                     "Email", "NormalizedEmail", "EmailConfirmed", "PhoneNumberConfirmed", "TwoFactorEnabled",
+                     "LockoutEnabled", "AccessFailedCount")
+                VALUES
+                    ({idB}, 'QA', 'RawB', true, {userNameB}, {userNameB.ToUpperInvariant()},
+                     {email}, {normalizedEmail}, false, false, false, true, 0)
+                """);
+
+            var thrown = await act.Should().ThrowAsync<PostgresException>(
+                "PostgreSQL must reject a second row with the same NormalizedEmail, regardless of UserName");
+
+            thrown.Which.SqlState.Should().Be(PostgresErrorCodes.UniqueViolation);
+            thrown.Which.ConstraintName.Should().Be("EmailIndex", "the rejection must come specifically from EmailIndex, not UserNameIndex");
+
+            var count = await context.Users.AsNoTracking().CountAsync(u => u.NormalizedEmail == normalizedEmail);
+            count.Should().Be(1, "the rejected second insert must not have created a row");
+        }
+        finally
+        {
+            await context.Database.ExecuteSqlInterpolatedAsync(
+                $"DELETE FROM \"AspNetUsers\" WHERE \"NormalizedEmail\" = {normalizedEmail}");
         }
     }
 }

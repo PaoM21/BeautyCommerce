@@ -16,11 +16,6 @@ public class CheckoutCommandHandlerTests
     [Fact]
     public async Task Should_Create_Order_When_Payment_Succeeds()
     {
-        // Arrange. Uses SQLite (not the InMemory provider) because checkout
-        // now reserves stock via InventoryService.TryRegisterExitAsync,
-        // which relies on ExecuteUpdateAsync — see InventoryServiceTests
-        // for why. SQLite also enforces real foreign keys, hence the
-        // Brand/Category/Product seeding below.
         var (context, connection) = SqliteDbContextHelper.CreateDbContext();
         using var _ = connection;
 
@@ -44,6 +39,8 @@ public class CheckoutCommandHandlerTests
         {
             Id = Guid.NewGuid(),
             ProductId = product.Id,
+            SKU = $"QA-SKU-{Guid.NewGuid():N}"[..20],
+            Barcode = $"QA-BC-{Guid.NewGuid():N}"[..20],
             Price = 10m,
             Stock = 5
         };
@@ -99,6 +96,7 @@ public class CheckoutCommandHandlerTests
                 currentUserMock.Object,
                 paymentMock.Object,
                 inventoryService,
+                cacheMock.Object,
                 NullLogger<CheckoutCommandHandler>.Instance);
 
         var command = new CheckoutCommand();
@@ -131,11 +129,6 @@ public class CheckoutCommandHandlerTests
             .Should()
             .Be(1);
 
-        // Stock and the InventoryMovement now come from
-        // IInventoryService.TryRegisterExitAsync, not from checkout
-        // mutating ProductVariant.Stock directly — confirm both actually
-        // happened. ExecuteUpdateAsync bypasses the change tracker, so
-        // read fresh via AsNoTracking.
         var updatedVariant = await context.ProductVariants
             .AsNoTracking()
             .FirstAsync(x => x.Id == variant.Id);

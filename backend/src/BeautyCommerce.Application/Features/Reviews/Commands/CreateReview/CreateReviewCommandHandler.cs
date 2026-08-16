@@ -49,9 +49,7 @@ public class CreateReviewCommandHandler
         if (!productExists)
             throw new NotFoundException(
                 "Producto no encontrado.");
-
-        // Buscar una orden entregada que contenga
-        // una variante perteneciente al producto.
+                
         var orderItem = await _context.OrderItems
             .Include(x => x.Order)
             .Include(x => x.ProductVariant)
@@ -97,12 +95,10 @@ public class CreateReviewCommandHandler
 
         await _context.SaveChangesAsync(
             cancellationToken);
-
-        // GetProductReviewsQuery's cache key includes ProductId, but the
-        // tag itself covers every product's reviews — invalidating it here
-        // is correct and simpler than tracking each individual product's
-        // cached key.
+            
         await _cache.InvalidateTagAsync("Reviews");
+        
+        await _cache.InvalidateTagAsync("Products");
 
         return review.Id;
     }

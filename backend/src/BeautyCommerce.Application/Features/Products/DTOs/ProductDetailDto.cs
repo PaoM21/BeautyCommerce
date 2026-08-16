@@ -16,6 +16,8 @@ public class ProductDetailDto
 
     public string Category { get; set; } = string.Empty;
 
+    public bool IsFeatured { get; set; }
+
     public List<ProductVariantDto> Variants { get; set; } = [];
 
     public List<ProductImageDto> Images { get; set; } = [];

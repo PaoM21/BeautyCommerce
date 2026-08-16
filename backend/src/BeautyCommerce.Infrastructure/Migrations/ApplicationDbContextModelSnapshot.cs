@@ -133,7 +133,10 @@ namespace BeautyCommerce.Infrastructure.Migrations
 
                     b.HasIndex("ProductVariantId");
 
-                    b.ToTable("InventoryMovements", (string)null);
+                    b.ToTable("InventoryMovements", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_InventoryMovements_Quantity_Positive", "\"Quantity\" > 0");
+                        });
                 });
 
             modelBuilder.Entity("BeautyCommerce.Domain.Entities.LoyaltyAccount", b =>
@@ -308,7 +311,12 @@ namespace BeautyCommerce.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Orders", (string)null);
+                    b.ToTable("Orders", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Orders_SubTotal_NonNegative", "\"SubTotal\" >= 0");
+
+                            t.HasCheckConstraint("CK_Orders_Total_NonNegative", "\"Total\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("BeautyCommerce.Domain.Entities.OrderItem", b =>
@@ -364,7 +372,12 @@ namespace BeautyCommerce.Infrastructure.Migrations
 
                     b.HasIndex("ProductVariantId");
 
-                    b.ToTable("OrderItems", (string)null);
+                    b.ToTable("OrderItems", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_OrderItems_Quantity_Positive", "\"Quantity\" > 0");
+
+                            t.HasCheckConstraint("CK_OrderItems_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("BeautyCommerce.Domain.Entities.OutboxMessage", b =>
@@ -592,9 +605,30 @@ namespace BeautyCommerce.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Barcode")
+                        .IsUnique();
+
                     b.HasIndex("ProductId");
 
-                    b.ToTable("ProductVariants", (string)null);
+                    b.HasIndex("SKU")
+                        .IsUnique();
+
+                    b.ToTable("ProductVariants", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ProductVariants_Barcode_NotBlank", "length(trim(\"Barcode\")) > 0");
+
+                            t.HasCheckConstraint("CK_ProductVariants_Cost_NonNegative", "\"Cost\" >= 0");
+
+                            t.HasCheckConstraint("CK_ProductVariants_MinimumStock_NonNegative", "\"MinimumStock\" >= 0");
+
+                            t.HasCheckConstraint("CK_ProductVariants_OldPrice_NonNegative", "\"OldPrice\" IS NULL OR \"OldPrice\" >= 0");
+
+                            t.HasCheckConstraint("CK_ProductVariants_Price_NonNegative", "\"Price\" >= 0");
+
+                            t.HasCheckConstraint("CK_ProductVariants_SKU_NotBlank", "length(trim(\"SKU\")) > 0");
+
+                            t.HasCheckConstraint("CK_ProductVariants_Stock_NonNegative", "\"Stock\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("BeautyCommerce.Domain.Entities.Review", b =>
@@ -691,6 +725,9 @@ namespace BeautyCommerce.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
                     b.ToTable("ShoppingCarts", (string)null);
                 });
 
@@ -743,7 +780,12 @@ namespace BeautyCommerce.Infrastructure.Migrations
 
                     b.HasIndex("ShoppingCartId");
 
-                    b.ToTable("ShoppingCartItems", (string)null);
+                    b.ToTable("ShoppingCartItems", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ShoppingCartItems_Quantity_Positive", "\"Quantity\" > 0");
+
+                            t.HasCheckConstraint("CK_ShoppingCartItems_UnitPrice_NonNegative", "\"UnitPrice\" >= 0");
+                        });
                 });
 
             modelBuilder.Entity("BeautyCommerce.Domain.Entities.Wishlist", b =>
@@ -929,6 +971,7 @@ namespace BeautyCommerce.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("NormalizedEmail")
+                        .IsUnique()
                         .HasDatabaseName("EmailIndex");
 
                     b.HasIndex("NormalizedUserName")
