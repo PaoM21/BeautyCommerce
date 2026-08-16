@@ -22,6 +22,7 @@ import {
   updateInventoryStock,
   type InventoryItem,
 } from "../../../services/inventoryService";
+import { getApiErrorMessage } from "../../../services/apiError";
 
 export default function AdminInventory() {
   const queryClient = useQueryClient();
@@ -41,6 +42,7 @@ export default function AdminInventory() {
     data: inventory = [],
     isLoading,
     isError,
+    error,
   } = useQuery({
     queryKey: ["admin-inventory"],
     queryFn: getInventory,
@@ -53,6 +55,17 @@ export default function AdminInventory() {
       await queryClient.invalidateQueries({
         queryKey: ["admin-inventory"],
       });
+
+      if (selectedItem) {
+        await queryClient.invalidateQueries({
+          queryKey: ["admin-product", selectedItem.productId],
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ["admin-product-edit", selectedItem.productId],
+        });
+      }
+
+      await queryClient.invalidateQueries({ queryKey: ["admin-products"] });
 
       setSelectedItem(null);
       setQuantity("");
@@ -130,7 +143,10 @@ export default function AdminInventory() {
     return (
       <Container sx={{ py: 10 }}>
         <Alert severity="error">
-          No fue posible cargar el inventario.
+          {getApiErrorMessage(
+            error,
+            "No fue posible cargar el inventario."
+          )}
         </Alert>
       </Container>
     );
@@ -399,7 +415,10 @@ export default function AdminInventory() {
 
             {mutation.isError && (
               <Alert severity="error" sx={{ mb: 3 }}>
-                No fue posible actualizar el inventario.
+                {getApiErrorMessage(
+                  mutation.error,
+                  "No fue posible actualizar el inventario."
+                )}
               </Alert>
             )}
 

@@ -54,7 +54,6 @@ export async function getProductById(
 
   const p = response.data;
 
-  // Map API product detail shape to frontend Product type
   const images = Array.isArray(p?.images)
     ? p.images.map((img: any) => ({
         id: img.id ?? "",
@@ -76,7 +75,6 @@ export async function getProductById(
       }))
     : [];
 
-  // Choose a sensible product price: lowest variant price or 0
   const price = variants.length
     ? Math.min(...variants.map((v: any) => Number(v.price ?? 0)))
     : p.price ?? 0;
@@ -200,4 +198,36 @@ export async function createProduct(
   );
 
   return response.data;
+}
+
+export interface DeleteProductResult {
+  success: boolean;
+  message: string;
+}
+
+export async function deleteProduct(
+  id: string
+): Promise<DeleteProductResult> {
+  try {
+    const response = await api.delete<DeleteProductResult>(
+      `/products/${id}`
+    );
+
+    return {
+      success: response.data.success,
+      message: response.data.message,
+    };
+  } catch (err: any) {
+    const status = err?.response?.status;
+
+    if (status === 404) {
+      return {
+        success: false,
+        message:
+          err?.response?.data?.message ?? "Producto no encontrado.",
+      };
+    }
+
+    throw err;
+  }
 }

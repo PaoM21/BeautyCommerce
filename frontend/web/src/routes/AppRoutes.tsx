@@ -10,9 +10,6 @@ import Register from "../pages/Register/Register";
 import ProtectedRoute from "./ProtectedRoute";
 import Checkout from "../pages/Checkout/Checkout";
 import CheckoutSuccess from "../pages/Checkout/CheckoutSuccess";
-import OrderConfirmation from "../pages/OrderConfirmation/OrderConfirmation";
-import Orders from "../features/orders/pages/OrdersPage";
-import OrderDetail from "../pages/OrderDetail/OrderDetail";
 import AdminOrders from "../pages/Admin/Orders/AdminOrders";
 import AdminOrderDetail from "../pages/Admin/OrderDetail/OrderDetail";
 import AdminProducts from "../pages/Admin/Products/AdminProducts";
@@ -45,9 +42,6 @@ export default function AppRoutes() {
           <Route path="/carrito" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
-          <Route path="/pedido-confirmado/:id" element={<OrderConfirmation />} />
-          <Route path="/pedidos" element={<Orders />} />
-          <Route path="/pedidos/:id" element={<OrderDetail />} />
           <Route path="/mi-cuenta/pedidos" element={<AccountOrders />} />
           <Route path="/mi-cuenta/pedidos/:id" element={<AccountOrderDetail />} />
           <Route path="/favoritos" element={<Wishlist />} />

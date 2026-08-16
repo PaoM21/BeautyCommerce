@@ -14,7 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 
@@ -24,10 +24,12 @@ import {
 } from "../../../services/productService";
 
 import { getBrands, getCategories } from "../../../services/catalogService";
+import { getApiErrorMessage } from "../../../services/apiError";
 
 export default function AdminProductEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -49,6 +51,7 @@ export default function AdminProductEdit() {
     data: product,
     isLoading: isLoadingProduct,
     isError: isProductError,
+    error: productError,
   } = useQuery({
     queryKey: ["admin-product-edit", id],
     queryFn: () => getProductById(id!),
@@ -122,7 +125,15 @@ export default function AdminProductEdit() {
         isFeatured,
       }),
 
-    onSuccess: () => {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["admin-product", id],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["admin-product-edit", id],
+      });
+
       setSuccessMessage(
         "Producto actualizado correctamente."
       );
@@ -136,9 +147,12 @@ export default function AdminProductEdit() {
       }, 800);
     },
 
-    onError: () => {
+    onError: (err) => {
       setErrorMessage(
-        "No fue posible actualizar el producto."
+        getApiErrorMessage(
+          err,
+          "No fue posible actualizar el producto."
+        )
       );
 
       setSuccessMessage("");
@@ -203,7 +217,10 @@ export default function AdminProductEdit() {
     return (
       <Container sx={{ py: 10 }}>
         <Alert severity="error">
-          No fue posible cargar el producto.
+          {getApiErrorMessage(
+            productError,
+            "No fue posible cargar el producto."
+          )}
         </Alert>
       </Container>
     );

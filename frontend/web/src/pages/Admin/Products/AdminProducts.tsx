@@ -8,25 +8,32 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import {
+  deleteProduct,
   getAdminProducts,
 } from "../../../services/productService";
+import { getApiErrorMessage } from "../../../services/apiError";
 
 export default function AdminProducts() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [searchValue, setSearchValue] = useState("");
+  const [feedback, setFeedback] = useState<
+    { type: "success" | "error"; message: string } | null
+  >(null);
 
   const {
     data,
     isLoading,
     isError,
+    error,
   } = useQuery({
     queryKey: [
       "admin-products",
@@ -40,6 +47,54 @@ export default function AdminProducts() {
         search
       ),
   });
+
+  const deleteMutation = useMutation({
+    mutationFn: (productId: string) => deleteProduct(productId),
+
+    onSuccess: async (result, productId) => {
+      await queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+      await queryClient.invalidateQueries({
+        queryKey: ["admin-product", productId],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ["admin-product-edit", productId],
+      });
+
+      setFeedback({
+        type: result.success ? "success" : "error",
+        message: result.message,
+      });
+    },
+
+    onError: (err) => {
+      setFeedback({
+        type: "error",
+        message: getApiErrorMessage(
+          err,
+          "No fue posible eliminar el producto."
+        ),
+      });
+    },
+  });
+
+  const handleDelete = (
+    event: React.MouseEvent,
+    productId: string,
+    productName: string
+  ) => {
+    event.stopPropagation();
+
+    if (
+      !window.confirm(
+        `¿Eliminar "${productName}"? Esta acción no se puede deshacer.`
+      )
+    ) {
+      return;
+    }
+
+    setFeedback(null);
+    deleteMutation.mutate(productId);
+  };
 
   const handleSearch = () => {
     setPage(1);
@@ -71,7 +126,10 @@ export default function AdminProducts() {
     return (
       <Container sx={{ py: 10 }}>
         <Alert severity="error">
-          No fue posible cargar los productos.
+          {getApiErrorMessage(
+            error,
+            "No fue posible cargar los productos."
+          )}
         </Alert>
       </Container>
     );
@@ -195,6 +253,16 @@ export default function AdminProducts() {
           </Button>
         )}
       </Box>
+
+      {feedback && (
+        <Alert
+          severity={feedback.type}
+          sx={{ mb: 3 }}
+          onClose={() => setFeedback(null)}
+        >
+          {feedback.message}
+        </Alert>
+      )}
 
       <Divider sx={{ mb: 2 }} />
 
@@ -336,6 +404,22 @@ export default function AdminProducts() {
                   Stock: {product.stock}
                 </Typography>
               </Box>
+
+              <Button
+                onClick={(event) =>
+                  handleDelete(event, product.id, product.name)
+                }
+                disabled={
+                  deleteMutation.isPending &&
+                  deleteMutation.variables === product.id
+                }
+                sx={{
+                  color: "#c62828",
+                  minWidth: "auto",
+                }}
+              >
+                Eliminar
+              </Button>
             </Box>
           ))}
         </Box>
