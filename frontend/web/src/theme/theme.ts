@@ -1,7 +1,8 @@
 import { createTheme } from "@mui/material/styles";
 
 // Paleta editorial de lujo: base marfil/carbón + acento oro-bronce,
-// pensada para transmitir exclusividad (skincare/makeup premium).
+// pensada para transmitir exclusividad (skincare/makeup premium)
+// sin perder la densidad comercial de un ecommerce real.
 export const palette = {
   ivory: "#f7f3ee",
   ivoryDeep: "#efe8df",
@@ -11,6 +12,7 @@ export const palette = {
   goldDeep: "#8a6540",
   goldLight: "#d9c2a3",
   rose: "#e7cfc6",
+  roseDeep: "#d9a9a0",
   textSecondary: "#6f6a63",
   border: "#e6ddd1",
 };
