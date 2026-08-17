@@ -12,6 +12,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import ShoppingBagOutlinedIcon from "@mui/icons-material/ShoppingBagOutlined";
 import PersonOutlineIcon from "@mui/icons-material/Person";
+import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 
 import { Link } from "react-router-dom";
 import { useCartStore } from "../../store/cartStore";
@@ -21,7 +22,9 @@ import { palette } from "../../theme/theme";
 export default function Header() {
   const itemCount = useCartStore((state) => state.itemCount);
   const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const isAdmin = user?.role === "Admin";
 
   return (
     <Box sx={{ position: "sticky", top: 0, zIndex: 1100 }}>
@@ -144,6 +147,17 @@ export default function Header() {
                   <ShoppingBagOutlinedIcon />
                 </Badge>
               </IconButton>
+
+              {isAdmin && (
+                <IconButton
+                  component={Link}
+                  to="/admin"
+                  title="Panel de administración"
+                  sx={{ color: palette.gold }}
+                >
+                  <AdminPanelSettingsOutlinedIcon />
+                </IconButton>
+              )}
 
               <IconButton
                 onClick={() => {

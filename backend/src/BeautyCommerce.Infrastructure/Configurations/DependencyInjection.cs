@@ -14,7 +14,8 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var defaultConn = configuration.GetConnectionString("DefaultConnection");
+        var defaultConn = ConnectionStringHelper.Normalize(
+            configuration.GetConnectionString("DefaultConnection"));
 
         if (!string.IsNullOrWhiteSpace(defaultConn) &&
             defaultConn.TrimStart().StartsWith("Host=", StringComparison.OrdinalIgnoreCase))

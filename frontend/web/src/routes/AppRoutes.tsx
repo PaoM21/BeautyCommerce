@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 
 import MainLayout from "../components/layout/MainLayout";
+import AdminLayout from "../components/layout/AdminLayout";
 import Home from "../pages/Home/Home";
 import Products from "../pages/Products/Products";
 import ProductDetail from "../pages/ProductDetail/ProductDetail";
@@ -47,8 +48,10 @@ export default function AppRoutes() {
           <Route path="/favoritos" element={<Wishlist />} />
           <Route path="/mi-cuenta/rewards" element={<Loyalty />} />
         </Route>
+      </Route>
 
-        <Route element={<ProtectedRoute requiredRole="Admin" />}>
+      <Route element={<ProtectedRoute requiredRole="Admin" />}>
+        <Route element={<AdminLayout />}>
           <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
           <Route path="/admin/dashboard" element={<Dashboard />} />
 
