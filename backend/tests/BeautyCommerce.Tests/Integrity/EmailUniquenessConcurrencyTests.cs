@@ -1,3 +1,4 @@
+using BeautyCommerce.Application.Common.Exceptions;
 using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Infrastructure.Identity;
 using BeautyCommerce.Infrastructure.Persistence;
@@ -88,6 +89,104 @@ public class EmailUniquenessConcurrencyTests
             .ToListAsync();
 
         return (successCount, usersWithThisEmail);
+    }
+
+    [Fact]
+    public async Task Concurrent_Registrations_Loser_Receives_ConflictException_Not_A_Generic_Failure()
+    {
+        var email = $"qa-email-race-contract-{Guid.NewGuid():N}@test.local";
+
+        async Task<(bool Succeeded, Exception? Error)> TryRegister(string firstName)
+        {
+            await using var context = NewContext();
+            var (userManager, signInManager) = BuildIdentityManagers(context);
+            var identityService = new IdentityService(
+                userManager, signInManager, Mock.Of<IJwtTokenGenerator>(), NullLogger<IdentityService>.Instance);
+
+            try
+            {
+                await identityService.RegisterAsync(firstName, "Race", email, "Qa12345!");
+                return (true, null);
+            }
+            catch (Exception ex)
+            {
+                return (false, ex);
+            }
+        }
+
+        var taskA = TryRegister("A");
+        var taskB = TryRegister("B");
+
+        var results = await Task.WhenAll(taskA, taskB);
+
+        try
+        {
+            results.Count(r => r.Succeeded).Should().Be(1, "exactly one registration should win the race");
+
+            var loser = results.Single(r => !r.Succeeded);
+
+            loser.Error.Should().NotBeNull("the losing request must not silently succeed");
+            loser.Error.Should().BeOfType<ConflictException>(
+                "the race loser must surface the same contractual error as a non-concurrent duplicate registration, not a generic/unhandled exception");
+            loser.Error!.Message.Should().Be(
+                "El correo ya está registrado.",
+                "the message must match exactly what the non-concurrent duplicate-email pre-check already returns");
+
+            await using var verify = NewContext();
+            var usersWithThisEmail = await verify.Users
+                .Where(u => u.NormalizedEmail == email.ToUpperInvariant())
+                .ToListAsync();
+
+            usersWithThisEmail.Should().HaveCount(1, "only one account should exist after the race settles");
+        }
+        finally
+        {
+            await using var cleanup = NewContext();
+            var usersToRemove = await cleanup.Users
+                .Where(u => u.NormalizedEmail == email.ToUpperInvariant())
+                .ToListAsync();
+
+            foreach (var user in usersToRemove)
+                cleanup.Users.Attach(user).State = Microsoft.EntityFrameworkCore.EntityState.Deleted;
+
+            await cleanup.SaveChangesAsync();
+        }
+    }
+
+    [Fact]
+    public async Task Non_Duplicate_Validation_Failure_Still_Throws_BadRequestException()
+    {
+        await using var context = NewContext();
+        var (userManager, signInManager) = BuildIdentityManagers(context);
+        var identityService = new IdentityService(
+            userManager, signInManager, Mock.Of<IJwtTokenGenerator>(), NullLogger<IdentityService>.Instance);
+
+        var email = $"qa-weak-password-{Guid.NewGuid():N}@test.local";
+
+        var act = () => identityService.RegisterAsync("QA", "WeakPassword", email, "weak");
+
+        // A password that fails the configured strength rules must remain a
+        // BadRequestException — the new DuplicateUserName/DuplicateEmail
+        // carve-out must not swallow unrelated validation failures.
+        await act.Should().ThrowAsync<BadRequestException>();
+
+        try
+        {
+            (await act.Should().ThrowAsync<Exception>()).Which.Should().NotBeOfType<ConflictException>(
+                "a weak password has nothing to do with a duplicate identifier");
+        }
+        finally
+        {
+            await using var cleanup = NewContext();
+            var users = await cleanup.Users
+                .Where(u => u.NormalizedEmail == email.ToUpperInvariant())
+                .ToListAsync();
+
+            foreach (var user in users)
+                cleanup.Users.Attach(user).State = Microsoft.EntityFrameworkCore.EntityState.Deleted;
+
+            await cleanup.SaveChangesAsync();
+        }
     }
 
     [Fact]

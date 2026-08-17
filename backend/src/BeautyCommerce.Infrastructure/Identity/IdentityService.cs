@@ -2,7 +2,9 @@
 using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Application.Features.Authentication.DTOs;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace BeautyCommerce.Infrastructure.Identity;
 
@@ -49,10 +51,35 @@ public class IdentityService : IIdentityService
             LastName = lastName
         };
 
-        var result = await _userManager.CreateAsync(user, password);
+        IdentityResult result;
+
+        try
+        {
+            result = await _userManager.CreateAsync(user, password);
+        }
+        catch (DbUpdateException ex) when (
+            ex.InnerException is PostgresException pgEx &&
+            pgEx.SqlState == PostgresErrorCodes.UniqueViolation &&
+            (pgEx.ConstraintName == "UserNameIndex" || pgEx.ConstraintName == "EmailIndex"))
+        {
+            _logger?.LogWarning(
+                "Register failed: concurrent request already registered {Email}", email);
+            throw new ConflictException("El correo ya está registrado.");
+        }
 
         if (!result.Succeeded)
         {
+            var isDuplicate = result.Errors.Any(x =>
+                x.Code == nameof(IdentityErrorDescriber.DuplicateUserName) ||
+                x.Code == nameof(IdentityErrorDescriber.DuplicateEmail));
+
+            if (isDuplicate)
+            {
+                _logger?.LogWarning(
+                    "Register failed: concurrent request already registered {Email}", email);
+                throw new ConflictException("El correo ya está registrado.");
+            }
+
             var errors = string.Join(", ", result.Errors.Select(x => x.Description));
             _logger?.LogError("Register failed for {Email}: {Errors}", email, errors);
             throw new BadRequestException(errors);
