@@ -1,20 +1,20 @@
 import { createTheme } from "@mui/material/styles";
 
-// Paleta editorial de lujo: base marfil/carbón + acento oro-bronce,
+// Paleta editorial de lujo: base beige + vinotinto,
 // pensada para transmitir exclusividad (skincare/makeup premium)
 // sin perder la densidad comercial de un ecommerce real.
 export const palette = {
-  ivory: "#f7f3ee",
-  ivoryDeep: "#efe8df",
-  charcoal: "#1a1714",
-  charcoalSoft: "#2b2620",
-  gold: "#a9805a",
-  goldDeep: "#8a6540",
-  goldLight: "#d9c2a3",
-  rose: "#e7cfc6",
-  roseDeep: "#d9a9a0",
-  textSecondary: "#6f6a63",
-  border: "#e6ddd1",
+  ivory: "#f6efe4", // beige
+  ivoryDeep: "#e9dcc4", // beige profundo
+  charcoal: "#3d0f18", // vinotinto casi negro (fondos oscuros, CTAs)
+  charcoalSoft: "#5c1a28", // vinotinto oscuro (hover de fondos oscuros)
+  gold: "#7d2438", // vinotinto principal (acentos, texto de marca)
+  goldDeep: "#5c1a28", // vinotinto oscuro (hover de acentos)
+  goldLight: "#c68a9a", // vinotinto claro (acentos sobre fondo oscuro)
+  rose: "#e4c9ae", // beige rosado
+  roseDeep: "#c9a37e", // beige rosado profundo
+  textSecondary: "#75695a",
+  border: "#e3d2ae",
 };
 
 declare module "@mui/material/styles" {

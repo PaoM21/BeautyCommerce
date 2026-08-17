@@ -1,4 +1,5 @@
 ﻿using BeautyCommerce.Application.Common.Interfaces;
+using BeautyCommerce.Application.Common.Models;
 using BeautyCommerce.Infrastructure.Persistence;
 using BeautyCommerce.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -30,6 +31,11 @@ public static class DependencyInjection
         services.AddScoped<BeautyCommerce.Application.Common.Interfaces.IUserService, BeautyCommerce.Infrastructure.Services.UserService>();
         services.AddScoped<ILoyaltyService, LoyaltyService>();
         services.AddScoped<IPaymentService, PaymentService>();
+
+        services.Configure<GoogleDriveOptions>(configuration.GetSection("GoogleDrive"));
+        services.Configure<CloudinaryOptions>(configuration.GetSection("Cloudinary"));
+        services.AddScoped<IDriveFileProvider, GoogleDriveFileProvider>();
+        services.AddScoped<IImageUploader, CloudinaryImageUploader>();
 
         return services;
     }
