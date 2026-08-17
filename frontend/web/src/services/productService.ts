@@ -1,8 +1,20 @@
 import { api } from "./api";
 import type { Product } from "../types/product";
 
-export async function getProducts(): Promise<Product[]> {
-  const response = await api.get<any>("/products");
+export interface ProductFilter {
+  search?: string;
+  categoryId?: string;
+}
+
+export async function getProducts(
+  filter?: ProductFilter
+): Promise<Product[]> {
+  const response = await api.get<any>("/products", {
+    params: {
+      Search: filter?.search || undefined,
+      CategoryId: filter?.categoryId || undefined,
+    },
+  });
 
   const data = response.data;
 

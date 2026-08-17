@@ -16,6 +16,7 @@ import PersonOutlineIcon from "@mui/icons-material/Person";
 import { Link } from "react-router-dom";
 import { useCartStore } from "../../store/cartStore";
 import { useAuthStore } from "../../store/authStore";
+import { palette } from "../../theme/theme";
 
 export default function Header() {
   const itemCount = useCartStore((state) => state.itemCount);
@@ -27,8 +28,8 @@ export default function Header() {
       elevation={0}
       sx={{
         backgroundColor: "#ffffff",
-        color: "#1f1f1f",
-        borderBottom: "1px solid #eeeeee",
+        color: palette.charcoal,
+        borderBottom: `1px solid ${palette.border}`,
       }}
     >
       <Container maxWidth="xl">
@@ -52,9 +53,10 @@ export default function Header() {
           >
             <Typography
               sx={{
-                fontSize: 22,
-                fontWeight: 600,
-                letterSpacing: 3,
+                fontFamily: '"Fraunces", serif',
+                fontSize: 23,
+                fontWeight: 500,
+                letterSpacing: 2,
               }}
             >
               BEAUTY
@@ -64,7 +66,7 @@ export default function Header() {
               sx={{
                 fontSize: 10,
                 letterSpacing: 5,
-                color: "#999999",
+                color: palette.gold,
                 mt: -0.5,
               }}
             >
@@ -83,33 +85,33 @@ export default function Header() {
             <NavItem to="/" label="Inicio" />
 
             <NavItem
-              to="/productos?categoria=maquillaje"
-              label="Maquillaje"
-            />
-
-            <NavItem
-              to="/productos?categoria=skincare"
-              label="Skincare"
-            />
-
-            <NavItem
               to="/productos?categoria=cabello"
               label="Cabello"
             />
 
             <NavItem
-              to="/productos?categoria=accesorios"
-              label="Accesorios"
+              to="/productos?categoria=rostro"
+              label="Rostro"
+            />
+
+            <NavItem
+              to="/productos?categoria=piel"
+              label="Piel"
+            />
+
+            <NavItem
+              to="/productos?categoria=labios"
+              label="Labios"
+            />
+
+            <NavItem
+              to="/productos?categoria=unas"
+              label="Uñas"
             />
 
             <NavItem
               to="/productos?novedades=true"
               label="Novedades"
-            />
-
-            <NavItem
-              to="/productos?promociones=true"
-              label="Promociones"
             />
           </Box>
 
@@ -175,7 +177,7 @@ function NavItem({ to, label }: NavItemProps) {
         whiteSpace: "nowrap",
         transition: "color 0.2s ease",
         "&:hover": {
-          color: "#b08a5a",
+          color: palette.gold,
         },
       }}
     >
