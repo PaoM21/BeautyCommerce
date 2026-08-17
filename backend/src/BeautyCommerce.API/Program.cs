@@ -49,7 +49,6 @@ public class Program
         builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
         builder.Services.AddScoped<IIdentityService, IdentityService>();
         builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
-        builder.Services.AddScoped<IImageStorageService, LocalImageStorageService>();
         builder.Services.AddScoped<IInventoryService, InventoryService>();
         builder.Services.AddScoped<IProductVariantIdentifierGenerator, ProductVariantIdentifierGenerator>();
         builder.Services.AddMemoryCache();

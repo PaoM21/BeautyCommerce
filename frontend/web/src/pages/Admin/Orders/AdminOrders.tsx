@@ -9,12 +9,14 @@ import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 
 import { getAdminOrders } from "../../../services/orderService";
+import { getApiErrorMessage } from "../../../services/apiError";
 
 export default function AdminOrders() {
   const {
     data: orders = [],
     isLoading,
     isError,
+    error,
   } = useQuery({
     queryKey: ["admin-orders"],
     queryFn: getAdminOrders,
@@ -39,7 +41,10 @@ export default function AdminOrders() {
     return (
       <Container sx={{ py: 10 }}>
         <Typography>
-          No fue posible cargar los pedidos.
+          {getApiErrorMessage(
+            error,
+            "No fue posible cargar los pedidos."
+          )}
         </Typography>
       </Container>
     );

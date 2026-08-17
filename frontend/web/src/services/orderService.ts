@@ -20,6 +20,9 @@ export interface Order {
   orderNumber: string;
   orderDate: string;
   status: string;
+  subTotal: number;
+  shippingCost: number;
+  tax: number;
   total: number;
   transactionId?: string | null;
   items: OrderItem[];
@@ -28,6 +31,21 @@ export interface Order {
 export interface CheckoutResponse {
   orderId: string;
   orderNumber?: string;
+}
+
+// Mirrors OrderStatusValidator.IsValidTransition on the backend — kept in
+// sync manually, not fetched, since the transition rules are static.
+const VALID_STATUS_TRANSITIONS: Record<string, string[]> = {
+  Pending: ["Paid", "Cancelled"],
+  Paid: ["Processing", "Cancelled"],
+  Processing: ["Shipped"],
+  Shipped: ["Delivered"],
+  Delivered: [],
+  Cancelled: [],
+};
+
+export function getValidNextStatuses(currentStatus: string): string[] {
+  return VALID_STATUS_TRANSITIONS[currentStatus] ?? [];
 }
 
 export async function getOrders(): Promise<Order[]> {

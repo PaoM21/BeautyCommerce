@@ -27,6 +27,7 @@ public class GetAllOrdersQueryHandler
             .Include(x => x.Items)
                 .ThenInclude(i => i.ProductVariant)
                     .ThenInclude(v => v.Product)
+                        .ThenInclude(p => p.Images)
             .OrderByDescending(x => x.OrderDate)
             .ToListAsync(cancellationToken);
 
@@ -80,7 +81,10 @@ public class GetAllOrdersQueryHandler
 
                 Subtotal = item.Quantity * item.UnitPrice,
 
-                ImageUrl = null
+                ImageUrl = item.ProductVariant?.Product?.Images
+                    .Where(image => image.IsPrimary)
+                    .Select(image => image.ImageUrl)
+                    .FirstOrDefault()
 
             }).ToList()
         }).ToList();

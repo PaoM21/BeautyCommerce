@@ -8,12 +8,14 @@ import {
 import { useQuery } from "@tanstack/react-query";
 
 import { getDashboard } from "../../../services/dashboardService";
+import { getApiErrorMessage } from "../../../services/apiError";
 
 export default function Dashboard() {
   const {
     data: dashboard,
     isLoading,
     isError,
+    error,
   } = useQuery({
     queryKey: ["dashboard"],
     queryFn: getDashboard,
@@ -38,7 +40,10 @@ export default function Dashboard() {
     return (
       <Container sx={{ py: 10 }}>
         <Typography>
-          No fue posible cargar el dashboard.
+          {getApiErrorMessage(
+            error,
+            "No fue posible cargar el dashboard."
+          )}
         </Typography>
       </Container>
     );

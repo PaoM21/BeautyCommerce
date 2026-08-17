@@ -15,7 +15,7 @@ import {
   Checkbox,
 } from "@mui/material";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -25,14 +25,14 @@ import {
 
 import {
   getBrands,
-} from "../../../services/brandService";
-
-import {
   getCategories,
-} from "../../../services/categoryService";
+} from "../../../services/catalogService";
+
+import { getApiErrorMessage } from "../../../services/apiError";
 
 export default function AdminProductCreate() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -62,13 +62,17 @@ export default function AdminProductCreate() {
   const mutation = useMutation({
     mutationFn: createProduct,
 
-    onSuccess: (id) => {
+    onSuccess: async (id) => {
+      await queryClient.invalidateQueries({ queryKey: ["admin-products"] });
       navigate(`/admin/productos/${id}`);
     },
 
-    onError: () => {
+    onError: (err) => {
       setErrorMessage(
-        "No fue posible crear el producto."
+        getApiErrorMessage(
+          err,
+          "No fue posible crear el producto."
+        )
       );
     },
   });
@@ -186,7 +190,10 @@ export default function AdminProductCreate() {
     return (
       <Container sx={{ py: 10 }}>
         <Alert severity="error">
-          No fue posible cargar las marcas y categorías.
+          {getApiErrorMessage(
+            brandsQuery.error ?? categoriesQuery.error,
+            "No fue posible cargar las marcas y categorías."
+          )}
         </Alert>
       </Container>
     );

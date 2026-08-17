@@ -15,8 +15,10 @@ import { useState } from "react";
 
 import {
   getAdminOrderById,
+  getValidNextStatuses,
   updateOrderStatus,
 } from "../../../services/orderService";
+import { getApiErrorMessage } from "../../../services/apiError";
 
 export default function AdminOrderDetail() {
   const { id } = useParams();
@@ -29,6 +31,7 @@ export default function AdminOrderDetail() {
     data: order,
     isLoading,
     isError,
+    error,
   } = useQuery({
     queryKey: ["admin-order", id],
     queryFn: () => getAdminOrderById(id!),
@@ -71,11 +74,19 @@ export default function AdminOrderDetail() {
     return (
       <Container sx={{ py: 10 }}>
         <Typography>
-          No fue posible encontrar el pedido.
+          {getApiErrorMessage(
+            error,
+            "No fue posible encontrar el pedido."
+          )}
         </Typography>
       </Container>
     );
   }
+
+  const validNextStatuses = getValidNextStatuses(order.status);
+  const mutationErrorMessage =
+    (mutation.error as { response?: { data?: { detail?: string } } } | null)
+      ?.response?.data?.detail ?? "No fue posible actualizar el estado.";
 
   return (
     <Container
@@ -155,76 +166,64 @@ export default function AdminOrderDetail() {
         Actualizar estado
       </Typography>
 
-      <Box
-        sx={{
-          display: "flex",
-          gap: 2,
-          flexDirection: {
-            xs: "column",
-            sm: "row",
-          },
-          mb: 5,
-        }}
-      >
-        <Select
-          value={status || order.status}
-          onChange={(event) => setStatus(event.target.value)}
+      {validNextStatuses.length > 0 ? (
+        <Box
           sx={{
-            minWidth: 220,
-          }}
-        >
-          <MenuItem value="Pending">
-            Pendiente
-          </MenuItem>
-
-          <MenuItem value="Paid">
-            Pagado
-          </MenuItem>
-
-          <MenuItem value="Processing">
-            Preparando pedido
-          </MenuItem>
-
-          <MenuItem value="Shipped">
-            Enviado
-          </MenuItem>
-
-          <MenuItem value="Delivered">
-            Entregado
-          </MenuItem>
-
-          <MenuItem value="Cancelled">
-            Cancelado
-          </MenuItem>
-        </Select>
-
-        <Button
-          variant="contained"
-          disabled={
-            mutation.isPending ||
-            !status ||
-            status.toLowerCase() ===
-              order.status.toLowerCase()
-          }
-          onClick={() => mutation.mutate()}
-          sx={{
-            borderRadius: 0,
-            px: 4,
-            backgroundColor: "#1f1f1f",
-            "&:hover": {
-              backgroundColor: "#000",
+            display: "flex",
+            gap: 2,
+            flexDirection: {
+              xs: "column",
+              sm: "row",
             },
+            mb: 5,
           }}
         >
-          {mutation.isPending
-            ? "Actualizando..."
-            : "Actualizar estado"}
-        </Button>
-      </Box>
+          <Select
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+            displayEmpty
+            sx={{
+              minWidth: 220,
+            }}
+          >
+            <MenuItem value="" disabled>
+              Selecciona un nuevo estado
+            </MenuItem>
+
+            {validNextStatuses.map((nextStatus) => (
+              <MenuItem key={nextStatus} value={nextStatus}>
+                {getStatusLabel(nextStatus)}
+              </MenuItem>
+            ))}
+          </Select>
+
+          <Button
+            variant="contained"
+            disabled={mutation.isPending || !status}
+            onClick={() => mutation.mutate()}
+            sx={{
+              borderRadius: 0,
+              px: 4,
+              backgroundColor: "#1f1f1f",
+              "&:hover": {
+                backgroundColor: "#000",
+              },
+            }}
+          >
+            {mutation.isPending
+              ? "Actualizando..."
+              : "Actualizar estado"}
+          </Button>
+        </Box>
+      ) : (
+        <Typography color="text.secondary" sx={{ mb: 5 }}>
+          Este pedido está en un estado final y no admite más cambios.
+        </Typography>
+      )}
 
       {mutation.isError && (
         <Alert severity="error" sx={{ mb: 4 }}>
-          No fue posible actualizar el estado.
+          {mutationErrorMessage}
         </Alert>
       )}
 
@@ -233,6 +232,49 @@ export default function AdminOrderDetail() {
           Estado actualizado correctamente.
         </Alert>
       )}
+
+      <Divider sx={{ mb: 5 }} />
+
+      <Typography
+        sx={{
+          fontSize: 22,
+          mb: 3,
+        }}
+      >
+        Resumen económico
+      </Typography>
+
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            sm: "repeat(4, 1fr)",
+          },
+          gap: 4,
+          mb: 6,
+        }}
+      >
+        <Info
+          label="Subtotal"
+          value={`$${order.subTotal.toLocaleString("es-CO")}`}
+        />
+
+        <Info
+          label="Envío"
+          value={`$${order.shippingCost.toLocaleString("es-CO")}`}
+        />
+
+        <Info
+          label="Impuestos"
+          value={`$${order.tax.toLocaleString("es-CO")}`}
+        />
+
+        <Info
+          label="Total"
+          value={`$${order.total.toLocaleString("es-CO")}`}
+        />
+      </Box>
 
       <Divider sx={{ mb: 5 }} />
 

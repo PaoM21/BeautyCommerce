@@ -25,6 +25,9 @@ public class TransactionBehavior<TRequest, TResponse> : IPipelineBehavior<TReque
         if (!typeof(TRequest).Name.EndsWith("Command"))
             return await next();
 
+        if (request is INotTransactional)
+            return await next();
+
         var response = default(TResponse)!;
 
         using var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);

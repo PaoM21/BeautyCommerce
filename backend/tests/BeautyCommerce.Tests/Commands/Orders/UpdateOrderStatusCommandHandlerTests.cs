@@ -36,7 +36,8 @@ public class UpdateOrderStatusCommandHandlerTests
         var cacheMock = new Mock<BeautyCommerce.Application.Common.Interfaces.ICacheService>();
         cacheMock.Setup(c => c.InvalidateTagAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
 
-        var handler = new UpdateOrderStatusCommandHandler(context, loyaltyMock.Object, cacheMock.Object);
+        var handler = new UpdateOrderStatusCommandHandler(
+            context, loyaltyMock.Object, cacheMock.Object, Mock.Of<IInventoryService>(), Mock.Of<ICurrentUserService>());
 
         var result = await handler.Handle(new UpdateOrderStatusCommand
         {
@@ -76,7 +77,8 @@ public class UpdateOrderStatusCommandHandlerTests
         var cacheMock = new Mock<BeautyCommerce.Application.Common.Interfaces.ICacheService>();
         cacheMock.Setup(c => c.InvalidateTagAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
 
-        var handler = new UpdateOrderStatusCommandHandler(context, loyaltyMock.Object, cacheMock.Object);
+        var handler = new UpdateOrderStatusCommandHandler(
+            context, loyaltyMock.Object, cacheMock.Object, Mock.Of<IInventoryService>(), Mock.Of<ICurrentUserService>());
 
         await FluentActions.Invoking(() => handler.Handle(new UpdateOrderStatusCommand
         {

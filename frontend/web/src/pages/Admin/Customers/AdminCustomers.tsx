@@ -12,6 +12,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 
 import { getAdminCustomers } from "../../../services/customerService";
+import { getApiErrorMessage } from "../../../services/apiError";
 
 export default function AdminCustomers() {
   const [search, setSearch] = useState("");
@@ -20,6 +21,7 @@ export default function AdminCustomers() {
     data: customers = [],
     isLoading,
     isError,
+    error,
   } = useQuery({
     queryKey: ["admin-customers"],
     queryFn: getAdminCustomers,
@@ -66,7 +68,10 @@ export default function AdminCustomers() {
     return (
       <Container sx={{ py: 10 }}>
         <Alert severity="error">
-          No fue posible cargar los clientes.
+          {getApiErrorMessage(
+            error,
+            "No fue posible cargar los clientes."
+          )}
         </Alert>
       </Container>
     );
