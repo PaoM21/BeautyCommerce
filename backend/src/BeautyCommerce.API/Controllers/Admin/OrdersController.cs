@@ -1,4 +1,5 @@
 using BeautyCommerce.Application.Common.Constants;
+using BeautyCommerce.Application.Features.Orders.Commands.UpdateOrderShipping;
 using BeautyCommerce.Application.Features.Orders.Commands.UpdateOrderStatus;
 using BeautyCommerce.Application.Features.Orders.Queries.GetAdminOrderById;
 using BeautyCommerce.Application.Features.Orders.Queries.GetAllOrders;
@@ -60,6 +61,23 @@ public class OrdersController : ControllerBase
         {
             Success = true,
             Message = "Estado actualizado correctamente."
+        });
+    }
+
+    [HttpPut("shipping")]
+    public async Task<IActionResult> UpdateShipping(
+        UpdateOrderShippingCommand command,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(command, cancellationToken);
+
+        if (!result)
+            return NotFound();
+
+        return Ok(new
+        {
+            Success = true,
+            Message = "Información de envío actualizada correctamente."
         });
     }
 }

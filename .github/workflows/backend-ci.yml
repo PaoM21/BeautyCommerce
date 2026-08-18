@@ -50,4 +50,4 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build Docker image
-        run: docker build -f backend/src/BeautyCommerce.API/Dockerfile -t beautycommerce-api:latest backend
+        run: docker build -f backend/Dockerfile -t beautycommerce-api:latest backend

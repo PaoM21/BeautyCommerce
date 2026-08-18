@@ -133,7 +133,35 @@ export default function OrderDetail() {
 
       <OrderTimeline status={order.status} />
 
+      {order.carrier && order.trackingNumber && (
+        <Typography sx={{ mt: 3, color: "#666" }}>
+          Transportadora: <strong>{order.carrier}</strong> · Guía:{" "}
+          <strong>{order.trackingNumber}</strong>
+        </Typography>
+      )}
+
       <Divider sx={{ my: 6 }} />
+
+      <Typography
+        sx={{
+          fontSize: 22,
+          mb: 3,
+        }}
+      >
+        Dirección de envío
+      </Typography>
+
+      <Typography sx={{ color: "#666", lineHeight: 1.8, mb: 6 }}>
+        {order.shippingRecipientName}
+        <br />
+        {order.shippingAddressLine}
+        <br />
+        {order.shippingCity}, {order.shippingDepartment}
+        <br />
+        Tel: {order.shippingPhone}
+      </Typography>
+
+      <Divider sx={{ mb: 6 }} />
 
       <Typography
         sx={{

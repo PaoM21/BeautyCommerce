@@ -1,0 +1,60 @@
+databases:
+  - name: beautycommerce-db
+    databaseName: beautycommerce
+    user: beautycommerce
+    plan: starter
+    region: ohio
+
+services:
+  - type: web
+    name: beautycommerce-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    region: ohio
+    healthCheckPath: /health
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_HTTP_PORTS
+        value: 8080
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: beautycommerce-db
+          property: connectionString
+      - key: Jwt__Key
+        sync: false
+      - key: Jwt__Issuer
+        value: BeautyCommerce
+      - key: Jwt__Audience
+        value: BeautyCommerceUsers
+      - key: Jwt__DurationInMinutes
+        value: "120"
+      # URL(s) del frontend permitidas por CORS. Agrega una entrada
+      # Cors__AllowedOrigins__1, __2, etc. si necesitas más de una
+      # (ej. el dominio de Cloudflare Pages y luego el dominio final).
+      - key: Cors__AllowedOrigins__0
+        sync: false
+      # Ver docs/GOOGLE_DRIVE_IMAGE_SYNC.md para cómo obtener estos valores.
+      - key: GoogleDrive__FolderId
+        sync: false
+      - key: GoogleDrive__ServiceAccountJson
+        sync: false
+      - key: Cloudinary__CloudName
+        sync: false
+      - key: Cloudinary__ApiKey
+        sync: false
+      - key: Cloudinary__ApiSecret
+        sync: false
+      # Ver docs/EMAIL_SETUP.md. Frontend__BaseUrl debe ser la URL real
+      # del frontend (Cloudflare Pages o el dominio final) — se usa para
+      # armar el link de "restablecer contraseña" en el correo.
+      - key: Email__ApiKey
+        sync: false
+      - key: Email__FromAddress
+        value: onboarding@resend.dev
+      - key: Email__FromName
+        value: BeautyCommerce
+      - key: Frontend__BaseUrl
+        sync: false

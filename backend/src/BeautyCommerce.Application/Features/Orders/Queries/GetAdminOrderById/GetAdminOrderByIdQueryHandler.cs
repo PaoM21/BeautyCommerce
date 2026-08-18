@@ -39,6 +39,15 @@ public class GetAdminOrderByIdQueryHandler
                 Total = x.Total,
                 TransactionId = x.TransactionId,
 
+                ShippingRecipientName = x.ShippingRecipientName,
+                ShippingPhone = x.ShippingPhone,
+                ShippingAddressLine = x.ShippingAddressLine,
+                ShippingCity = x.ShippingCity,
+                ShippingDepartment = x.ShippingDepartment,
+                Carrier = x.Carrier,
+                TrackingNumber = x.TrackingNumber,
+                ShippedAt = x.ShippedAt,
+
                 Items = x.Items.Select(item => new OrderItemDto
                 {
                     Id = item.Id,

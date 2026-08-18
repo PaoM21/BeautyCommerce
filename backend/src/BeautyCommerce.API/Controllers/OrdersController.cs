@@ -20,10 +20,11 @@ public class OrdersController : ControllerBase
 
     [HttpPost("checkout")]
     public async Task<IActionResult> Checkout(
+        CheckoutCommand command,
         CancellationToken cancellationToken)
     {
         var orderId = await _mediator.Send(
-            new CheckoutCommand(),
+            command,
             cancellationToken);
 
         return Ok(new

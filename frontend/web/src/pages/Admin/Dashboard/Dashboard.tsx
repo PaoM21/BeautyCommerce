@@ -6,6 +6,8 @@ import {
   Typography,
 } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "react-router-dom";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 import { getDashboard } from "../../../services/dashboardService";
 import { getApiErrorMessage } from "../../../services/apiError";
@@ -53,18 +55,22 @@ export default function Dashboard() {
     {
       label: "Productos",
       value: dashboard.totalProducts,
+      to: "/admin/productos",
     },
     {
       label: "Pedidos",
       value: dashboard.totalOrders,
+      to: "/admin/pedidos",
     },
     {
       label: "Clientes",
       value: dashboard.totalCustomers,
+      to: "/admin/clientes",
     },
     {
       label: "Pedidos pendientes",
       value: dashboard.pendingOrders,
+      to: "/admin/pedidos",
     },
     {
       label: "Ventas totales",
@@ -77,10 +83,12 @@ export default function Dashboard() {
     {
       label: "Stock bajo",
       value: dashboard.lowStockProducts,
+      to: "/admin/inventario",
     },
     {
       label: "Agotados",
       value: dashboard.outOfStockProducts,
+      to: "/admin/inventario",
     },
   ];
 
@@ -131,6 +139,9 @@ export default function Dashboard() {
         {cards.map((card) => (
           <Box
             key={card.label}
+            {...(card.to
+              ? { component: Link, to: card.to }
+              : {})}
             sx={{
               border: "1px solid #e5e1dc",
               p: {
@@ -138,6 +149,18 @@ export default function Dashboard() {
                 md: 4,
               },
               minHeight: 150,
+              display: "block",
+              textDecoration: "none",
+              color: "inherit",
+              position: "relative",
+              transition: "border-color 0.15s ease, transform 0.15s ease",
+              ...(card.to && {
+                cursor: "pointer",
+                "&:hover": {
+                  borderColor: "#1f1f1f",
+                  transform: "translateY(-2px)",
+                },
+              }),
             }}
           >
             <Typography
@@ -163,6 +186,18 @@ export default function Dashboard() {
             >
               {card.value}
             </Typography>
+
+            {card.to && (
+              <ChevronRightIcon
+                sx={{
+                  position: "absolute",
+                  top: 16,
+                  right: 16,
+                  color: "#bbb",
+                  fontSize: 20,
+                }}
+              />
+            )}
           </Box>
         ))}
       </Box>
@@ -184,6 +219,8 @@ export default function Dashboard() {
           {dashboard.lastOrders.map((order) => (
             <Box
               key={order.id}
+              component={Link}
+              to={`/admin/pedidos/${order.id}`}
               sx={{
                 display: "grid",
                 gridTemplateColumns: {
@@ -195,6 +232,12 @@ export default function Dashboard() {
                 py: 3,
                 px: 2,
                 borderBottom: "1px solid #e5e1dc",
+                textDecoration: "none",
+                color: "inherit",
+                transition: "background-color 0.15s ease",
+                "&:hover": {
+                  backgroundColor: "#faf9f7",
+                },
               }}
             >
               <Box>

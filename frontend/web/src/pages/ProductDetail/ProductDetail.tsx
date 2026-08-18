@@ -14,6 +14,7 @@ import { addCartItem } from "../../services/cartService";
 import { useCartStore } from "../../store/cartStore";
 import ProductReviews from "../../components/reviews/ProductReviews";
 import CreateReviewForm from "../../components/reviews/CreateReviewForm";
+import Seo from "../../components/seo/Seo";
 
 export default function ProductDetail() {
     const [selectedVariant, setSelectedVariant] =
@@ -104,8 +105,46 @@ export default function ProductDetail() {
         product.images?.find((x) => x.isPrimary)?.imageUrl ??
             product.images?.[0]?.imageUrl;
 
+    const productJsonLd = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: product.name,
+        description: product.shortDescription ?? product.description ?? product.name,
+        image: image ? [image] : undefined,
+        brand: product.brand?.name
+            ? { "@type": "Brand", name: product.brand.name }
+            : undefined,
+        offers: {
+            "@type": "Offer",
+            priceCurrency: "COP",
+            price: product.price,
+            availability: "https://schema.org/InStock",
+        },
+        ...(product.averageRating && product.reviewCount
+            ? {
+                  aggregateRating: {
+                      "@type": "AggregateRating",
+                      ratingValue: product.averageRating,
+                      reviewCount: product.reviewCount,
+                  },
+              }
+            : {}),
+    };
+
     return (
         <Container maxWidth="xl" sx={{ py: 8 }}>
+            <Seo
+                title={product.name}
+                description={
+                    product.shortDescription ??
+                    `Compra ${product.name} ${product.brand?.name ? `de ${product.brand.name}` : ""} en HALDY&CO ECOMMERCE. Envío a toda Colombia.`
+                }
+                path={`/productos/${product.id}`}
+                image={image}
+                type="product"
+                jsonLd={productJsonLd}
+            />
+
             <Grid container spacing={6}>
                 {/* IMAGEN */}
                 <Grid size={{ xs: 12, md: 6 }}>

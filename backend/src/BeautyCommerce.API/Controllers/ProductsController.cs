@@ -6,6 +6,7 @@ using BeautyCommerce.Application.Features.Products.Commands.UpdateProduct;
 using BeautyCommerce.Application.Features.Products.DTOs;
 using BeautyCommerce.Application.Features.Products.Queries.GetProducts;
 using BeautyCommerce.Application.Features.Products.Queries.GetProductById;
+using BeautyCommerce.Application.Features.Products.Queries.GetBestSellers;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -45,6 +46,19 @@ public class ProductsController : ControllerBase
             new GetProductsQuery
             {
                 Filter = filter
+            });
+
+        return Ok(result);
+    }
+
+    [HttpGet("best-sellers")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetBestSellers([FromQuery] int count)
+    {
+        var result = await _mediator.Send(
+            new GetBestSellersQuery
+            {
+                Count = count > 0 ? count : 8
             });
 
         return Ok(result);

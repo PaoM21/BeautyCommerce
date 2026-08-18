@@ -82,7 +82,8 @@ public class CheckoutIdempotencyReproductionTests
             var inventoryService = new InventoryService(context, cacheMock.Object);
 
             var handler = new CheckoutCommandHandler(
-                context, currentUser.Object, paymentMock.Object, inventoryService, cacheMock.Object,
+                context, currentUser.Object, paymentMock.Object, inventoryService,
+                new ZeroShippingCostCalculator(), cacheMock.Object,
                 NullLogger<CheckoutCommandHandler>.Instance);
 
             var behavior = new TransactionBehavior<CheckoutCommand, Guid>(
@@ -331,7 +332,8 @@ public class CheckoutIdempotencyReproductionTests
             var inventoryService = new InventoryService(context, cache.Object);
 
             var handler = new CheckoutCommandHandler(
-                context, currentUser.Object, payment.Object, inventoryService, cache.Object,
+                context, currentUser.Object, payment.Object, inventoryService,
+                new ZeroShippingCostCalculator(), cache.Object,
                 NullLogger<CheckoutCommandHandler>.Instance);
 
             var transactionBehavior = new TransactionBehavior<CheckoutCommand, Guid>(

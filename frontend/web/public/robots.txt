@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /mi-cuenta
+Disallow: /checkout
+Disallow: /carrito
+
+Sitemap: https://www.beautycommerce.co/sitemap.xml

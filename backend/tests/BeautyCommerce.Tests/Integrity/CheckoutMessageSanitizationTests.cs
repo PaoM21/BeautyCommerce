@@ -90,7 +90,8 @@ public class CheckoutMessageSanitizationTests
         var logger = new CapturingLogger<CheckoutCommandHandler>();
 
         var handler = new CheckoutCommandHandler(
-            context, currentUser.Object, paymentMock.Object, inventoryService, cacheMock.Object, logger);
+            context, currentUser.Object, paymentMock.Object, inventoryService,
+            new ZeroShippingCostCalculator(), cacheMock.Object, logger);
 
         var act = async () => await handler.Handle(new CheckoutCommand(), default);
 

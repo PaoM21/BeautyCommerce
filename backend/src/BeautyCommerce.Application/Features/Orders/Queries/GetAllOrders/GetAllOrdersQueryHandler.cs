@@ -63,6 +63,22 @@ public class GetAllOrdersQueryHandler
 
             TransactionId = order.TransactionId,
 
+            ShippingRecipientName = order.ShippingRecipientName,
+
+            ShippingPhone = order.ShippingPhone,
+
+            ShippingAddressLine = order.ShippingAddressLine,
+
+            ShippingCity = order.ShippingCity,
+
+            ShippingDepartment = order.ShippingDepartment,
+
+            Carrier = order.Carrier,
+
+            TrackingNumber = order.TrackingNumber,
+
+            ShippedAt = order.ShippedAt,
+
             Items = order.Items.Select(item => new OrderItemDto
             {
                 Id = item.Id,

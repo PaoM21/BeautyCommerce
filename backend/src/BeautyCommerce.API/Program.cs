@@ -216,6 +216,16 @@ public class Program
 
         var app = builder.Build();
 
+        if (!app.Environment.IsDevelopment())
+        {
+            using var migrationScope = app.Services.CreateScope();
+
+            var dbContext = migrationScope.ServiceProvider
+                .GetRequiredService<ApplicationDbContext>();
+
+            dbContext.Database.Migrate();
+        }
+
         app.UseExceptionHandler();
 
         app.UseSerilogRequestLogging();

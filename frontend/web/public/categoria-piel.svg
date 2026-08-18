@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="800" height="1000" viewBox="0 0 800 1000" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g-piel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f7f3ee" />
+      <stop offset="100%" stop-color="#efe8df" />
+    </linearGradient>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#g-piel)" />
+  <g fill="none" stroke="#a9805a" stroke-width="2.5" opacity="0.8">
+    <path d="M400 300 C 460 380, 480 440, 480 490 C 480 550, 440 590, 400 590 C 360 590, 320 550, 320 490 C 320 440, 340 380, 400 300 Z" />
+  </g>
+  <circle cx="330" cy="700" r="26" fill="#d9c2a3" opacity="0.7" />
+  <circle cx="470" cy="740" r="16" fill="#d9c2a3" opacity="0.5" />
+  <circle cx="410" cy="670" r="10" fill="#d9c2a3" opacity="0.6" />
+</svg>

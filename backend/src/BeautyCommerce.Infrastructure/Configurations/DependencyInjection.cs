@@ -1,4 +1,5 @@
 ﻿using BeautyCommerce.Application.Common.Interfaces;
+using BeautyCommerce.Application.Common.Models;
 using BeautyCommerce.Infrastructure.Persistence;
 using BeautyCommerce.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
@@ -13,7 +14,8 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var defaultConn = configuration.GetConnectionString("DefaultConnection");
+        var defaultConn = ConnectionStringHelper.Normalize(
+            configuration.GetConnectionString("DefaultConnection"));
 
         if (!string.IsNullOrWhiteSpace(defaultConn) &&
             defaultConn.TrimStart().StartsWith("Host=", StringComparison.OrdinalIgnoreCase))
@@ -30,6 +32,18 @@ public static class DependencyInjection
         services.AddScoped<BeautyCommerce.Application.Common.Interfaces.IUserService, BeautyCommerce.Infrastructure.Services.UserService>();
         services.AddScoped<ILoyaltyService, LoyaltyService>();
         services.AddScoped<IPaymentService, PaymentService>();
+
+        services.Configure<GoogleDriveOptions>(configuration.GetSection("GoogleDrive"));
+        services.Configure<CloudinaryOptions>(configuration.GetSection("Cloudinary"));
+        services.AddScoped<IDriveFileProvider, GoogleDriveFileProvider>();
+        services.AddScoped<IImageUploader, CloudinaryImageUploader>();
+
+        services.Configure<ShippingRatesOptions>(configuration.GetSection("Shipping"));
+        services.AddScoped<IShippingCostCalculator, ShippingCostCalculator>();
+
+        services.Configure<EmailOptions>(configuration.GetSection("Email"));
+        services.Configure<FrontendOptions>(configuration.GetSection("Frontend"));
+        services.AddHttpClient<IEmailService, ResendEmailService>();
 
         return services;
     }

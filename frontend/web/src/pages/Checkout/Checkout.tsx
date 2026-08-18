@@ -5,13 +5,29 @@ import {
     CircularProgress,
     Container,
     Divider,
+    MenuItem,
+    TextField,
     Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCartStore } from "../../store/cartStore";
 import { getShoppingCart } from "../../services/cartService";
-import { checkout } from "../../services/orderService";
+import {
+    checkout,
+    COLOMBIAN_DEPARTMENTS,
+    estimateShippingCost,
+    type CheckoutRequest,
+} from "../../services/orderService";
+
+const EMPTY_SHIPPING_FORM: CheckoutRequest = {
+    recipientName: "",
+    phone: "",
+    addressLine: "",
+    city: "",
+    department: "",
+};
 
 export default function Checkout() {
     const navigate = useNavigate();
@@ -21,6 +37,18 @@ export default function Checkout() {
     const setItemCount = useCartStore(
         (state) => state.setItemCount
     );
+
+    const [shippingForm, setShippingForm] = useState<CheckoutRequest>(
+        EMPTY_SHIPPING_FORM
+    );
+
+    const isShippingFormComplete = Object.values(shippingForm).every(
+        (value) => value.trim().length > 0
+    );
+
+    const shippingCost = shippingForm.city
+        ? estimateShippingCost(shippingForm.city)
+        : null;
 
     const {
         data: cart,
@@ -32,7 +60,7 @@ export default function Checkout() {
     });
 
     const mutation = useMutation({
-        mutationFn: checkout,
+        mutationFn: () => checkout(shippingForm),
 
         onSuccess: (data) => {
             queryClient.setQueryData(["shopping-cart"], {
@@ -145,6 +173,99 @@ export default function Checkout() {
             >
                 Finalizar compra
             </Typography>
+
+            {/* DIRECCIÓN DE ENVÍO */}
+            <Box
+                sx={{
+                    border: "1px solid #e5e1dc",
+                    p: 4,
+                    mb: 6,
+                }}
+            >
+                <Typography sx={{ fontSize: 22, mb: 3 }}>
+                    Dirección de envío
+                </Typography>
+
+                <Box
+                    sx={{
+                        display: "grid",
+                        gridTemplateColumns: {
+                            xs: "1fr",
+                            sm: "1fr 1fr",
+                        },
+                        gap: 3,
+                    }}
+                >
+                    <TextField
+                        label="Nombre de quien recibe"
+                        value={shippingForm.recipientName}
+                        onChange={(event) =>
+                            setShippingForm((current) => ({
+                                ...current,
+                                recipientName: event.target.value,
+                            }))
+                        }
+                        fullWidth
+                    />
+
+                    <TextField
+                        label="Teléfono de contacto"
+                        value={shippingForm.phone}
+                        onChange={(event) =>
+                            setShippingForm((current) => ({
+                                ...current,
+                                phone: event.target.value,
+                            }))
+                        }
+                        fullWidth
+                    />
+
+                    <TextField
+                        label="Dirección"
+                        placeholder="Calle 123 #45-67, apto 8"
+                        value={shippingForm.addressLine}
+                        onChange={(event) =>
+                            setShippingForm((current) => ({
+                                ...current,
+                                addressLine: event.target.value,
+                            }))
+                        }
+                        fullWidth
+                        sx={{ gridColumn: { sm: "1 / -1" } }}
+                    />
+
+                    <TextField
+                        label="Ciudad"
+                        value={shippingForm.city}
+                        onChange={(event) =>
+                            setShippingForm((current) => ({
+                                ...current,
+                                city: event.target.value,
+                            }))
+                        }
+                        fullWidth
+                    />
+
+                    <TextField
+                        select
+                        label="Departamento"
+                        value={shippingForm.department}
+                        onChange={(event) =>
+                            setShippingForm((current) => ({
+                                ...current,
+                                department: event.target.value,
+                            }))
+                        }
+                        fullWidth
+                    >
+                        {COLOMBIAN_DEPARTMENTS.map((department) => (
+                            <MenuItem key={department} value={department}>
+                                {department}
+                            </MenuItem>
+                        ))}
+                    </TextField>
+                </Box>
+            </Box>
 
             <Box
                 sx={{
@@ -287,7 +408,9 @@ export default function Checkout() {
                         </Typography>
 
                         <Typography>
-                            Gratis
+                            {shippingCost === null
+                                ? "Ingresa tu ciudad"
+                                : `$${shippingCost.toLocaleString("es-CO")}`}
                         </Typography>
                     </Box>
 
@@ -306,9 +429,17 @@ export default function Checkout() {
 
                         <Typography sx={{ fontSize: 20, fontWeight: 500 }}>
                             $
-                            {cart.total.toLocaleString("es-CO")}
+                            {(cart.total + (shippingCost ?? 0)).toLocaleString(
+                                "es-CO"
+                            )}
                         </Typography>
                     </Box>
+
+                    {!isShippingFormComplete && (
+                        <Alert severity="info" sx={{ mb: 3 }}>
+                            Completa la dirección de envío para continuar.
+                        </Alert>
+                    )}
 
                     {mutation.isError && (
                         <Alert severity="error" sx={{ mb: 3 }}>
@@ -320,7 +451,7 @@ export default function Checkout() {
                     <Button
                         fullWidth
                         variant="contained"
-                        disabled={mutation.isPending}
+                        disabled={mutation.isPending || !isShippingFormComplete}
                         onClick={() => mutation.mutate()}
                         sx={{
                             borderRadius: 0,

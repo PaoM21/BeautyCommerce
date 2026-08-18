@@ -7,7 +7,7 @@ import {
   Rating,
   Typography,
 } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import IconButton from "@mui/material/IconButton";
@@ -15,17 +15,48 @@ import IconButton from "@mui/material/IconButton";
 import { useWishlist } from "../../hooks/useWishlist";
 
 import { getProducts } from "../../services/productService";
+import { getCategories } from "../../services/catalogService";
 import type { Product } from "../../types/product";
+import Seo from "../../components/seo/Seo";
+import { palette } from "../../theme/theme";
 
 export default function Products() {
+  const [searchParams] = useSearchParams();
+  const categorySlug = searchParams.get("categoria");
+  const searchTerm = searchParams.get("buscar");
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["categories"],
+    queryFn: getCategories,
+  });
+
+  const matchedCategory = categorySlug
+    ? categories.find(
+        (c) => c.slug?.toLowerCase() === categorySlug.toLowerCase()
+      )
+    : undefined;
+
   const {
     data: products = [],
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["products"],
-    queryFn: getProducts,
+    queryKey: ["products", matchedCategory?.id ?? categorySlug, searchTerm],
+    queryFn: () =>
+      getProducts({
+        categoryId: matchedCategory?.id,
+        search: searchTerm ?? undefined,
+      }),
+    enabled: !categorySlug || categories.length > 0,
   });
+
+  const heading = searchTerm
+    ? `Resultados para "${searchTerm}"`
+    : matchedCategory?.name ?? "Todos nuestros productos";
+
+  const description = matchedCategory
+    ? `Descubre nuestra selección de ${matchedCategory.name.toLowerCase()} de marcas premium. Envío a toda Colombia.`
+    : "Explora el catálogo completo de maquillaje, skincare, cabello, uñas y labios de HALDY&CO ECOMMERCE.";
 
   if (isLoading) {
     return (
@@ -54,27 +85,39 @@ export default function Products() {
 
   return (
     <Container maxWidth="xl" sx={{ py: 8 }}>
+      <Seo
+        title={heading}
+        description={description}
+        path={
+          categorySlug
+            ? `/productos?categoria=${categorySlug}`
+            : "/productos"
+        }
+      />
+
       <Typography
         sx={{
           fontSize: 13,
           letterSpacing: 3,
           textTransform: "uppercase",
-          color: "#9a8065",
+          color: palette.gold,
           mb: 2,
+          fontWeight: 500,
         }}
       >
-        Beauty Collection
+        HALDY&CO Selection
       </Typography>
 
       <Typography
         component="h1"
+        variant="h1"
         sx={{
-          fontSize: { xs: 36, md: 48 },
-          fontWeight: 400,
+          fontSize: { xs: 32, md: 46 },
           mb: 6,
+          color: palette.ink,
         }}
       >
-        Todos nuestros productos
+        {heading}
       </Typography>
 
       {products.length === 0 ? (

@@ -6,13 +6,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { login } from "../../services/authService";
 import { useAuthStore } from "../../store/authStore";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const loginStore = useAuthStore((state) => state.login);
 
@@ -21,6 +22,9 @@ export default function Login() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const successMessage = (location.state as { message?: string } | null)
+    ?.message;
 
   const handleSubmit = async (
     event: React.FormEvent
@@ -80,8 +84,20 @@ export default function Login() {
             mb: 5,
           }}
         >
-          Inicia sesión en Beauty Commerce.
+          Inicia sesión en HALDY&CO ECOMMERCE.
         </Typography>
+
+        {successMessage && (
+          <Typography
+            sx={{
+              color: "#2e7d32",
+              fontSize: 14,
+              mb: 3,
+            }}
+          >
+            {successMessage}
+          </Typography>
+        )}
 
         <Box component="form" onSubmit={handleSubmit}>
           <TextField
@@ -99,8 +115,23 @@ export default function Login() {
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            sx={{ mb: 2 }}
+            sx={{ mb: 1 }}
           />
+
+          <Typography sx={{ textAlign: "right", mb: 2 }}>
+            <Box
+              component={Link}
+              to="/olvide-password"
+              sx={{
+                fontSize: 13,
+                color: "#777",
+                textDecoration: "none",
+                "&:hover": { color: "#1f1f1f" },
+              }}
+            >
+              ¿Olvidaste tu contraseña?
+            </Box>
+          </Typography>
 
           {error && (
             <Typography

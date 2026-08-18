@@ -1,4 +1,5 @@
 using BeautyCommerce.Application.Features.Reviews.Commands.CreateReview;
+using BeautyCommerce.Application.Features.Reviews.Queries.GetFeaturedReviews;
 using BeautyCommerce.Application.Features.Reviews.Queries.GetProductReviews;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -33,6 +34,22 @@ public class ReviewsController : ControllerBase
             ReviewId = id,
             Message = "Reseña creada correctamente."
         });
+    }
+
+    [AllowAnonymous]
+    [HttpGet("featured")]
+    public async Task<IActionResult> GetFeatured(
+        [FromQuery] int count,
+        CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new GetFeaturedReviewsQuery
+            {
+                Count = count > 0 ? count : 6
+            },
+            cancellationToken);
+
+        return Ok(result);
     }
 
     [AllowAnonymous]

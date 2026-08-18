@@ -1,5 +1,7 @@
-﻿using BeautyCommerce.Application.Features.Authentication.Commands.Login;
+﻿using BeautyCommerce.Application.Features.Authentication.Commands.ForgotPassword;
+using BeautyCommerce.Application.Features.Authentication.Commands.Login;
 using BeautyCommerce.Application.Features.Authentication.Commands.Register;
+using BeautyCommerce.Application.Features.Authentication.Commands.ResetPassword;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -35,5 +37,31 @@ public class AuthController : ControllerBase
         var result = await _mediator.Send(command);
 
         return Ok(result);
+    }
+
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordCommand command)
+    {
+        await _mediator.Send(command);
+
+        // Misma respuesta exista o no el correo — evita revelar qué
+        // correos están registrados en el sistema.
+        return Ok(new
+        {
+            Success = true,
+            Message = "Si el correo está registrado, te enviamos un enlace para restablecer tu contraseña."
+        });
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword(ResetPasswordCommand command)
+    {
+        await _mediator.Send(command);
+
+        return Ok(new
+        {
+            Success = true,
+            Message = "Tu contraseña fue actualizada correctamente."
+        });
     }
 }

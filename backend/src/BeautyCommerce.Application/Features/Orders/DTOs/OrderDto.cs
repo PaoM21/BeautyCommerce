@@ -26,5 +26,21 @@ public class OrderDto
 
     public string? TransactionId { get; set; }
 
+    public string ShippingRecipientName { get; set; } = string.Empty;
+
+    public string ShippingPhone { get; set; } = string.Empty;
+
+    public string ShippingAddressLine { get; set; } = string.Empty;
+
+    public string ShippingCity { get; set; } = string.Empty;
+
+    public string ShippingDepartment { get; set; } = string.Empty;
+
+    public string? Carrier { get; set; }
+
+    public string? TrackingNumber { get; set; }
+
+    public DateTime? ShippedAt { get; set; }
+
     public List<OrderItemDto> Items { get; set; } = new();
 }

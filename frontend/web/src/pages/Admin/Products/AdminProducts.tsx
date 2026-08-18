@@ -17,6 +17,10 @@ import {
   getAdminProducts,
 } from "../../../services/productService";
 import { getApiErrorMessage } from "../../../services/apiError";
+import {
+  syncImagesFromDrive,
+  type DriveSyncResult,
+} from "../../../services/mediaService";
 
 export default function AdminProducts() {
   const navigate = useNavigate();
@@ -28,6 +32,8 @@ export default function AdminProducts() {
   const [feedback, setFeedback] = useState<
     { type: "success" | "error"; message: string } | null
   >(null);
+  const [driveSyncResult, setDriveSyncResult] =
+    useState<DriveSyncResult | null>(null);
 
   const {
     data,
@@ -95,6 +101,26 @@ export default function AdminProducts() {
     setFeedback(null);
     deleteMutation.mutate(productId);
   };
+
+  const driveSyncMutation = useMutation({
+    mutationFn: syncImagesFromDrive,
+
+    onSuccess: async (result) => {
+      setDriveSyncResult(result);
+      await queryClient.invalidateQueries({ queryKey: ["admin-products"] });
+    },
+
+    onError: (err) => {
+      setDriveSyncResult(null);
+      setFeedback({
+        type: "error",
+        message: getApiErrorMessage(
+          err,
+          "No fue posible sincronizar las imágenes desde Drive."
+        ),
+      });
+    },
+  });
 
   const handleSearch = () => {
     setPage(1);
@@ -183,24 +209,78 @@ export default function AdminProducts() {
           Productos
         </Typography>
 
-        <Button
-          variant="contained"
-          onClick={() =>
-            navigate("/admin/productos/nuevo")
-          }
-          sx={{
-            borderRadius: 0,
-            px: 4,
-            py: 1.5,
-            backgroundColor: "#1f1f1f",
-            "&:hover": {
-              backgroundColor: "#000",
-            },
-          }}
-        >
-          Nuevo producto
-        </Button>
+        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setDriveSyncResult(null);
+              driveSyncMutation.mutate();
+            }}
+            disabled={driveSyncMutation.isPending}
+            sx={{
+              borderRadius: 0,
+              px: 3,
+              py: 1.5,
+              color: "#1f1f1f",
+              borderColor: "#1f1f1f",
+            }}
+          >
+            {driveSyncMutation.isPending
+              ? "Sincronizando..."
+              : "Sincronizar imágenes desde Drive"}
+          </Button>
+
+          <Button
+            variant="contained"
+            onClick={() =>
+              navigate("/admin/productos/nuevo")
+            }
+            sx={{
+              borderRadius: 0,
+              px: 4,
+              py: 1.5,
+              backgroundColor: "#1f1f1f",
+              "&:hover": {
+                backgroundColor: "#000",
+              },
+            }}
+          >
+            Nuevo producto
+          </Button>
+        </Box>
       </Box>
+
+      {driveSyncResult && (
+        <Alert
+          severity={
+            driveSyncResult.errors.length > 0
+              ? "warning"
+              : "success"
+          }
+          sx={{ mb: 3 }}
+          onClose={() => setDriveSyncResult(null)}
+        >
+          <Typography sx={{ fontWeight: 600, mb: 0.5 }}>
+            {driveSyncResult.updatedProducts.length} imagen(es)
+            sincronizada(s) de {driveSyncResult.filesProcessed}{" "}
+            archivo(s) procesado(s).
+          </Typography>
+
+          {driveSyncResult.unmatchedFiles.length > 0 && (
+            <Typography sx={{ fontSize: 13, mt: 1 }}>
+              Sin coincidencia por SKU (
+              {driveSyncResult.unmatchedFiles.length}):{" "}
+              {driveSyncResult.unmatchedFiles.join(", ")}
+            </Typography>
+          )}
+
+          {driveSyncResult.errors.length > 0 && (
+            <Typography sx={{ fontSize: 13, mt: 1 }}>
+              Errores: {driveSyncResult.errors.join(" · ")}
+            </Typography>
+          )}
+        </Alert>
+      )}
 
       <Box
         sx={{

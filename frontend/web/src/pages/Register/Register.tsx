@@ -2,7 +2,9 @@ import { useState } from "react";
 import {
   Box,
   Button,
+  Checkbox,
   Container,
+  FormControlLabel,
   TextField,
   Typography,
 } from "@mui/material";
@@ -18,6 +20,7 @@ export default function Register() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -37,6 +40,14 @@ export default function Register() {
     ) {
       setError(
         "Completa todos los campos."
+      );
+
+      return;
+    }
+
+    if (!acceptedTerms) {
+      setError(
+        "Debes aceptar los Términos y Condiciones y la Política de Tratamiento de Datos Personales."
       );
 
       return;
@@ -90,7 +101,7 @@ export default function Register() {
             mb: 5,
           }}
         >
-          Forma parte de Beauty Commerce.
+          Forma parte de HALDY&CO ECOMMERCE.
         </Typography>
 
         <Box
@@ -145,6 +156,42 @@ export default function Register() {
             helperText="Mínimo 8 caracteres, incluyendo mayúscula, minúscula, número y carácter especial."
           />
 
+          <FormControlLabel
+            sx={{ mb: 2, alignItems: "flex-start" }}
+            control={
+              <Checkbox
+                checked={acceptedTerms}
+                onChange={(event) =>
+                  setAcceptedTerms(event.target.checked)
+                }
+                sx={{ pt: 0 }}
+              />
+            }
+            label={
+              <Typography sx={{ fontSize: 13, color: "#666", mt: 1 }}>
+                He leído y acepto los{" "}
+                <Box
+                  component={Link}
+                  to="/terminos-y-condiciones"
+                  target="_blank"
+                  sx={{ color: "#1f1f1f", fontWeight: 500 }}
+                >
+                  Términos y Condiciones
+                </Box>{" "}
+                y la{" "}
+                <Box
+                  component={Link}
+                  to="/tratamiento-de-datos-personales"
+                  target="_blank"
+                  sx={{ color: "#1f1f1f", fontWeight: 500 }}
+                >
+                  Política de Tratamiento de Datos Personales
+                </Box>
+                .
+              </Typography>
+            }
+          />
+
           {error && (
             <Typography
               sx={{
@@ -161,7 +208,7 @@ export default function Register() {
             type="submit"
             fullWidth
             variant="contained"
-            disabled={loading}
+            disabled={loading || !acceptedTerms}
             sx={{
               backgroundColor: "#1f1f1f",
               borderRadius: 0,
