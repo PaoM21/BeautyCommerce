@@ -8,6 +8,8 @@ import ProductDetail from "../pages/ProductDetail/ProductDetail";
 import Cart from "../pages/Cart/Cart";
 import Login from "../pages/Login/Login";
 import Register from "../pages/Register/Register";
+import ForgotPassword from "../pages/ForgotPassword/ForgotPassword";
+import ResetPassword from "../pages/ResetPassword/ResetPassword";
 import ProtectedRoute from "./ProtectedRoute";
 import Checkout from "../pages/Checkout/Checkout";
 import CheckoutSuccess from "../pages/Checkout/CheckoutSuccess";
@@ -20,6 +22,10 @@ import AdminProductEdit from "../pages/Admin/Products/AdminProductEdit";
 import Dashboard from "../pages/Admin/Dashboard/Dashboard";
 import AdminCustomers from "../pages/Admin/Customers/AdminCustomers";
 import AdminInventory from "../pages/Admin/Inventory/AdminInventory";
+import AdminCategories from "../pages/Admin/Categories/AdminCategories";
+import AdminCategoryForm from "../pages/Admin/Categories/AdminCategoryForm";
+import AdminBrands from "../pages/Admin/Brands/AdminBrands";
+import AdminBrandForm from "../pages/Admin/Brands/AdminBrandForm";
 import AccountOrders from "../pages/Account/Orders";
 import AccountOrderDetail from "../pages/Account/OrderDetail";
 import Wishlist from "../pages/Wishlist/Wishlist";
@@ -38,6 +44,10 @@ export default function AppRoutes() {
         <Route path="/login" element={<Login />} />
 
         <Route path="/registro" element={<Register />} />
+
+        <Route path="/olvide-password" element={<ForgotPassword />} />
+
+        <Route path="/restablecer-password" element={<ResetPassword />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/carrito" element={<Cart />} />
@@ -66,6 +76,14 @@ export default function AppRoutes() {
           <Route path="/admin/clientes" element={<AdminCustomers />} />
 
           <Route path="/admin/inventario" element={<AdminInventory />} />
+
+          <Route path="/admin/categorias" element={<AdminCategories />} />
+          <Route path="/admin/categorias/nueva" element={<AdminCategoryForm />} />
+          <Route path="/admin/categorias/:id/editar" element={<AdminCategoryForm />} />
+
+          <Route path="/admin/marcas" element={<AdminBrands />} />
+          <Route path="/admin/marcas/nueva" element={<AdminBrandForm />} />
+          <Route path="/admin/marcas/:id/editar" element={<AdminBrandForm />} />
         </Route>
       </Route>
     </Routes>

@@ -130,4 +130,53 @@ public class IdentityService : IIdentityService
 
         return token;
     }
+
+    public async Task<string?> GeneratePasswordResetTokenAsync(string email)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+
+        if (user == null)
+        {
+            _logger?.LogInformation(
+                "Password reset requested for unknown email {Email}", email);
+
+            return null;
+        }
+
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+        _logger?.LogInformation(
+            "Password reset token generated for {UserId} ({Email})", user.Id, email);
+
+        return token;
+    }
+
+    public async Task<bool> ResetPasswordAsync(
+        string email,
+        string token,
+        string newPassword)
+    {
+        var user = await _userManager.FindByEmailAsync(email);
+
+        if (user == null)
+        {
+            return false;
+        }
+
+        var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+        if (!result.Succeeded)
+        {
+            var errors = string.Join(", ", result.Errors.Select(x => x.Description));
+
+            _logger?.LogWarning(
+                "Password reset failed for {Email}: {Errors}", email, errors);
+
+            return false;
+        }
+
+        _logger?.LogInformation("Password reset successfully for {Email}", email);
+
+        return true;
+    }
 }

@@ -41,6 +41,10 @@ public static class DependencyInjection
         services.Configure<ShippingRatesOptions>(configuration.GetSection("Shipping"));
         services.AddScoped<IShippingCostCalculator, ShippingCostCalculator>();
 
+        services.Configure<EmailOptions>(configuration.GetSection("Email"));
+        services.Configure<FrontendOptions>(configuration.GetSection("Frontend"));
+        services.AddHttpClient<IEmailService, ResendEmailService>();
+
         return services;
     }
 }

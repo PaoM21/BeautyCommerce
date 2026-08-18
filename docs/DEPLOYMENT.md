@@ -24,6 +24,8 @@ Lo que ya quedó listo en el código (verificado con un build + smoke test real 
      (En PowerShell: `[Convert]::ToBase64String((1..32 | ForEach-Object { Get-Random -Maximum 256 }))`)
    - `Cors__AllowedOrigins__0`: de momento pon un valor cualquiera como `https://placeholder.pages.dev` — lo vas a corregir en el Paso 3 con la URL real del frontend. **No lo dejes vacío**: la app está configurada para no arrancar sin al menos un origin válido (por seguridad, para no arrancar con CORS abierto a todos por accidente).
    - `GoogleDrive__FolderId`, `GoogleDrive__ServiceAccountJson`, `Cloudinary__*`: los valores que obtuviste siguiendo `docs/GOOGLE_DRIVE_IMAGE_SYNC.md`. Si todavía no los tienes, puedes dejarlos vacíos por ahora — el resto de la tienda funciona igual, solo el botón "Sincronizar imágenes desde Drive" del Admin fallará hasta que los configures.
+   - `Email__ApiKey`: tu API key de Resend — ver `docs/EMAIL_SETUP.md`. Si lo dejas vacío, la tienda sigue funcionando normal, simplemente no se envían correos de confirmación de pedido ni de restablecer contraseña.
+   - `Frontend__BaseUrl`: de momento pon el mismo placeholder que usaste en `Cors__AllowedOrigins__0` — lo vas a corregir en el Paso 3 junto con CORS. Se usa para armar el link del correo de "restablecer contraseña".
 4. Deploy. La primera build tarda varios minutos (compila el backend completo). Puedes seguir el progreso en la pestaña "Logs" — vas a ver las migraciones de EF Core aplicándose igual que en la prueba local.
 5. Cuando termine, Render te da una URL tipo `https://beautycommerce-api.onrender.com`. Verifica que está viva:
    ```bash
@@ -46,7 +48,7 @@ Lo que ya quedó listo en el código (verificado con un build + smoke test real 
 
 Con la URL real del frontend (`https://beautycommerce-web.pages.dev` o la que te haya dado Cloudflare):
 
-1. En Render, ve al servicio `beautycommerce-api` → **Environment** → edita `Cors__AllowedOrigins__0` con esa URL exacta (sin `/` al final).
+1. En Render, ve al servicio `beautycommerce-api` → **Environment** → edita `Cors__AllowedOrigins__0` **y** `Frontend__BaseUrl` con esa misma URL exacta (sin `/` al final).
 2. Guarda — Render redeploya automáticamente (no hace falta rehacer el build completo, solo reinicia con la nueva variable).
 3. Prueba la tienda real: abre la URL de Cloudflare Pages y verifica que carga el catálogo sin errores de CORS en la consola del navegador.
 
@@ -55,9 +57,10 @@ Con la URL real del frontend (`https://beautycommerce-web.pages.dev` o la que te
 1. Compra el dominio en [Cloudflare Registrar](https://www.cloudflare.com/products/registrar/) (sin markup sobre el precio mayorista, y ya queda con el DNS en Cloudflare).
 2. **Frontend**: en el proyecto de Cloudflare Pages → **Custom domains** → agrega tu dominio (ej. `www.tudominio.com`). Cloudflare configura el DNS automáticamente porque ya administra la zona.
 3. **Backend**: en Render, el servicio → **Settings → Custom Domains** → agrega un subdominio, ej. `api.tudominio.com`. Render te da un registro CNAME para crear — como el dominio ya está en Cloudflare, lo agregas ahí en **DNS**.
-4. Actualiza las dos variables que dependen de URLs, y vuelve a desplegar:
+4. Actualiza las variables que dependen de URLs, y vuelve a desplegar:
    - En Cloudflare Pages: `VITE_API_URL` → `https://api.tudominio.com/api`
-   - En Render: `Cors__AllowedOrigins__0` → `https://www.tudominio.com`
+   - En Render: `Cors__AllowedOrigins__0` y `Frontend__BaseUrl` → `https://www.tudominio.com`
+   - En Render: `Email__FromAddress` → tu correo verificado en el dominio propio (ver `docs/EMAIL_SETUP.md`)
 5. Actualiza también los placeholders `https://www.beautycommerce.co` que quedaron en `frontend/web/index.html`, `frontend/web/src/components/seo/Seo.tsx`, `frontend/web/public/robots.txt` y `frontend/web/public/sitemap.xml` (documentado ya en `docs/SEO-ROADMAP.md`) por el dominio real, para que el SEO y las tarjetas de Open Graph apunten al sitio correcto.
 
 ## Verificación final

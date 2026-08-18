@@ -17,8 +17,9 @@ Este documento describe qué se implementó ya en el código (base técnica) y c
 
 - [ ] Reemplazar el dominio placeholder `https://www.beautycommerce.co` (usado en `index.html`, `Seo.tsx`, `robots.txt` y `sitemap.xml`) por el dominio real una vez esté comprado y apuntando.
 - [ ] Crear la imagen `og-cover.jpg` (1200×630 px) para que las vistas previas en WhatsApp/Facebook/Instagram/X se vean bien.
-- [ ] Cargar en el panel de Admin las categorías reales con slugs `cabello`, `rostro`, `piel`, `labios`, `unas` — la base de datos actual **no tiene categorías de belleza cargadas** (solo datos de prueba genéricos tipo "Clothing", "Computers"), así que las tarjetas de categoría de la Home no mostrarán productos hasta que existan.
-- [ ] Verificar que cada producto tenga `slug`, imágenes con `alt` descriptivo y `shortDescription` — hoy varios de esos campos llegan vacíos desde el backend y son insumo directo del SEO on-page.
+- [x] Categorías reales cargadas (`cabello`, `rostro`, `piel`, `labios`, `unas`) — hecho.
+- [ ] **Reemplazar el catálogo DEMO por el inventario real y verificado.** Se cargaron 8 marcas, 20 productos y 27 variantes de ejemplo (Maybelline New York, L'Oréal Paris, Ruby Rose, Italia Deluxe, Beauty Creations, Moira Cosmetics, Nivea, Garnier) con precios estimados para que el sitio no esté vacío mientras se consigue la lista real — **no son datos verificados de negocio**. Antes de vender de verdad: confirmar autorización real de distribución para cada marca listada, ajustar precios/costos/stock reales, y reemplazar por el catálogo definitivo (vía Admin → Productos/Categorías/Marcas, o con un importador masivo si se define un formato de archivo).
+- [ ] Cargar fotos reales de producto (hoy ningún producto tiene imagen — se muestra "Sin imagen" de forma controlada) e incluir `alt` descriptivo y `shortDescription` completa por producto, insumo directo del SEO on-page.
 
 ## 2. SEO técnico
 

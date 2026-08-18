@@ -47,3 +47,14 @@ services:
         sync: false
       - key: Cloudinary__ApiSecret
         sync: false
+      # Ver docs/EMAIL_SETUP.md. Frontend__BaseUrl debe ser la URL real
+      # del frontend (Cloudflare Pages o el dominio final) — se usa para
+      # armar el link de "restablecer contraseña" en el correo.
+      - key: Email__ApiKey
+        sync: false
+      - key: Email__FromAddress
+        value: onboarding@resend.dev
+      - key: Email__FromName
+        value: BeautyCommerce
+      - key: Frontend__BaseUrl
+        sync: false

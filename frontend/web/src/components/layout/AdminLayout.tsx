@@ -8,6 +8,8 @@ import PeopleOutlinedIcon from "@mui/icons-material/PeopleOutlined";
 import WarehouseOutlinedIcon from "@mui/icons-material/WarehouseOutlined";
 import StorefrontOutlinedIcon from "@mui/icons-material/StorefrontOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
+import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
+import LocalOfferOutlinedIcon from "@mui/icons-material/LocalOfferOutlined";
 
 import { useAuthStore } from "../../store/authStore";
 import { palette } from "../../theme/theme";
@@ -15,6 +17,8 @@ import { palette } from "../../theme/theme";
 const NAV_ITEMS = [
   { to: "/admin/dashboard", label: "Dashboard", icon: DashboardOutlinedIcon },
   { to: "/admin/productos", label: "Productos", icon: Inventory2OutlinedIcon },
+  { to: "/admin/categorias", label: "Categorías", icon: CategoryOutlinedIcon },
+  { to: "/admin/marcas", label: "Marcas", icon: LocalOfferOutlinedIcon },
   { to: "/admin/pedidos", label: "Pedidos", icon: ReceiptLongOutlinedIcon },
   { to: "/admin/clientes", label: "Clientes", icon: PeopleOutlinedIcon },
   { to: "/admin/inventario", label: "Inventario", icon: WarehouseOutlinedIcon },
