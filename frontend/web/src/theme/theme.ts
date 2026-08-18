@@ -1,23 +1,23 @@
 import { createTheme } from "@mui/material/styles";
 
-// Paleta editorial blush: crema + rosa empolvado + acentos en negro
-// y maroon oscuro, inspirada en la referencia visual de la marca.
+// Paleta boutique: blanco + crema + rosa empolvado + negro casi puro,
+// calibrada contra la referencia visual de la marca (hex exactos).
 export const palette = {
-  ivory: "#faf3ee", // crema (fondo general)
-  ivoryDeep: "#f0e3d8", // crema profundo (tarjetas, inputs)
-  blush: "#f8e1e3", // rosa empolvado (fondos de sección)
-  blushDeep: "#f0c7cc", // rosa empolvado profundo (hover, bandas)
-  charcoal: "#4a1420", // maroon oscuro (barra de anuncio, footer)
-  charcoalSoft: "#661d2c", // maroon (hover de fondos oscuros)
-  ink: "#18130f", // negro casi puro (botones sólidos tipo CTA)
-  inkSoft: "#332a24", // negro suavizado (hover de botones)
-  gold: "#c9707f", // rosa acento (texto de marca, eyebrow, hover)
-  goldDeep: "#a8505f", // rosa acento oscuro (hover de acentos)
-  goldLight: "#e3aeb8", // rosa acento claro (sobre fondo oscuro)
+  ivory: "#f5efea", // crema/beige (fondo general)
+  ivoryDeep: "#efe4da", // crema profundo (tarjetas, inputs)
+  blush: "#f7e8e7", // rosa empolvado (fondos de sección)
+  blushDeep: "#f4dfde", // rosa empolvado profundo (hover, bandas)
+  charcoal: "#171717", // negro (footer, texto fuerte) — sin vinotinto
+  charcoalSoft: "#333333", // negro suavizado
+  ink: "#171717", // negro casi puro (botones sólidos, texto principal)
+  inkSoft: "#333333", // negro suavizado (hover de botones)
+  gold: "#d99aa3", // rosa empolvado (texto de marca, eyebrow, hover)
+  goldDeep: "#c17b85", // rosa empolvado oscuro (hover de acentos)
+  goldLight: "#e6bcc2", // rosa empolvado claro (sobre fondo oscuro)
   rose: "#e4c9ae", // beige rosado (compat)
   roseDeep: "#c9a37e", // beige rosado profundo (compat)
-  textSecondary: "#7a6a63",
-  border: "#ecdcd6",
+  textSecondary: "#777777",
+  border: "#e7e7e7",
 };
 
 declare module "@mui/material/styles" {

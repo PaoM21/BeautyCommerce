@@ -58,7 +58,7 @@ export default function Footer() {
   };
 
   return (
-    <Box component="footer" sx={{ backgroundColor: palette.charcoal, color: "rgba(255,255,255,0.85)" }}>
+    <Box component="footer" sx={{ backgroundColor: "#ffffff", color: palette.ink, borderTop: `1px solid ${palette.border}` }}>
       <Container maxWidth="xl" sx={{ py: { xs: 6, md: 8 } }}>
         <Box
           sx={{
@@ -70,17 +70,17 @@ export default function Footer() {
         >
           {/* SUSCRÍBETE + REDES */}
           <Box>
-            <Typography sx={{ fontWeight: 600, fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase", color: "#fff", mb: 1 }}>
+            <Typography sx={{ fontWeight: 700, fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase", color: palette.ink, mb: 1 }}>
               Suscríbete y recibe
             </Typography>
-            <Typography sx={{ fontSize: 13, color: "rgba(255,255,255,0.6)", mb: 2 }}>
+            <Typography sx={{ fontSize: 13, color: palette.textSecondary, mb: 2 }}>
               Novedades y promociones exclusivas
             </Typography>
 
             <Box
               component="form"
               onSubmit={handleSubscribe}
-              sx={{ display: "flex", backgroundColor: "rgba(255,255,255,0.08)", borderRadius: 1, mb: 1 }}
+              sx={{ display: "flex", backgroundColor: palette.ivory, border: `1px solid ${palette.border}`, borderRadius: 1, mb: 1 }}
             >
               <InputBase
                 type="email"
@@ -88,7 +88,7 @@ export default function Footer() {
                 placeholder="Tu correo electrónico"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                sx={{ flex: 1, color: "#fff", fontSize: 13, px: 1.5 }}
+                sx={{ flex: 1, color: palette.ink, fontSize: 13, px: 1.5 }}
               />
               <Box
                 component="button"
@@ -111,17 +111,17 @@ export default function Footer() {
             </Box>
 
             {status === "sent" && (
-              <Typography sx={{ fontSize: 12, color: palette.goldLight }}>
+              <Typography sx={{ fontSize: 12, color: palette.goldDeep }}>
                 ¡Gracias! Ya quedaste suscrita.
               </Typography>
             )}
             {status === "error" && (
-              <Typography sx={{ fontSize: 12, color: "#e08585" }}>
+              <Typography sx={{ fontSize: 12, color: "#c62828" }}>
                 No fue posible suscribirte. Intenta de nuevo.
               </Typography>
             )}
 
-            <Typography sx={{ fontSize: 12, letterSpacing: 1, textTransform: "uppercase", color: "rgba(255,255,255,0.55)", mt: 3, mb: 1.2 }}>
+            <Typography sx={{ fontSize: 12, letterSpacing: 1, textTransform: "uppercase", color: palette.textSecondary, mt: 3, mb: 1.2 }}>
               Síguenos
             </Typography>
             <Box sx={{ display: "flex", gap: 1 }}>
@@ -130,8 +130,8 @@ export default function Footer() {
                   key={index}
                   title="Pendiente: agregar cuenta real"
                   sx={{
-                    color: "rgba(255,255,255,0.5)",
-                    border: "1px dashed rgba(255,255,255,0.3)",
+                    color: palette.textSecondary,
+                    border: `1px dashed ${palette.border}`,
                     width: 34,
                     height: 34,
                     cursor: "default",
@@ -149,7 +149,7 @@ export default function Footer() {
 
           {/* CONTÁCTANOS */}
           <Box>
-            <Typography sx={{ fontWeight: 600, fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase", color: "#fff", mb: 2 }}>
+            <Typography sx={{ fontWeight: 700, fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase", color: palette.ink, mb: 2 }}>
               Contáctanos
             </Typography>
             <Typography sx={placeholderSx}>[Teléfono pendiente]</Typography>
@@ -159,17 +159,18 @@ export default function Footer() {
             <Box
               sx={{
                 height: 90,
-                border: "1px dashed rgba(255,255,255,0.3)",
+                border: `1px dashed ${palette.border}`,
                 borderRadius: 1,
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
                 gap: 0.5,
+                backgroundColor: palette.ivory,
               }}
             >
-              <PlaceOutlinedIcon sx={{ color: "rgba(255,255,255,0.4)", fontSize: 20 }} />
-              <Typography sx={{ fontSize: 10.5, color: "rgba(255,255,255,0.45)", textAlign: "center", px: 1 }}>
+              <PlaceOutlinedIcon sx={{ color: palette.textSecondary, fontSize: 20 }} />
+              <Typography sx={{ fontSize: 10.5, color: palette.textSecondary, textAlign: "center", px: 1 }}>
                 Mapa disponible cuando tengamos la dirección real
               </Typography>
             </Box>
@@ -178,7 +179,7 @@ export default function Footer() {
 
         <Box
           sx={{
-            borderTop: "1px solid rgba(255,255,255,0.12)",
+            borderTop: `1px solid ${palette.border}`,
             pt: 3,
             display: "flex",
             justifyContent: "space-between",
@@ -186,10 +187,10 @@ export default function Footer() {
             gap: 1,
           }}
         >
-          <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+          <Typography sx={{ fontSize: 12, color: palette.textSecondary }}>
             © {new Date().getFullYear()} HALDY&amp;CO ECOMMERCE. Todos los derechos reservados.
           </Typography>
-          <Typography sx={{ fontSize: 12, color: "rgba(255,255,255,0.45)" }}>
+          <Typography sx={{ fontSize: 12, color: palette.textSecondary }}>
             Bogotá · Medellín · Cali
           </Typography>
         </Box>
@@ -200,8 +201,8 @@ export default function Footer() {
 
 const placeholderSx = {
   fontSize: 13,
-  color: palette.goldLight,
-  borderBottom: `1px dashed ${palette.goldLight}`,
+  color: palette.goldDeep,
+  borderBottom: `1px dashed ${palette.goldDeep}`,
   display: "inline-block",
   pb: 0.2,
 };
@@ -214,7 +215,7 @@ interface FooterLinkItem {
 function FooterColumn({ title, links }: { title: string; links: FooterLinkItem[] }) {
   return (
     <Box>
-      <Typography sx={{ fontWeight: 600, fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase", color: "#fff", mb: 2 }}>
+      <Typography sx={{ fontWeight: 700, fontSize: 13, letterSpacing: 1.5, textTransform: "uppercase", color: palette.ink, mb: 2 }}>
         {title}
       </Typography>
       <Box sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
@@ -226,16 +227,16 @@ function FooterColumn({ title, links }: { title: string; links: FooterLinkItem[]
               to={link.to}
               sx={{
                 fontSize: 14,
-                color: "rgba(255,255,255,0.75)",
+                color: palette.textSecondary,
                 textDecoration: "none",
                 transition: "color 0.2s ease",
-                "&:hover": { color: palette.goldLight },
+                "&:hover": { color: palette.gold },
               }}
             >
               {link.label}
             </Typography>
           ) : (
-            <Typography key={link.label} sx={{ fontSize: 14, color: "rgba(255,255,255,0.35)" }}>
+            <Typography key={link.label} sx={{ fontSize: 14, color: "#bbbbbb" }}>
               {link.label} <Box component="span" sx={{ fontSize: 10.5 }}>(próximamente)</Box>
             </Typography>
           )

@@ -16,7 +16,7 @@ import ShoppingBagOutlinedIcon from "@mui/icons-material/ShoppingBagOutlined";
 import PersonOutlineIcon from "@mui/icons-material/Person";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useCartStore } from "../../store/cartStore";
 import { useAuthStore } from "../../store/authStore";
 import { palette } from "../../theme/theme";
@@ -47,7 +47,7 @@ export default function Header() {
         elevation={0}
         sx={{
           backgroundColor: "#ffffff",
-          color: palette.charcoal,
+          color: palette.ink,
           borderBottom: `1px solid ${palette.border}`,
         }}
       >
@@ -55,7 +55,7 @@ export default function Header() {
           <Toolbar
             disableGutters
             sx={{
-              minHeight: 76,
+              minHeight: 64,
               display: "flex",
               justifyContent: "space-between",
             }}
@@ -132,18 +132,19 @@ export default function Header() {
                 sx={{
                   display: { xs: "none", sm: "flex" },
                   alignItems: "center",
-                  backgroundColor: "#f4f2f0",
-                  borderRadius: 5,
-                  px: 1.8,
+                  backgroundColor: "#ffffff",
+                  border: "1px solid #eeeeee",
+                  borderRadius: "4px",
+                  px: 1.2,
                   py: 0.5,
                 }}
               >
-                <SearchIcon sx={{ fontSize: 18, color: "#999999", mr: 1 }} />
+                <SearchIcon sx={{ fontSize: 15, color: "#999999", mr: 0.8 }} />
                 <InputBase
                   placeholder="Buscar"
                   value={searchValue}
                   onChange={(event) => setSearchValue(event.target.value)}
-                  sx={{ fontSize: 13, width: { sm: 110, md: 160 } }}
+                  sx={{ fontSize: 12.5, width: { sm: 90, md: 130 } }}
                 />
               </Box>
 
@@ -208,15 +209,18 @@ interface NavItemProps {
 }
 
 function NavItem({ to, label }: NavItemProps) {
+  const location = useLocation();
+  const isActive = location.pathname === "/" ? to === "/" : to !== "/" && location.pathname + location.search === to;
+
   return (
     <Typography
       component={Link}
       to={to}
       sx={{
         textDecoration: "none",
-        color: "#333333",
+        color: isActive ? palette.ink : "#333333",
         fontSize: 14,
-        fontWeight: 400,
+        fontWeight: isActive ? 700 : 400,
         whiteSpace: "nowrap",
         transition: "color 0.2s ease",
         "&:hover": {

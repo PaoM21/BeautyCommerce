@@ -215,7 +215,7 @@ export default function Home() {
 
       {/* NOVEDADES — catálogo real (se oculta si aún no hay productos publicados) */}
       {newArrivals.length > 0 && (
-        <Box sx={{ backgroundColor: palette.blush }}>
+        <Box sx={{ backgroundColor: "#ffffff" }}>
           <Container maxWidth="xl" sx={{ py: { xs: 6, md: 8 } }}>
             <SectionHeader eyebrow={null} title="Novedades" to="/productos" />
 
@@ -326,17 +326,18 @@ export default function Home() {
               >
                 <Box
                   sx={{
-                    width: 64,
-                    height: 64,
+                    width: 54,
+                    height: 54,
                     borderRadius: "50%",
                     backgroundColor: "#fff",
+                    border: `1px solid ${palette.border}`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    boxShadow: "0 6px 16px rgba(26,23,20,0.08)",
+                    boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
                   }}
                 >
-                  <Icon sx={{ color: palette.ink, fontSize: 26 }} />
+                  <Icon sx={{ color: palette.ink, fontSize: 22 }} />
                 </Box>
                 <Typography sx={{ fontSize: 13.5, fontWeight: 500, color: palette.ink }}>
                   {label}
@@ -363,7 +364,7 @@ export default function Home() {
               key={index}
               alt={`Inspiración de belleza ${index + 1}`}
               tone={tone}
-              sx={{ width: "100%", aspectRatio: "3 / 4" }}
+              sx={{ width: "100%", aspectRatio: "3 / 4", borderRadius: "5px" }}
             />
           ))}
         </Box>
@@ -371,7 +372,7 @@ export default function Home() {
 
       {/* LO QUE DICEN NUESTRAS CLIENTAS — reseñas reales, se oculta mientras no existan */}
       {testimonials.length > 0 && (
-        <Box sx={{ backgroundColor: palette.blush }}>
+        <Box sx={{ backgroundColor: "#ffffff" }}>
           <Container maxWidth="xl" sx={{ py: { xs: 8, md: 10 } }}>
             <Typography
               component="h2"
@@ -388,12 +389,12 @@ export default function Home() {
               }}
             >
               {testimonials.map((review) => (
-                <Box key={review.id} sx={{ backgroundColor: "#fff", p: 4 }}>
+                <Box key={review.id} sx={{ backgroundColor: "#fff", border: `1px solid ${palette.border}`, borderRadius: "6px", p: 4 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
                     <Box
                       sx={{
-                        width: 40,
-                        height: 40,
+                        width: 32,
+                        height: 32,
                         borderRadius: "50%",
                         backgroundColor: palette.blush,
                         color: palette.gold,
@@ -402,13 +403,13 @@ export default function Home() {
                         justifyContent: "center",
                         fontFamily: '"Fraunces", serif',
                         fontWeight: 600,
-                        fontSize: 16,
+                        fontSize: 13,
                         flexShrink: 0,
                       }}
                     >
                       {review.userName.charAt(0).toUpperCase()}
                     </Box>
-                    <Rating value={review.rating} readOnly size="small" />
+                    <Rating value={review.rating} readOnly size="small" sx={{ color: "#b89455" }} />
                   </Box>
                   <Typography sx={{ fontSize: 14.5, lineHeight: 1.75, color: palette.ink, mb: 2.5 }}>
                     "{review.comment}"
@@ -445,7 +446,7 @@ export default function Home() {
                   gap: 1.5,
                   alignItems: "center",
                   justifyContent: { xs: "flex-start", sm: "center" },
-                  borderLeft: index > 0 ? { xs: "none", sm: "1px solid rgba(24,19,15,0.15)" } : "none",
+                  borderLeft: index > 0 ? { xs: "none", sm: "1px solid #cfc6c2" } : "none",
                   opacity: 0.85,
                 }}
               >
@@ -517,9 +518,10 @@ function CategoryCard({ title, tone, slug }: CategoryCardProps) {
         color: "inherit",
         display: "block",
         overflow: "hidden",
-        transition: "transform 0.25s ease, box-shadow 0.25s ease",
-        boxShadow: "0 8px 24px rgba(26,16,16,0.08)",
-        "&:hover": { transform: "translateY(-6px)", boxShadow: "0 18px 40px rgba(26,16,16,0.14)" },
+        borderRadius: "6px",
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
+        boxShadow: "0 2px 10px rgba(0,0,0,0.04)",
+        "&:hover": { transform: "translateY(-3px)", boxShadow: "0 6px 18px rgba(0,0,0,0.08)" },
       }}
     >
       <PhotoPlaceholder alt={title} tone={tone} sx={{ width: "100%", height: 300 }} />
@@ -620,7 +622,7 @@ function BestSellerCard({ product }: { product: Product }) {
 
   return (
     <Box component={Link} to={`/productos/${product.id}`} sx={{ textDecoration: "none", color: "inherit", display: "block" }}>
-      <Box sx={{ position: "relative", aspectRatio: "1 / 1", backgroundColor: palette.ivoryDeep, overflow: "hidden", mb: 1.5 }}>
+      <Box sx={{ position: "relative", aspectRatio: "1 / 1", backgroundColor: palette.ivoryDeep, overflow: "hidden", borderRadius: "4px", mb: 1.5 }}>
         <ProductImage src={image} alt={product.name} />
 
         <IconButton
@@ -643,7 +645,7 @@ function BestSellerCard({ product }: { product: Product }) {
       <Typography sx={{ fontSize: 15, mt: 0.5, mb: 0.5, color: palette.ink }}>{product.name}</Typography>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
-        <Rating value={product.averageRating ?? 0} precision={0.1} readOnly size="small" />
+        <Rating value={product.averageRating ?? 0} precision={0.1} readOnly size="small" sx={{ color: "#b89455" }} />
         {(product.reviewCount ?? 0) > 0 && (
           <Typography sx={{ fontSize: 12, color: palette.textSecondary }}>({product.reviewCount})</Typography>
         )}
@@ -674,7 +676,7 @@ function NewArrivalCard({ product }: { product: Product }) {
 
   return (
     <Box component={Link} to={`/productos/${product.id}`} sx={{ textDecoration: "none", color: "inherit", display: "block" }}>
-      <Box sx={{ position: "relative", aspectRatio: "1 / 1", backgroundColor: palette.ivoryDeep, overflow: "hidden", mb: 1.5 }}>
+      <Box sx={{ position: "relative", aspectRatio: "1 / 1", backgroundColor: palette.ivoryDeep, overflow: "hidden", borderRadius: "4px", mb: 1.5 }}>
         <Box
           sx={{
             position: "absolute",
@@ -688,7 +690,7 @@ function NewArrivalCard({ product }: { product: Product }) {
             letterSpacing: 1,
             px: 1.2,
             py: 0.4,
-            borderRadius: 4,
+            borderRadius: "3px",
           }}
         >
           NUEVO

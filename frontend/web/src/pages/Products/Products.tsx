@@ -114,7 +114,7 @@ export default function Products() {
         sx={{
           fontSize: { xs: 32, md: 46 },
           mb: 6,
-          color: palette.charcoal,
+          color: palette.ink,
         }}
       >
         {heading}
