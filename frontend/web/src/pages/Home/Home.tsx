@@ -14,9 +14,10 @@ import BackHandOutlinedIcon from "@mui/icons-material/BackHandOutlined";
 import WbSunnyOutlinedIcon from "@mui/icons-material/WbSunnyOutlined";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import AddShoppingCartOutlinedIcon from "@mui/icons-material/AddShoppingCartOutlined";
-import FormatQuoteOutlinedIcon from "@mui/icons-material/FormatQuoteOutlined";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 
 import Seo from "../../components/seo/Seo";
 import PhotoPlaceholder from "../../components/media/PhotoPlaceholder";
@@ -99,6 +100,7 @@ export default function Home() {
       {/* HERO — split: texto + foto de campaña (reemplazar PhotoPlaceholder por foto real) */}
       <Box
         sx={{
+          position: "relative",
           display: "grid",
           gridTemplateColumns: { xs: "1fr", md: "1fr 1.2fr" },
           minHeight: { xs: "auto", md: 560 },
@@ -116,11 +118,13 @@ export default function Home() {
         >
           <Typography
             component="h1"
-            variant="h1"
-            sx={{ fontSize: { xs: 34, md: 52 }, lineHeight: 1.15, color: palette.charcoal, mb: 3 }}
+            sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 500, fontSize: { xs: 34, md: 52 }, lineHeight: 1.15, color: palette.ink, mb: 3 }}
           >
             Descubre la{" "}
-            <Box component="span" sx={{ color: palette.gold }}>
+            <Box
+              component="span"
+              sx={{ fontFamily: '"Fraunces", serif', fontStyle: "italic", fontWeight: 500, color: palette.gold, fontSize: "1.15em" }}
+            >
               belleza
             </Box>{" "}
             que resalta tu esencia.
@@ -144,12 +148,35 @@ export default function Home() {
             sx={{ width: "100%", height: "100%" }}
           />
         </Box>
+
+        <Box
+          sx={{
+            position: "absolute",
+            left: "50%",
+            bottom: 18,
+            transform: "translateX(-50%)",
+            display: "flex",
+            gap: 1,
+          }}
+        >
+          {[0, 1, 2, 3].map((i) => (
+            <Box
+              key={i}
+              sx={{
+                width: 7,
+                height: 7,
+                borderRadius: "50%",
+                backgroundColor: i === 0 ? palette.ink : "rgba(24,19,15,0.3)",
+              }}
+            />
+          ))}
+        </Box>
       </Box>
 
       {/* CATEGORÍAS */}
       <Container maxWidth="xl" sx={{ py: { xs: 8, md: 10 } }}>
         <Typography
-          sx={{ fontSize: 13, letterSpacing: 3, textTransform: "uppercase", color: palette.charcoal, mb: 5, textAlign: "center", fontWeight: 500 }}
+          sx={{ fontSize: 13, letterSpacing: 3, textTransform: "uppercase", color: palette.ink, mb: 5, textAlign: "center", fontWeight: 700 }}
         >
           Categorías principales
         </Typography>
@@ -175,8 +202,8 @@ export default function Home() {
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(3, 1fr)", lg: "repeat(4, 1fr)" },
-              gap: 3,
+              gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(4, 1fr)", lg: "repeat(8, 1fr)" },
+              gap: { xs: 2, lg: 1.5 },
             }}
           >
             {bestSellers.map((product) => (
@@ -217,22 +244,46 @@ export default function Home() {
               Marcas que amamos
             </Typography>
 
-            <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: { xs: 3, md: 6 } }}>
-              {brands.map((brand) => (
-                <Typography
-                  key={brand.id}
-                  sx={{
-                    fontFamily: '"Fraunces", serif',
-                    fontSize: { xs: 16, md: 19 },
-                    color: palette.charcoal,
-                    opacity: 0.55,
-                    transition: "opacity 0.2s ease",
-                    "&:hover": { opacity: 1 },
-                  }}
-                >
-                  {brand.name}
-                </Typography>
-              ))}
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Box
+                sx={{
+                  flex: 1,
+                  display: "flex",
+                  flexWrap: "wrap",
+                  justifyContent: "center",
+                  gap: { xs: 3, md: 6 },
+                }}
+              >
+                {brands.map((brand) => (
+                  <Typography
+                    key={brand.id}
+                    sx={{
+                      fontFamily: '"Inter", sans-serif',
+                      fontWeight: 600,
+                      fontSize: { xs: 15, md: 18 },
+                      letterSpacing: 0.5,
+                      color: palette.ink,
+                      opacity: 0.55,
+                      transition: "opacity 0.2s ease",
+                      "&:hover": { opacity: 1 },
+                    }}
+                  >
+                    {brand.name}
+                  </Typography>
+                ))}
+              </Box>
+
+              <IconButton
+                size="small"
+                aria-label="Ver más marcas"
+                sx={{
+                  display: { xs: "none", md: "inline-flex" },
+                  border: `1px solid ${palette.border}`,
+                  color: palette.ink,
+                }}
+              >
+                <ArrowForwardIcon fontSize="small" />
+              </IconButton>
             </Box>
           </Container>
         </Box>
@@ -243,8 +294,7 @@ export default function Home() {
         <Container maxWidth="xl" sx={{ py: { xs: 7, md: 9 } }}>
           <Typography
             component="h2"
-            variant="h2"
-            sx={{ fontSize: { xs: 24, md: 30 }, mb: 5, color: palette.charcoal, textAlign: "center" }}
+            sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 700, fontSize: { xs: 20, md: 24 }, textTransform: "uppercase", letterSpacing: 1, mb: 5, color: palette.ink, textAlign: "center" }}
           >
             Compra por necesidad
           </Typography>
@@ -286,9 +336,9 @@ export default function Home() {
                     boxShadow: "0 6px 16px rgba(26,23,20,0.08)",
                   }}
                 >
-                  <Icon sx={{ color: palette.gold, fontSize: 26 }} />
+                  <Icon sx={{ color: palette.ink, fontSize: 26 }} />
                 </Box>
-                <Typography sx={{ fontSize: 13.5, fontWeight: 500, color: palette.charcoal }}>
+                <Typography sx={{ fontSize: 13.5, fontWeight: 500, color: palette.ink }}>
                   {label}
                 </Typography>
               </Box>
@@ -325,8 +375,7 @@ export default function Home() {
           <Container maxWidth="xl" sx={{ py: { xs: 8, md: 10 } }}>
             <Typography
               component="h2"
-              variant="h2"
-              sx={{ fontSize: { xs: 24, md: 30 }, mb: 6, color: palette.charcoal, textAlign: "center" }}
+              sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 700, fontSize: { xs: 20, md: 24 }, textTransform: "uppercase", letterSpacing: 1, mb: 6, color: palette.ink, textAlign: "center" }}
             >
               Lo que dicen nuestras clientas
             </Typography>
@@ -340,12 +389,31 @@ export default function Home() {
             >
               {testimonials.map((review) => (
                 <Box key={review.id} sx={{ backgroundColor: "#fff", p: 4 }}>
-                  <FormatQuoteOutlinedIcon sx={{ color: palette.goldLight, fontSize: 28, mb: 1 }} />
-                  <Rating value={review.rating} readOnly size="small" sx={{ mb: 1.5, display: "block" }} />
-                  <Typography sx={{ fontSize: 14.5, lineHeight: 1.75, color: palette.charcoal, mb: 2.5 }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 2 }}>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: "50%",
+                        backgroundColor: palette.blush,
+                        color: palette.gold,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontFamily: '"Fraunces", serif',
+                        fontWeight: 600,
+                        fontSize: 16,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {review.userName.charAt(0).toUpperCase()}
+                    </Box>
+                    <Rating value={review.rating} readOnly size="small" />
+                  </Box>
+                  <Typography sx={{ fontSize: 14.5, lineHeight: 1.75, color: palette.ink, mb: 2.5 }}>
                     "{review.comment}"
                   </Typography>
-                  <Typography sx={{ fontSize: 13.5, fontWeight: 600, color: palette.charcoal }}>
+                  <Typography sx={{ fontSize: 13.5, fontWeight: 600, color: palette.ink }}>
                     {review.userName}
                   </Typography>
                   <Typography sx={{ fontSize: 12.5, color: palette.textSecondary }}>
@@ -377,14 +445,14 @@ export default function Home() {
                   gap: 1.5,
                   alignItems: "center",
                   justifyContent: { xs: "flex-start", sm: "center" },
-                  borderLeft: index > 0 ? { xs: "none", sm: `1px solid ${palette.charcoalSoft}` } : "none",
+                  borderLeft: index > 0 ? { xs: "none", sm: "1px solid rgba(24,19,15,0.15)" } : "none",
                   opacity: 0.85,
                 }}
               >
-                <Icon sx={{ color: palette.charcoal, fontSize: 26 }} />
+                <Icon sx={{ color: palette.ink, fontSize: 26 }} />
                 <Box>
-                  <Typography sx={{ fontWeight: 600, fontSize: 14, mb: 0.2, color: palette.charcoal }}>{title}</Typography>
-                  <Typography sx={{ fontSize: 12.5, color: palette.charcoal }}>{text}</Typography>
+                  <Typography sx={{ fontWeight: 600, fontSize: 14, mb: 0.2, color: palette.ink }}>{title}</Typography>
+                  <Typography sx={{ fontSize: 12.5, color: palette.ink, opacity: 0.75 }}>{text}</Typography>
                 </Box>
               </Box>
             ))}
@@ -406,12 +474,25 @@ function SectionHeader({
   ctaLabel?: string;
 }) {
   return (
-    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", mb: 4 }}>
-      <Typography component="h2" variant="h2" sx={{ fontSize: { xs: 24, md: 30 }, color: palette.charcoal }}>
+    <Box sx={{ position: "relative", display: "flex", justifyContent: "center", alignItems: "center", mb: 4 }}>
+      <Typography
+        component="h2"
+        sx={{ fontFamily: '"Inter", sans-serif', fontWeight: 700, fontSize: { xs: 20, md: 24 }, textTransform: "uppercase", letterSpacing: 1, color: palette.ink }}
+      >
         {title}
       </Typography>
 
-      <Button component={Link} to={to} sx={{ display: { xs: "none", sm: "inline-flex" }, color: palette.gold, fontSize: 13 }}>
+      <Button
+        component={Link}
+        to={to}
+        sx={{
+          position: "absolute",
+          right: 0,
+          display: { xs: "none", sm: "inline-flex" },
+          color: palette.gold,
+          fontSize: 13,
+        }}
+      >
         {ctaLabel}
       </Button>
     </Box>
@@ -425,15 +506,17 @@ interface CategoryCardProps {
   slug: string;
 }
 
-function CategoryCard({ title, subtitle, tone, slug }: CategoryCardProps) {
+function CategoryCard({ title, tone, slug }: CategoryCardProps) {
   return (
     <Box
       component={Link}
       to={`/productos?categoria=${slug}`}
       sx={{
+        position: "relative",
         textDecoration: "none",
         color: "inherit",
         display: "block",
+        overflow: "hidden",
         transition: "transform 0.25s ease, box-shadow 0.25s ease",
         boxShadow: "0 8px 24px rgba(26,16,16,0.08)",
         "&:hover": { transform: "translateY(-6px)", boxShadow: "0 18px 40px rgba(26,16,16,0.14)" },
@@ -441,12 +524,31 @@ function CategoryCard({ title, subtitle, tone, slug }: CategoryCardProps) {
     >
       <PhotoPlaceholder alt={title} tone={tone} sx={{ width: "100%", height: 300 }} />
 
-      <Box sx={{ backgroundColor: "#fff", p: 2.5 }}>
-        <Typography sx={{ fontFamily: '"Fraunces", serif', fontSize: 20, fontWeight: 500, mb: 0.5, color: palette.charcoal }}>
-          {title}
-        </Typography>
-        <Typography sx={{ color: palette.textSecondary, fontSize: 13 }}>{subtitle}</Typography>
-      </Box>
+      <Box
+        sx={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(0deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0) 45%)",
+        }}
+      />
+
+      <Typography
+        sx={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 16,
+          textAlign: "center",
+          fontFamily: '"Inter", sans-serif',
+          fontWeight: 700,
+          fontSize: 14,
+          letterSpacing: 1.5,
+          textTransform: "uppercase",
+          color: "#fff",
+        }}
+      >
+        {title}
+      </Typography>
     </Box>
   );
 }
@@ -480,6 +582,37 @@ function useQuickAdd(defaultVariantId?: string) {
   return { adding, handleQuickAdd };
 }
 
+function ProductImage({ src, alt }: { src?: string; alt: string }) {
+  if (!src) {
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 0.5,
+          color: palette.textSecondary,
+        }}
+      >
+        <ImageOutlinedIcon sx={{ fontSize: 28, opacity: 0.5 }} />
+        <Typography sx={{ fontSize: 11 }}>Sin imagen</Typography>
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      component="img"
+      src={src}
+      alt={alt}
+      sx={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .4s ease", "&:hover": { transform: "scale(1.04)" } }}
+    />
+  );
+}
+
 function BestSellerCard({ product }: { product: Product }) {
   const image = product.images?.find((x) => x.isPrimary)?.imageUrl ?? product.images?.[0]?.imageUrl;
   const { adding, handleQuickAdd } = useQuickAdd(product.defaultVariantId);
@@ -488,14 +621,7 @@ function BestSellerCard({ product }: { product: Product }) {
   return (
     <Box component={Link} to={`/productos/${product.id}`} sx={{ textDecoration: "none", color: "inherit", display: "block" }}>
       <Box sx={{ position: "relative", aspectRatio: "1 / 1", backgroundColor: palette.ivoryDeep, overflow: "hidden", mb: 1.5 }}>
-        {image && (
-          <Box
-            component="img"
-            src={image}
-            alt={product.name}
-            sx={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        )}
+        <ProductImage src={image} alt={product.name} />
 
         <IconButton
           onClick={(event) => {
@@ -514,7 +640,7 @@ function BestSellerCard({ product }: { product: Product }) {
       <Typography sx={{ fontSize: 11, color: palette.textSecondary, textTransform: "uppercase", letterSpacing: 1 }}>
         {product.brand?.name}
       </Typography>
-      <Typography sx={{ fontSize: 15, mt: 0.5, mb: 0.5, color: palette.charcoal }}>{product.name}</Typography>
+      <Typography sx={{ fontSize: 15, mt: 0.5, mb: 0.5, color: palette.ink }}>{product.name}</Typography>
 
       <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 0.5 }}>
         <Rating value={product.averageRating ?? 0} precision={0.1} readOnly size="small" />
@@ -523,7 +649,7 @@ function BestSellerCard({ product }: { product: Product }) {
         )}
       </Box>
 
-      <Typography sx={{ fontWeight: 600, color: palette.charcoal, mb: 1.5 }}>
+      <Typography sx={{ fontWeight: 600, color: palette.ink, mb: 1.5 }}>
         ${product.price.toLocaleString("es-CO")}
       </Typography>
 
@@ -548,7 +674,7 @@ function NewArrivalCard({ product }: { product: Product }) {
 
   return (
     <Box component={Link} to={`/productos/${product.id}`} sx={{ textDecoration: "none", color: "inherit", display: "block" }}>
-      <Box sx={{ position: "relative", aspectRatio: "1 / 1", backgroundColor: "#fff", overflow: "hidden", mb: 1.5 }}>
+      <Box sx={{ position: "relative", aspectRatio: "1 / 1", backgroundColor: palette.ivoryDeep, overflow: "hidden", mb: 1.5 }}>
         <Box
           sx={{
             position: "absolute",
@@ -568,22 +694,15 @@ function NewArrivalCard({ product }: { product: Product }) {
           NUEVO
         </Box>
 
-        {image && (
-          <Box
-            component="img"
-            src={image}
-            alt={product.name}
-            sx={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform .4s ease", "&:hover": { transform: "scale(1.04)" } }}
-          />
-        )}
+        <ProductImage src={image} alt={product.name} />
       </Box>
 
       <Typography sx={{ fontSize: 11, color: palette.textSecondary, textTransform: "uppercase", letterSpacing: 1 }}>
         {product.brand?.name}
       </Typography>
-      <Typography sx={{ fontSize: 15, mt: 0.5, mb: 0.5, color: palette.charcoal }}>{product.name}</Typography>
+      <Typography sx={{ fontSize: 15, mt: 0.5, mb: 0.5, color: palette.ink }}>{product.name}</Typography>
 
-      <Typography sx={{ fontWeight: 600, color: palette.charcoal }}>
+      <Typography sx={{ fontWeight: 600, color: palette.ink }}>
         ${product.price.toLocaleString("es-CO")}
       </Typography>
     </Box>

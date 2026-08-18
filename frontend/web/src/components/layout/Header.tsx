@@ -29,7 +29,6 @@ export default function Header() {
   const isAdmin = user?.role === "Admin";
 
   const navigate = useNavigate();
-  const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
   const handleSearchSubmit = (event: FormEvent) => {
@@ -39,31 +38,10 @@ export default function Header() {
     if (!term) return;
 
     navigate(`/productos?buscar=${encodeURIComponent(term)}`);
-    setSearchOpen(false);
   };
 
   return (
     <Box sx={{ position: "sticky", top: 0, zIndex: 1100 }}>
-      {/* BARRA DE ANUNCIO */}
-      <Box
-        sx={{
-          backgroundColor: palette.charcoal,
-          color: "#fff",
-          textAlign: "center",
-          py: 0.7,
-        }}
-      >
-        <Typography
-          sx={{
-            fontSize: 12,
-            letterSpacing: 1.5,
-            textTransform: "uppercase",
-          }}
-        >
-          Envío asegurado a toda Colombia · Empaque de regalo en cada pedido
-        </Typography>
-      </Box>
-
       <AppBar
         position="static"
         elevation={0}
@@ -108,7 +86,7 @@ export default function Header() {
                 sx={{
                   fontSize: 10,
                   letterSpacing: 5,
-                  color: palette.gold,
+                  color: "#999999",
                   mt: -0.5,
                 }}
               >
@@ -139,46 +117,35 @@ export default function Header() {
               <NavItem to="/productos" label="Novedades" />
             </Box>
 
-            {/* ICONOS */}
+            {/* BUSQUEDA + ICONOS */}
             <Box
               sx={{
                 display: "flex",
                 alignItems: "center",
-                gap: 0.5,
-                minWidth: 180,
+                gap: 1.5,
                 justifyContent: "flex-end",
               }}
             >
-              {searchOpen ? (
-                <Box
-                  component="form"
-                  onSubmit={handleSearchSubmit}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    backgroundColor: palette.ivory,
-                    borderRadius: 1,
-                    px: 1.5,
-                    mr: 1,
-                  }}
-                >
-                  <InputBase
-                    autoFocus
-                    placeholder="Buscar productos..."
-                    value={searchValue}
-                    onChange={(event) => setSearchValue(event.target.value)}
-                    onBlur={() => !searchValue && setSearchOpen(false)}
-                    sx={{ fontSize: 14, width: { xs: 140, sm: 220 } }}
-                  />
-                  <IconButton type="submit" size="small">
-                    <SearchIcon fontSize="small" />
-                  </IconButton>
-                </Box>
-              ) : (
-                <IconButton onClick={() => setSearchOpen(true)} aria-label="Buscar">
-                  <SearchIcon />
-                </IconButton>
-              )}
+              <Box
+                component="form"
+                onSubmit={handleSearchSubmit}
+                sx={{
+                  display: { xs: "none", sm: "flex" },
+                  alignItems: "center",
+                  backgroundColor: "#f4f2f0",
+                  borderRadius: 5,
+                  px: 1.8,
+                  py: 0.5,
+                }}
+              >
+                <SearchIcon sx={{ fontSize: 18, color: "#999999", mr: 1 }} />
+                <InputBase
+                  placeholder="Buscar"
+                  value={searchValue}
+                  onChange={(event) => setSearchValue(event.target.value)}
+                  sx={{ fontSize: 13, width: { sm: 110, md: 160 } }}
+                />
+              </Box>
 
               <IconButton component={Link} to="/favoritos">
                 <Badge badgeContent={0}>
@@ -203,7 +170,7 @@ export default function Header() {
                 </IconButton>
               )}
 
-              <IconButton
+              <Box
                 onClick={() => {
                   if (token) {
                     logout();
@@ -211,9 +178,22 @@ export default function Header() {
                     window.location.href = "/login";
                   }
                 }}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                  cursor: "pointer",
+                  color: "inherit",
+                  pl: 0.5,
+                }}
               >
-                <PersonOutlineIcon />
-              </IconButton>
+                <IconButton sx={{ p: 0.5 }}>
+                  <PersonOutlineIcon />
+                </IconButton>
+                <Typography sx={{ fontSize: 13, display: { xs: "none", md: "inline" } }}>
+                  Mi cuenta
+                </Typography>
+              </Box>
             </Box>
           </Toolbar>
         </Container>
