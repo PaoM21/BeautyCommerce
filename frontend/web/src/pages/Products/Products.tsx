@@ -23,6 +23,7 @@ import { palette } from "../../theme/theme";
 export default function Products() {
   const [searchParams] = useSearchParams();
   const categorySlug = searchParams.get("categoria");
+  const searchTerm = searchParams.get("buscar");
 
   const { data: categories = [] } = useQuery({
     queryKey: ["categories"],
@@ -40,19 +41,22 @@ export default function Products() {
     isLoading,
     isError,
   } = useQuery({
-    queryKey: ["products", matchedCategory?.id ?? categorySlug],
+    queryKey: ["products", matchedCategory?.id ?? categorySlug, searchTerm],
     queryFn: () =>
-      getProducts(
-        matchedCategory ? { categoryId: matchedCategory.id } : undefined
-      ),
+      getProducts({
+        categoryId: matchedCategory?.id,
+        search: searchTerm ?? undefined,
+      }),
     enabled: !categorySlug || categories.length > 0,
   });
 
-  const heading = matchedCategory?.name ?? "Todos nuestros productos";
+  const heading = searchTerm
+    ? `Resultados para "${searchTerm}"`
+    : matchedCategory?.name ?? "Todos nuestros productos";
 
   const description = matchedCategory
     ? `Descubre nuestra selección de ${matchedCategory.name.toLowerCase()} de marcas premium. Envío a toda Colombia.`
-    : "Explora el catálogo completo de maquillaje, skincare, cabello, uñas y labios de BeautyCommerce.";
+    : "Explora el catálogo completo de maquillaje, skincare, cabello, uñas y labios de HALDY&CO ECOMMERCE.";
 
   if (isLoading) {
     return (
@@ -101,7 +105,7 @@ export default function Products() {
           fontWeight: 500,
         }}
       >
-        Beauty Collection
+        HALDY&CO Selection
       </Typography>
 
       <Typography

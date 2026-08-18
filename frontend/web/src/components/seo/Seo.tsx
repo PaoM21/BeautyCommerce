@@ -1,6 +1,6 @@
-const SITE_NAME = "BeautyCommerce";
-const DEFAULT_IMAGE = "https://www.beautycommerce.co/og-cover.jpg";
-const SITE_URL = "https://www.beautycommerce.co";
+const SITE_NAME = "HALDY&CO ECOMMERCE";
+const DEFAULT_IMAGE = "https://www.haldyco.com/og-cover.jpg";
+const SITE_URL = "https://www.haldyco.com";
 
 interface SeoProps {
   title: string;

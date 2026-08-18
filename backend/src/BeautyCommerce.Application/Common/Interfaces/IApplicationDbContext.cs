@@ -25,6 +25,7 @@ public interface IApplicationDbContext
     DbSet<OutboxMessage> OutboxMessages { get; }
     DbSet<LoyaltyAccount> LoyaltyAccounts { get; }
     DbSet<LoyaltyTransaction> LoyaltyTransactions { get; }
+    DbSet<NewsletterSubscriber> NewsletterSubscribers { get; }
 
     Task<bool> UserExistsAsync(
         Guid userId,

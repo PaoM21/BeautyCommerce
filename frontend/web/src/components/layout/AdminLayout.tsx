@@ -60,7 +60,7 @@ export default function AdminLayout() {
               fontWeight: 500,
             }}
           >
-            BEAUTY COMMERCE
+            HALDY&CO
           </Typography>
 
           <Typography

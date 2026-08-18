@@ -30,6 +30,8 @@ import AccountOrders from "../pages/Account/Orders";
 import AccountOrderDetail from "../pages/Account/OrderDetail";
 import Wishlist from "../pages/Wishlist/Wishlist";
 import Loyalty from "../pages/Account/Loyalty";
+import TermsAndConditions from "../pages/Legal/TermsAndConditions";
+import DataProcessingPolicy from "../pages/Legal/DataProcessingPolicy";
 
 export default function AppRoutes() {
   return (
@@ -48,6 +50,10 @@ export default function AppRoutes() {
         <Route path="/olvide-password" element={<ForgotPassword />} />
 
         <Route path="/restablecer-password" element={<ResetPassword />} />
+
+        <Route path="/terminos-y-condiciones" element={<TermsAndConditions />} />
+
+        <Route path="/tratamiento-de-datos-personales" element={<DataProcessingPolicy />} />
 
         <Route element={<ProtectedRoute />}>
           <Route path="/carrito" element={<Cart />} />

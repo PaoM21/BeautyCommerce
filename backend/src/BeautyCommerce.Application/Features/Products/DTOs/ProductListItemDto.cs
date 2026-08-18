@@ -25,5 +25,7 @@ namespace BeautyCommerce.Application.Features.Products.DTOs
         public decimal? AverageRating { get; set; }
 
         public int ReviewCount { get; set; }
+
+        public Guid? DefaultVariantId { get; set; }
     }
 }

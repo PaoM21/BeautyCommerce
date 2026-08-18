@@ -100,7 +100,13 @@ public class GetProductsQueryHandler
                     .Average(r => (decimal?)r.Rating),
 
                 ReviewCount = _context.Reviews
-                    .Count(r => r.ProductId == x.Id)
+                    .Count(r => r.ProductId == x.Id),
+
+                DefaultVariantId = x.Variants
+                    .OrderByDescending(v => v.Stock > 0)
+                    .ThenBy(v => v.Price)
+                    .Select(v => (Guid?)v.Id)
+                    .FirstOrDefault()
 
             })
             .ToListAsync(cancellationToken);

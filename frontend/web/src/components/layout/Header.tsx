@@ -1,9 +1,11 @@
+import { useState, type FormEvent } from "react";
 import {
   AppBar,
   Badge,
   Box,
   Container,
   IconButton,
+  InputBase,
   Toolbar,
   Typography,
 } from "@mui/material";
@@ -14,7 +16,7 @@ import ShoppingBagOutlinedIcon from "@mui/icons-material/ShoppingBagOutlined";
 import PersonOutlineIcon from "@mui/icons-material/Person";
 import AdminPanelSettingsOutlinedIcon from "@mui/icons-material/AdminPanelSettingsOutlined";
 
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCartStore } from "../../store/cartStore";
 import { useAuthStore } from "../../store/authStore";
 import { palette } from "../../theme/theme";
@@ -25,6 +27,20 @@ export default function Header() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const isAdmin = user?.role === "Admin";
+
+  const navigate = useNavigate();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+
+  const handleSearchSubmit = (event: FormEvent) => {
+    event.preventDefault();
+
+    const term = searchValue.trim();
+    if (!term) return;
+
+    navigate(`/productos?buscar=${encodeURIComponent(term)}`);
+    setSearchOpen(false);
+  };
 
   return (
     <Box sx={{ position: "sticky", top: 0, zIndex: 1100 }}>
@@ -79,12 +95,13 @@ export default function Header() {
               <Typography
                 sx={{
                   fontFamily: '"Fraunces", serif',
-                  fontSize: 23,
+                  fontSize: 21,
                   fontWeight: 500,
-                  letterSpacing: 2,
+                  letterSpacing: 1,
+                  whiteSpace: "nowrap",
                 }}
               >
-                BEAUTY
+                HALDY&amp;CO
               </Typography>
 
               <Typography
@@ -95,7 +112,7 @@ export default function Header() {
                   mt: -0.5,
                 }}
               >
-                COMMERCE
+                ECOMMERCE
               </Typography>
             </Box>
 
@@ -132,9 +149,36 @@ export default function Header() {
                 justifyContent: "flex-end",
               }}
             >
-              <IconButton>
-                <SearchIcon />
-              </IconButton>
+              {searchOpen ? (
+                <Box
+                  component="form"
+                  onSubmit={handleSearchSubmit}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    backgroundColor: palette.ivory,
+                    borderRadius: 1,
+                    px: 1.5,
+                    mr: 1,
+                  }}
+                >
+                  <InputBase
+                    autoFocus
+                    placeholder="Buscar productos..."
+                    value={searchValue}
+                    onChange={(event) => setSearchValue(event.target.value)}
+                    onBlur={() => !searchValue && setSearchOpen(false)}
+                    sx={{ fontSize: 14, width: { xs: 140, sm: 220 } }}
+                  />
+                  <IconButton type="submit" size="small">
+                    <SearchIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              ) : (
+                <IconButton onClick={() => setSearchOpen(true)} aria-label="Buscar">
+                  <SearchIcon />
+                </IconButton>
+              )}
 
               <IconButton component={Link} to="/favoritos">
                 <Badge badgeContent={0}>

@@ -56,6 +56,38 @@ export async function getProducts(
     variants: [],
     averageRating: p.averageRating ?? undefined,
     reviewCount: p.reviewCount ?? undefined,
+    defaultVariantId: p.defaultVariantId ?? undefined,
+  } as Product));
+}
+
+export async function getBestSellers(count = 8): Promise<Product[]> {
+  const response = await api.get<any[]>("/products/best-sellers", {
+    params: { count },
+  });
+
+  const items = Array.isArray(response.data) ? response.data : [];
+
+  return items.map((p: any) => ({
+    id: p.id,
+    sku: p.sku ?? "",
+    barcode: p.barcode ?? "",
+    name: p.name,
+    slug: p.slug ?? "",
+    shortDescription: p.shortDescription,
+    description: p.description,
+    price: p.price ?? 0,
+    oldPrice: p.oldPrice ?? undefined,
+    brandId: p.brandId ?? "",
+    categoryId: p.categoryId ?? "",
+    brand: p.brand ? { id: p.brandId ?? "", name: p.brand } : undefined,
+    category: p.category ? { id: p.categoryId ?? "", name: p.category } : undefined,
+    images: p.image
+      ? [{ id: "", imageUrl: p.image, isPrimary: true }]
+      : [],
+    variants: [],
+    averageRating: p.averageRating ?? undefined,
+    reviewCount: p.reviewCount ?? undefined,
+    defaultVariantId: p.defaultVariantId ?? undefined,
   } as Product));
 }
 

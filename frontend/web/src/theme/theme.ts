@@ -1,20 +1,23 @@
 import { createTheme } from "@mui/material/styles";
 
-// Paleta editorial de lujo: base beige + vinotinto,
-// pensada para transmitir exclusividad (skincare/makeup premium)
-// sin perder la densidad comercial de un ecommerce real.
+// Paleta editorial blush: crema + rosa empolvado + acentos en negro
+// y maroon oscuro, inspirada en la referencia visual de la marca.
 export const palette = {
-  ivory: "#f6efe4", // beige
-  ivoryDeep: "#e9dcc4", // beige profundo
-  charcoal: "#3d0f18", // vinotinto casi negro (fondos oscuros, CTAs)
-  charcoalSoft: "#5c1a28", // vinotinto oscuro (hover de fondos oscuros)
-  gold: "#7d2438", // vinotinto principal (acentos, texto de marca)
-  goldDeep: "#5c1a28", // vinotinto oscuro (hover de acentos)
-  goldLight: "#c68a9a", // vinotinto claro (acentos sobre fondo oscuro)
-  rose: "#e4c9ae", // beige rosado
-  roseDeep: "#c9a37e", // beige rosado profundo
-  textSecondary: "#75695a",
-  border: "#e3d2ae",
+  ivory: "#faf3ee", // crema (fondo general)
+  ivoryDeep: "#f0e3d8", // crema profundo (tarjetas, inputs)
+  blush: "#f8e1e3", // rosa empolvado (fondos de sección)
+  blushDeep: "#f0c7cc", // rosa empolvado profundo (hover, bandas)
+  charcoal: "#4a1420", // maroon oscuro (barra de anuncio, footer)
+  charcoalSoft: "#661d2c", // maroon (hover de fondos oscuros)
+  ink: "#18130f", // negro casi puro (botones sólidos tipo CTA)
+  inkSoft: "#332a24", // negro suavizado (hover de botones)
+  gold: "#c9707f", // rosa acento (texto de marca, eyebrow, hover)
+  goldDeep: "#a8505f", // rosa acento oscuro (hover de acentos)
+  goldLight: "#e3aeb8", // rosa acento claro (sobre fondo oscuro)
+  rose: "#e4c9ae", // beige rosado (compat)
+  roseDeep: "#c9a37e", // beige rosado profundo (compat)
+  textSecondary: "#7a6a63",
+  border: "#ecdcd6",
 };
 
 declare module "@mui/material/styles" {
@@ -33,8 +36,8 @@ export const theme = createTheme({
       paper: "#ffffff",
     },
     primary: {
-      main: palette.charcoal,
-      light: palette.charcoalSoft,
+      main: palette.ink,
+      light: palette.inkSoft,
       contrastText: "#ffffff",
     },
     secondary: {
@@ -94,16 +97,16 @@ export const theme = createTheme({
         contained: {
           borderRadius: 2,
           padding: "12px 32px",
-          backgroundColor: palette.charcoal,
+          backgroundColor: palette.ink,
           boxShadow: "none",
           "&:hover": {
-            backgroundColor: palette.charcoalSoft,
+            backgroundColor: palette.inkSoft,
             boxShadow: "none",
           },
         },
         outlined: {
           borderRadius: 2,
-          borderColor: palette.charcoal,
+          borderColor: palette.ink,
           padding: "11px 31px",
         },
       },

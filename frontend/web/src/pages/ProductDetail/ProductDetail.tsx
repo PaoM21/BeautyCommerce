@@ -137,7 +137,7 @@ export default function ProductDetail() {
                 title={product.name}
                 description={
                     product.shortDescription ??
-                    `Compra ${product.name} ${product.brand?.name ? `de ${product.brand.name}` : ""} en BeautyCommerce. Envío a toda Colombia.`
+                    `Compra ${product.name} ${product.brand?.name ? `de ${product.brand.name}` : ""} en HALDY&CO ECOMMERCE. Envío a toda Colombia.`
                 }
                 path={`/productos/${product.id}`}
                 image={image}

@@ -84,7 +84,7 @@ export default function Login() {
             mb: 5,
           }}
         >
-          Inicia sesión en Beauty Commerce.
+          Inicia sesión en HALDY&CO ECOMMERCE.
         </Typography>
 
         {successMessage && (

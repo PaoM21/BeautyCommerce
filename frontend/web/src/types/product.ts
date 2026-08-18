@@ -32,6 +32,7 @@ export interface Product {
   variants?: ProductVariant[];
   averageRating?: number;
   reviewCount?: number;
+  defaultVariantId?: string;
 }
 
 export interface ProductImage {
