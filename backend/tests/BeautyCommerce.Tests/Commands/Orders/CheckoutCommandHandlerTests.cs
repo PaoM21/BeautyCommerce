@@ -7,6 +7,7 @@ using BeautyCommerce.Tests.Helpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace BeautyCommerce.Tests.Commands.Orders;
@@ -90,16 +91,27 @@ public class CheckoutCommandHandlerTests
         var cacheMock = new Mock<ICacheService>();
         var inventoryService = new InventoryService(context, cacheMock.Object);
 
+        var shippingCostCalculator = new ShippingCostCalculator(
+            Options.Create(new ShippingRatesOptions { BogotaCost = 8000m, NationalCost = 15000m }));
+
         var handler =
             new CheckoutCommandHandler(
                 context,
                 currentUserMock.Object,
                 paymentMock.Object,
                 inventoryService,
+                shippingCostCalculator,
                 cacheMock.Object,
                 NullLogger<CheckoutCommandHandler>.Instance);
 
-        var command = new CheckoutCommand();
+        var command = new CheckoutCommand
+        {
+            RecipientName = "Ana Pérez",
+            Phone = "3001234567",
+            AddressLine = "Calle 123 #45-67",
+            City = "Bogotá",
+            Department = "Cundinamarca",
+        };
 
         // Act
         var orderId =
@@ -117,12 +129,19 @@ public class CheckoutCommandHandlerTests
         order.Should().NotBeNull();
 
         order!.UserId.Should().Be(userId);
-        order.Total.Should().Be(20m);
         order.SubTotal.Should().Be(20m);
+        order.ShippingCost.Should().Be(8000m);
+        order.Total.Should().Be(8020m);
         order.TransactionId.Should().Be("tx123");
         order.Status
             .Should()
             .Be(BeautyCommerce.Domain.Enums.OrderStatus.Paid);
+
+        order.ShippingRecipientName.Should().Be("Ana Pérez");
+        order.ShippingPhone.Should().Be("3001234567");
+        order.ShippingAddressLine.Should().Be("Calle 123 #45-67");
+        order.ShippingCity.Should().Be("Bogotá");
+        order.ShippingDepartment.Should().Be("Cundinamarca");
 
         context.OrderItems
             .Count()

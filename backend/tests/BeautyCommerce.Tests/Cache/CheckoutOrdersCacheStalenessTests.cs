@@ -104,6 +104,7 @@ public class CheckoutOrdersCacheStalenessTests
             currentUserMock.Object,
             paymentMock.Object,
             inventoryService,
+            new ZeroShippingCostCalculator(),
             cache,
             NullLogger<CheckoutCommandHandler>.Instance);
 
@@ -217,6 +218,7 @@ public class CheckoutOrdersCacheStalenessTests
             buyerMock.Object,
             paymentMock.Object,
             inventoryService,
+            new ZeroShippingCostCalculator(),
             cache,
             NullLogger<CheckoutCommandHandler>.Instance);
 

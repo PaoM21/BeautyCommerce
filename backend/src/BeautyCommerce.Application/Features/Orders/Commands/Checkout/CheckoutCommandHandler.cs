@@ -17,6 +17,7 @@ public class CheckoutCommandHandler
     private readonly ICurrentUserService _currentUser;
     private readonly IPaymentService _paymentService;
     private readonly IInventoryService _inventoryService;
+    private readonly IShippingCostCalculator _shippingCostCalculator;
     private readonly ICacheService _cache;
     private readonly ILogger<CheckoutCommandHandler> _logger;
 
@@ -25,6 +26,7 @@ public class CheckoutCommandHandler
         ICurrentUserService currentUser,
         IPaymentService paymentService,
         IInventoryService inventoryService,
+        IShippingCostCalculator shippingCostCalculator,
         ICacheService cache,
         ILogger<CheckoutCommandHandler> logger)
     {
@@ -32,6 +34,7 @@ public class CheckoutCommandHandler
         _currentUser = currentUser;
         _paymentService = paymentService;
         _inventoryService = inventoryService;
+        _shippingCostCalculator = shippingCostCalculator;
         _cache = cache;
         _logger = logger;
     }
@@ -105,7 +108,7 @@ public class CheckoutCommandHandler
         var subTotal = cartItems.Sum(
             item => item.Quantity * item.UnitPrice);
 
-        var shippingCost = 0m;
+        var shippingCost = _shippingCostCalculator.Calculate(request.City);
         var tax = 0m;
         var total = subTotal + shippingCost + tax;
 
@@ -163,7 +166,12 @@ public class CheckoutCommandHandler
             Tax = tax,
             Total = total,
             OrderNumber = orderNumber,
-            TransactionId = payment.TransactionId
+            TransactionId = payment.TransactionId,
+            ShippingRecipientName = request.RecipientName,
+            ShippingPhone = request.Phone,
+            ShippingAddressLine = request.AddressLine,
+            ShippingCity = request.City,
+            ShippingDepartment = request.Department
         };
 
         _context.Orders.Add(order);

@@ -5,6 +5,7 @@ using BeautyCommerce.Application.Features.Orders.Commands.Checkout;
 using BeautyCommerce.Domain.Entities;
 using BeautyCommerce.Infrastructure.Persistence;
 using BeautyCommerce.Infrastructure.Services;
+using BeautyCommerce.Tests.Helpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -175,6 +176,7 @@ public class CheckoutTransactionIntegrityTests : IAsyncLifetime
             currentUser.Object,
             payment.Object,
             inventoryService,
+            new ZeroShippingCostCalculator(),
             cache.Object,
             NullLogger<CheckoutCommandHandler>.Instance);
 
@@ -255,6 +257,7 @@ public class CheckoutTransactionIntegrityTests : IAsyncLifetime
             currentUser.Object,
             payment.Object,
             inventoryService,
+            new ZeroShippingCostCalculator(),
             cache.Object,
             NullLogger<CheckoutCommandHandler>.Instance);
 

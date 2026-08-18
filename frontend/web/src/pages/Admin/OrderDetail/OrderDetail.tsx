@@ -7,18 +7,22 @@ import {
   Divider,
   MenuItem,
   Select,
+  TextField,
   Typography,
 } from "@mui/material";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   getAdminOrderById,
   getValidNextStatuses,
+  updateOrderShipping,
   updateOrderStatus,
 } from "../../../services/orderService";
 import { getApiErrorMessage } from "../../../services/apiError";
+
+const CARRIER_OPTIONS = ["Envía", "Interrapidísimo", "Otra"];
 
 export default function AdminOrderDetail() {
   const { id } = useParams();
@@ -26,6 +30,8 @@ export default function AdminOrderDetail() {
   const queryClient = useQueryClient();
 
   const [status, setStatus] = useState("");
+  const [carrier, setCarrier] = useState("");
+  const [trackingNumber, setTrackingNumber] = useState("");
 
   const {
     data: order,
@@ -37,6 +43,13 @@ export default function AdminOrderDetail() {
     queryFn: () => getAdminOrderById(id!),
     enabled: Boolean(id),
   });
+
+  useEffect(() => {
+    if (order) {
+      setCarrier(order.carrier ?? "");
+      setTrackingNumber(order.trackingNumber ?? "");
+    }
+  }, [order]);
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -52,6 +65,17 @@ export default function AdminOrderDetail() {
       });
 
       setStatus("");
+    },
+  });
+
+  const shippingMutation = useMutation({
+    mutationFn: () =>
+      updateOrderShipping(id!, carrier, trackingNumber),
+
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({
+        queryKey: ["admin-order", id],
+      });
     },
   });
 
@@ -154,6 +178,120 @@ export default function AdminOrderDetail() {
           value={order.transactionId ?? "Pendiente"}
         />
       </Box>
+
+      <Divider sx={{ mb: 5 }} />
+
+      <Typography
+        sx={{
+          fontSize: 22,
+          mb: 3,
+        }}
+      >
+        Dirección de envío
+      </Typography>
+
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: {
+            xs: "1fr",
+            md: "repeat(3, 1fr)",
+          },
+          gap: 4,
+          mb: 5,
+        }}
+      >
+        <Info label="Destinatario" value={order.shippingRecipientName || "—"} />
+        <Info label="Teléfono" value={order.shippingPhone || "—"} />
+        <Info
+          label="Dirección"
+          value={
+            order.shippingAddressLine
+              ? `${order.shippingAddressLine}, ${order.shippingCity} (${order.shippingDepartment})`
+              : "—"
+          }
+        />
+      </Box>
+
+      <Typography
+        sx={{
+          fontSize: 22,
+          mb: 3,
+        }}
+      >
+        Transportadora y guía
+      </Typography>
+
+      <Box
+        sx={{
+          display: "flex",
+          gap: 2,
+          flexDirection: {
+            xs: "column",
+            sm: "row",
+          },
+          mb: 3,
+        }}
+      >
+        <Select
+          value={carrier}
+          onChange={(event) => setCarrier(event.target.value)}
+          displayEmpty
+          sx={{ minWidth: 220 }}
+        >
+          <MenuItem value="" disabled>
+            Selecciona la transportadora
+          </MenuItem>
+
+          {CARRIER_OPTIONS.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </Select>
+
+        <TextField
+          label="Número de guía"
+          value={trackingNumber}
+          onChange={(event) => setTrackingNumber(event.target.value)}
+          sx={{ minWidth: 220 }}
+        />
+
+        <Button
+          variant="contained"
+          disabled={
+            shippingMutation.isPending || !carrier || !trackingNumber
+          }
+          onClick={() => shippingMutation.mutate()}
+          sx={{
+            borderRadius: 0,
+            px: 4,
+            backgroundColor: "#1f1f1f",
+            "&:hover": { backgroundColor: "#000" },
+          }}
+        >
+          {shippingMutation.isPending ? "Guardando..." : "Guardar envío"}
+        </Button>
+      </Box>
+
+      {order.shippedAt && (
+        <Typography sx={{ fontSize: 13, color: "#777", mb: 2 }}>
+          Despachado el{" "}
+          {new Date(order.shippedAt).toLocaleDateString("es-CO")}
+        </Typography>
+      )}
+
+      {shippingMutation.isError && (
+        <Alert severity="error" sx={{ mb: 4 }}>
+          No fue posible guardar la información de envío.
+        </Alert>
+      )}
+
+      {shippingMutation.isSuccess && (
+        <Alert severity="success" sx={{ mb: 4 }}>
+          Información de envío guardada correctamente.
+        </Alert>
+      )}
 
       <Divider sx={{ mb: 5 }} />
 

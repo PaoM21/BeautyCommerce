@@ -11,6 +11,7 @@ using BeautyCommerce.Domain.Enums;
 using BeautyCommerce.Infrastructure.Identity;
 using BeautyCommerce.Infrastructure.Persistence;
 using BeautyCommerce.Infrastructure.Services;
+using BeautyCommerce.Tests.Helpers;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -116,7 +117,8 @@ public class DashboardReproductionTests : IAsyncLifetime
         var inventoryService = new InventoryService(context, cacheMock.Object);
 
         var checkoutHandler = new CheckoutCommandHandler(
-            context, currentUser.Object, paymentMock.Object, inventoryService, cacheMock.Object,
+            context, currentUser.Object, paymentMock.Object, inventoryService,
+            new ZeroShippingCostCalculator(), cacheMock.Object,
             NullLogger<CheckoutCommandHandler>.Instance);
 
         var behavior = new TransactionBehavior<CheckoutCommand, Guid>(

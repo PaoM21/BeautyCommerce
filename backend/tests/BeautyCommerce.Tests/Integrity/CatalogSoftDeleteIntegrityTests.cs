@@ -5,6 +5,7 @@ using BeautyCommerce.Application.Features.Orders.Commands.Checkout;
 using BeautyCommerce.Domain.Entities;
 using BeautyCommerce.Infrastructure.Persistence;
 using BeautyCommerce.Infrastructure.Services;
+using BeautyCommerce.Tests.Helpers;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -155,7 +156,8 @@ public class CatalogSoftDeleteIntegrityTests : IAsyncLifetime
         var inventoryService = new InventoryService(context, cache.Object);
 
         var handler = new CheckoutCommandHandler(
-            context, currentUser.Object, payment.Object, inventoryService, cache.Object, NullLogger<CheckoutCommandHandler>.Instance);
+            context, currentUser.Object, payment.Object, inventoryService,
+            new ZeroShippingCostCalculator(), cache.Object, NullLogger<CheckoutCommandHandler>.Instance);
 
         var transactionBehavior = new TransactionBehavior<CheckoutCommand, Guid>(
             context, NullLogger<TransactionBehavior<CheckoutCommand, Guid>>.Instance);

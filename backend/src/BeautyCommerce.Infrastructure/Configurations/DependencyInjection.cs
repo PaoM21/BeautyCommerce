@@ -38,6 +38,9 @@ public static class DependencyInjection
         services.AddScoped<IDriveFileProvider, GoogleDriveFileProvider>();
         services.AddScoped<IImageUploader, CloudinaryImageUploader>();
 
+        services.Configure<ShippingRatesOptions>(configuration.GetSection("Shipping"));
+        services.AddScoped<IShippingCostCalculator, ShippingCostCalculator>();
+
         return services;
     }
 }

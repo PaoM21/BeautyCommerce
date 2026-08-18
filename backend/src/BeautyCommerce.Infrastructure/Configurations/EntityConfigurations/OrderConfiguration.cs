@@ -31,5 +31,26 @@ public class OrderConfiguration
 
         builder.Property(x => x.Total)
             .HasPrecision(18, 2);
+
+        builder.Property(x => x.ShippingRecipientName)
+            .HasMaxLength(150);
+
+        builder.Property(x => x.ShippingPhone)
+            .HasMaxLength(30);
+
+        builder.Property(x => x.ShippingAddressLine)
+            .HasMaxLength(250);
+
+        builder.Property(x => x.ShippingCity)
+            .HasMaxLength(100);
+
+        builder.Property(x => x.ShippingDepartment)
+            .HasMaxLength(100);
+
+        builder.Property(x => x.Carrier)
+            .HasMaxLength(50);
+
+        builder.Property(x => x.TrackingNumber)
+            .HasMaxLength(100);
     }
 }
