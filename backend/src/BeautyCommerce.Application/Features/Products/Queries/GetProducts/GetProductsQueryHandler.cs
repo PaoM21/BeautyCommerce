@@ -28,8 +28,10 @@ public class GetProductsQueryHandler
 
         if (!string.IsNullOrWhiteSpace(filter.Search))
         {
+            var search = filter.Search.ToLower();
+
             query = query.Where(x =>
-                x.Name.Contains(filter.Search));
+                x.Name.ToLower().Contains(search));
         }
 
         if (filter.BrandId.HasValue)
