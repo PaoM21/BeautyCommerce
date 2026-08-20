@@ -35,7 +35,7 @@ public static class EmailTemplates
         var html = $@"
 <div style=""font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#211d19;"">
     <div style=""background:{Wine};color:#fff;padding:24px;text-align:center;"">
-        <h1 style=""margin:0;font-size:20px;font-weight:normal;letter-spacing:2px;"">BEAUTY COMMERCE</h1>
+        <h1 style=""margin:0;font-size:20px;font-weight:normal;letter-spacing:2px;"">HALDY&amp;CO ECOMMERCE</h1>
     </div>
 
     <div style=""padding:24px;background:{Beige};"">
@@ -60,7 +60,7 @@ public static class EmailTemplates
     </div>
 
     <div style=""padding:16px 24px;text-align:center;color:#999;font-size:12px;"">
-        BeautyCommerce · Envíos a toda Colombia
+        HALDY&amp;CO ECOMMERCE · Envíos a toda Colombia
     </div>
 </div>";
 
@@ -69,12 +69,12 @@ public static class EmailTemplates
 
     public static (string Subject, string Html) PasswordReset(string resetUrl)
     {
-        const string subject = "Restablece tu contraseña de BeautyCommerce";
+        const string subject = "Restablece tu contraseña de HALDY&CO ECOMMERCE";
 
         var html = $@"
 <div style=""font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#211d19;"">
     <div style=""background:{Wine};color:#fff;padding:24px;text-align:center;"">
-        <h1 style=""margin:0;font-size:20px;font-weight:normal;letter-spacing:2px;"">BEAUTY COMMERCE</h1>
+        <h1 style=""margin:0;font-size:20px;font-weight:normal;letter-spacing:2px;"">HALDY&amp;CO ECOMMERCE</h1>
     </div>
 
     <div style=""padding:32px 24px;"">
