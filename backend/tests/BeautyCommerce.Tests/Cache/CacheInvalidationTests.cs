@@ -25,14 +25,6 @@ using Moq;
 
 namespace BeautyCommerce.Tests.Cache;
 
-// 6.3: formal proof that Brands/Categories/Reviews/Users — the four
-// invalidation gaps found in the read-only audit — now actually clear the
-// cache after a write. Uses a real MemoryCacheService backed by a real
-// MemoryCache and the real CachingBehavior/QueryHandler/CommandHandler
-// classes; nothing about the cache itself is mocked. Each test proves the
-// full MISS -> HIT -> write -> MISS -> fresh-value cycle, using reference
-// equality to confirm a "HIT" really came from the cache object and not a
-// coincidentally-identical re-read.
 public class CacheInvalidationTests
 {
     private static CachingBehavior<TRequest, TResponse> NewBehavior<TRequest, TResponse>(ICacheService cache)
@@ -63,32 +55,21 @@ public class CacheInvalidationTests
         Task<List<BrandDto>> RunQuery() =>
             behavior.Handle(new GetAllBrandsQuery(), _ => queryHandler.Handle(new GetAllBrandsQuery(), default), default);
 
-        // MISS: goes to the DB, caches the 1-brand result.
         var first = await RunQuery();
         first.Should().HaveCount(1);
 
-        // Change the DB directly, without going through the command handler
-        // (so the tag is NOT invalidated yet).
         context.Brands.Add(new Brand { Name = "Uncached Brand", Description = "x", IsActive = true });
         await context.SaveChangesAsync();
 
-        // HIT: still the stale 1-brand result — and the SAME object
-        // reference, proving it came from the cache rather than a fresh
-        // (coincidentally identical) DB read.
         var second = await RunQuery();
         second.Should().HaveCount(1);
         ReferenceEquals(first, second).Should().BeTrue("a cache hit returns the exact cached instance");
 
-        // The real command handler, using the SAME cache instance —
-        // this is the fix: it now calls InvalidateTagAsync("Brands").
         var createHandler = new CreateBrandCommandHandler(context, cache);
         await createHandler.Handle(
             new CreateBrandCommand { Brand = new CreateBrandDto { Name = "New Brand", Description = "x" } },
             default);
 
-        // MISS again: a fresh DB read reflecting everything written since
-        // the cache was populated (the 3rd brand from CreateBrandCommandHandler,
-        // and the 2nd one written directly to the DB above).
         var third = await RunQuery();
         third.Should().HaveCount(3);
         ReferenceEquals(second, third).Should().BeFalse("invalidation must force a new instance, not reuse the stale one");
@@ -238,9 +219,6 @@ public class CacheInvalidationTests
             new() { Id = newUserId, FullName = "New User", Email = "new@test.local" }
         };
 
-        // IUserService wraps UserManager, so it's mocked here — what's
-        // under test is CachingBehavior + MemoryCacheService +
-        // GetUsersQueryHandler + RegisterCommandHandler, all real.
         var userService = new Mock<IUserService>();
         userService.SetupSequence(x => x.GetAllAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(beforeRegister)
@@ -260,7 +238,11 @@ public class CacheInvalidationTests
         ReferenceEquals(first, second).Should().BeTrue("a cache hit returns the exact cached instance, without calling IUserService again");
         userService.Verify(x => x.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
 
-        var registerHandler = new RegisterCommandHandler(identityService.Object, cache);
+        var registerHandler = new RegisterCommandHandler(
+            identityService.Object,
+            cache,
+            Mock.Of<IEmailService>(),
+            NullLogger<RegisterCommandHandler>.Instance);
         await registerHandler.Handle(
             new RegisterCommand
             {

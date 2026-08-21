@@ -142,6 +142,70 @@ public class OutboxProcessorTests
     }
 
     [Fact]
+    public async Task Should_Send_Order_Shipped_Email_For_OrderShipped_Message()
+    {
+        var context = DbContextHelper.CreateDbContext();
+        var userId = Guid.NewGuid();
+
+        var order = new Order
+        {
+            UserId = userId,
+            OrderNumber = "ORD-SHIP-1",
+            Total = 53000m,
+            ShippingRecipientName = "Ana Pérez",
+            ShippingAddressLine = "Calle 123",
+            ShippingCity = "Bogotá",
+            ShippingDepartment = "Cundinamarca",
+            Carrier = "Servientrega",
+            TrackingNumber = "TRK-999",
+        };
+        context.Orders.Add(order);
+        await context.SaveChangesAsync();
+
+        var message = new OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            Type = "OrderShipped",
+            OccurredOn = DateTime.UtcNow,
+            Content = JsonSerializer.Serialize(new
+            {
+                order.Id,
+                order.OrderNumber,
+                order.UserId,
+            }),
+        };
+        context.OutboxMessages.Add(message);
+        await context.SaveChangesAsync();
+
+        var emailMock = new Mock<IEmailService>();
+
+        var userServiceMock = new Mock<IUserService>();
+        userServiceMock
+            .Setup(x => x.GetUsersByIdsAsync(
+                It.Is<IEnumerable<Guid>>(ids => ids.Contains(userId)),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new Dictionary<Guid, UserDto>
+            {
+                [userId] = new UserDto { Id = userId, Email = "cliente@test.com", FullName = "Ana Pérez" },
+            });
+
+        await OutboxProcessor.ProcessMessageAsync(
+            context, emailMock.Object, userServiceMock.Object, message,
+            NullLogger.Instance, default);
+
+        emailMock.Verify(
+            x => x.SendAsync(
+                "cliente@test.com",
+                It.Is<string>(subject => subject.Contains("ORD-SHIP-1")),
+                It.Is<string>(html => html.Contains("Servientrega") && html.Contains("TRK-999")),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        message.ProcessedOn.Should().NotBeNull();
+        message.Error.Should().BeNull();
+    }
+
+    [Fact]
     public async Task Should_Mark_Unknown_Message_Types_As_Processed_Without_Sending_Email()
     {
         var context = DbContextHelper.CreateDbContext();

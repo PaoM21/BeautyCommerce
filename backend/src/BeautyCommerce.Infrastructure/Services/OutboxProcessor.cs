@@ -83,6 +83,11 @@ public class OutboxProcessor : BackgroundService
                         db, emailService, userService, message, cancellationToken);
                     break;
 
+                case "OrderShipped":
+                    await SendOrderShippedEmailAsync(
+                        db, emailService, userService, message, cancellationToken);
+                    break;
+
                 default:
                     logger.LogWarning("Unknown outbox message type {Type}", message.Type);
                     break;
@@ -144,5 +149,46 @@ public class OutboxProcessor : BackgroundService
         await emailService.SendAsync(customer.Email, subject, html, cancellationToken);
     }
 
+    private static async Task SendOrderShippedEmailAsync(
+        ApplicationDbContext db,
+        IEmailService emailService,
+        IUserService userService,
+        OutboxMessage message,
+        CancellationToken cancellationToken)
+    {
+        var payload = JsonSerializer.Deserialize<OrderShippedPayload>(message.Content);
+
+        if (payload == null)
+        {
+            throw new InvalidOperationException(
+                "No fue posible leer el payload del evento OrderShipped.");
+        }
+
+        var order = await db.Orders
+            .FirstOrDefaultAsync(o => o.Id == payload.Id, cancellationToken);
+
+        if (order == null)
+        {
+            throw new InvalidOperationException(
+                $"No se encontró el pedido {payload.Id} para enviar el aviso de envío.");
+        }
+
+        var users = await userService.GetUsersByIdsAsync(
+            new[] { order.UserId }, cancellationToken);
+
+        if (!users.TryGetValue(order.UserId, out var customer) ||
+            string.IsNullOrWhiteSpace(customer.Email))
+        {
+            throw new InvalidOperationException(
+                $"No se encontró el correo del cliente para el pedido {order.Id}.");
+        }
+
+        var (subject, html) = EmailTemplates.OrderShipped(order);
+
+        await emailService.SendAsync(customer.Email, subject, html, cancellationToken);
+    }
+
     private record OrderCreatedPayload(Guid Id, string OrderNumber, decimal Total, Guid UserId);
+
+    private record OrderShippedPayload(Guid Id, string OrderNumber, Guid UserId);
 }

@@ -1,6 +1,8 @@
-﻿using BeautyCommerce.Application.Common.Exceptions;
+﻿using System.Text.Json;
+using BeautyCommerce.Application.Common.Exceptions;
 using BeautyCommerce.Application.Common.Helpers;
 using BeautyCommerce.Application.Common.Interfaces;
+using BeautyCommerce.Domain.Entities;
 using BeautyCommerce.Domain.Enums;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
@@ -67,6 +69,23 @@ public class UpdateOrderStatusCommandHandler
                     _currentUser.UserId,
                     cancellationToken);
             }
+        }
+
+        if (previousStatus != OrderStatus.Shipped &&
+            order.Status == OrderStatus.Shipped)
+        {
+            _context.OutboxMessages.Add(new OutboxMessage
+            {
+                Id = Guid.NewGuid(),
+                OccurredOn = DateTime.UtcNow,
+                Type = "OrderShipped",
+                Content = JsonSerializer.Serialize(new
+                {
+                    order.Id,
+                    order.OrderNumber,
+                    order.UserId
+                })
+            });
         }
 
         await _context.SaveChangesAsync(
