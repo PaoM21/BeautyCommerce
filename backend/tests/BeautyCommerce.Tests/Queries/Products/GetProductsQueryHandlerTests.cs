@@ -134,4 +134,20 @@ public class GetProductsQueryHandlerTests : IAsyncLifetime
         item.AverageRating.Should().Be(4m, "(5 + 4 + 3) / 3 = 4");
         item.ReviewCount.Should().Be(3);
     }
+
+    [Fact]
+    public async Task Search_Matches_Regardless_Of_Case()
+    {
+        await using var context = NewContext();
+
+        var handler = new GetProductsQueryHandler(context);
+
+        var result = await handler.Handle(
+            new GetProductsQuery { Filter = new ProductFilterDto { Search = "qa rated product" } },
+            default);
+
+        result.Items.Should().ContainSingle(
+            x => x.Id == _productId,
+            "PostgreSQL's default LIKE is case-sensitive, so the search must use ILIKE");
+    }
 }
