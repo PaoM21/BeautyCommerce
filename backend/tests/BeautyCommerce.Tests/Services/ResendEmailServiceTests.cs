@@ -22,7 +22,7 @@ public class ResendEmailServiceTests
         {
             ApiKey = apiKey,
             FromAddress = "onboarding@resend.dev",
-            FromName = "BeautyCommerce",
+            FromName = "HALDY&CO ECOMMERCE",
         });
 
         var service = new ResendEmailService(
@@ -46,7 +46,7 @@ public class ResendEmailServiceTests
         using var body = JsonDocument.Parse(handler.LastRequestBody!);
         var root = body.RootElement;
 
-        root.GetProperty("from").GetString().Should().Be("BeautyCommerce <onboarding@resend.dev>");
+        root.GetProperty("from").GetString().Should().Be("HALDY&CO ECOMMERCE <onboarding@resend.dev>");
         root.GetProperty("subject").GetString().Should().Be("Asunto de prueba");
         root.GetProperty("to")[0].GetString().Should().Be("cliente@test.com");
     }

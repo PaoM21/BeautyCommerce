@@ -1,9 +1,11 @@
 # Correos transaccionales (Resend)
 
-BeautyCommerce envía dos correos hoy:
+BeautyCommerce envía cuatro correos hoy:
 
 1. **Confirmación de pedido** — automático, disparado por el patrón Outbox cuando se crea un pedido (`CheckoutCommandHandler` → `OutboxMessage` tipo `OrderCreated` → `OutboxProcessor` lo procesa cada 10 segundos y envía el correo).
 2. **Restablecer contraseña** — disparado por `POST /api/auth/forgot-password`.
+3. **Pedido enviado** — automático, disparado por el patrón Outbox cuando el admin cambia el estado del pedido a "Enviado" (`UpdateOrderStatusCommandHandler` → `OutboxMessage` tipo `OrderShipped` → `OutboxProcessor` lo procesa igual que `OrderCreated`). Incluye transportadora y número de guía si ya fueron cargados (`PUT /api/admin/orders/shipping`); si no, el correo avisa que la guía se compartirá pronto.
+4. **Bienvenida / cuenta creada** — disparado de forma síncrona en `POST /api/auth/register` (mismo patrón que "olvidé mi contraseña": si Resend falla, no bloquea el registro, solo queda el error en logs).
 
 Ambos usan [Resend](https://resend.com) como proveedor.
 
@@ -59,6 +61,4 @@ Las plantillas HTML viven en `backend/src/BeautyCommerce.Application/Common/Emai
 
 ## Próximos pasos posibles
 
-- Correo cuando el pedido cambia a "Enviado" (ya existe el dato de transportadora/guía — solo falta engancharlo a un nuevo tipo de evento en el Outbox).
-- Confirmación de creación de cuenta.
-- Mover el envío de "olvidé mi contraseña" al patrón Outbox también, si se necesita reintentos automáticos (hoy se envía de forma síncrona dentro del request, con el error capturado para no filtrar si el correo existe).
+- Mover el envío de "olvidé mi contraseña" y "bienvenida" al patrón Outbox también, si se necesita reintentos automáticos (hoy se envían de forma síncrona dentro del request, con el error capturado para no bloquear ni filtrar información al cliente).

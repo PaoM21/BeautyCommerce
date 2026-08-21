@@ -1,6 +1,8 @@
+using BeautyCommerce.Application.Common.Interfaces;
 using BeautyCommerce.Application.Features.Authentication.Commands.Login;
 using BeautyCommerce.Application.Features.Authentication.Commands.Register;
 using BeautyCommerce.Application.Features.Authentication.DTOs;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using FluentAssertions;
 
@@ -33,7 +35,11 @@ public class LoginRegisterHandlerTests
         var userId = Guid.NewGuid();
         mock.Setup(x => x.RegisterAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(userId);
 
-        var handler = new RegisterCommandHandler(mock.Object, cache.Object);
+        var handler = new RegisterCommandHandler(
+            mock.Object,
+            cache.Object,
+            Mock.Of<IEmailService>(),
+            NullLogger<RegisterCommandHandler>.Instance);
 
         var command = new RegisterCommand { User = new RegisterRequestDto { FirstName = "A", LastName = "B", Email = "a@b.com", Password = "p" } };
 

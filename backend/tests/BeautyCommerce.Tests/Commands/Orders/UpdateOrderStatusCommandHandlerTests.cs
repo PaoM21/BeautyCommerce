@@ -88,4 +88,47 @@ public class UpdateOrderStatusCommandHandlerTests
 
         cacheMock.Verify(c => c.InvalidateTagAsync(It.IsAny<string>()), Times.Never);
     }
+
+    [Fact]
+    public async Task Should_Enqueue_OrderShipped_Outbox_Message_When_Moving_To_Shipped()
+    {
+        var context = DbContextHelper.CreateDbContext();
+
+        var order = new Order
+        {
+            Id = Guid.NewGuid(),
+            UserId = Guid.NewGuid(),
+            OrderNumber = "ORD-3",
+            Status = OrderStatus.Processing,
+            Total = 100m,
+            OrderDate = DateTime.UtcNow
+        };
+
+        context.Orders.Add(order);
+        await context.SaveChangesAsync(default);
+
+        var cacheMock = new Mock<BeautyCommerce.Application.Common.Interfaces.ICacheService>();
+        cacheMock.Setup(c => c.InvalidateTagAsync(It.IsAny<string>())).Returns(Task.CompletedTask);
+
+        var handler = new UpdateOrderStatusCommandHandler(
+            context,
+            Mock.Of<BeautyCommerce.Application.Common.Interfaces.ILoyaltyService>(),
+            cacheMock.Object,
+            Mock.Of<IInventoryService>(),
+            Mock.Of<ICurrentUserService>());
+
+        var result = await handler.Handle(new UpdateOrderStatusCommand
+        {
+            OrderId = order.Id,
+            Status = OrderStatus.Shipped
+        }, default);
+
+        result.Should().BeTrue();
+
+        var outboxMessage = context.OutboxMessages
+            .SingleOrDefault(m => m.Type == "OrderShipped");
+
+        outboxMessage.Should().NotBeNull();
+        outboxMessage!.Content.Should().Contain(order.OrderNumber);
+    }
 }
